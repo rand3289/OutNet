@@ -13,11 +13,13 @@ OutNetDir and is a service that lists other types of distributed services runnin
 Querying OutNetList port will return the following information:
 
 struct Response {
-    vector<HostPort> list;
-    string signature; // PGP signature?
-    string publicKey; // PGP public key?
-    string name;      // name or a PGP key hash?
-};
+    HostPort OutNetDir; // points to the local OutNetDir service or filled with zeros.
+    HostPort OutNetDirLocal; //is it needed??? non-routable ip of the OutNetDir service (local/behind the router 192.168.x.x or 10.x.x.x)
+    vector<HostPort> list;   // list of remote OutNetList instances
+    string name;      // public key hashes can be used instead.  MD5 might work since hashing a key.
+    string signature; // PGP/GPG signature
+    string publicKey; // PGP/GPG public key
+}; // no e-mail field to prevent network-wide spam!
 
 struct HostPort { // all fields are in the network byte order
     uint32 host;
@@ -26,7 +28,6 @@ struct HostPort { // all fields are in the network byte order
 };
 
 
-* Fist HostPort in the OutNetList response points to the OutNetDir service or filled with zeros.
 * Response data is binary and is encoded using application octet-stream mime type
 * Design it to be undetectable by ISPs so it less likely to be blocked.
 * change "running locally" in the text above to "run by the same individual or organization"
@@ -44,6 +45,7 @@ struct HostPort { // all fields are in the network byte order
 
 * OutNetList and OutNetDir are capable of "opening a port in your router" via UPnP in order to be accessible from outside of your network.
 * In addition OutNetDir is capable of "opening" additional ports for your distributed services to accept connections.
+* OutNetList (and OutNetDir?) can also tell your services the "real/external" IP.
 * To support other distributed services OutNet provides a library for signature creation and verification using private and public key. (Your private key does not have to be shared with your other services???)
 
 
@@ -53,7 +55,7 @@ struct HostPort { // all fields are in the network byte order
 
 ********************************************  Other Base Services **************************************
 
-* As described above, OutNet is able to advertise many existing services such as your web site, ftp, ssh and some P2P software, however there is a need for OutNet notification service.  OutNetMsg receives messages addressed to your public key.  If it is from some one you trust (their public key is on your white list), it tries to open the message using the protocol/mime specified in the message.  OutNetMsg can display the message, offer to open the message or file, forward it to one of the services running on your system or suggest you install a corresponding protocol handler / service.  For example it might be possible to open a Zoom session this way.  It has to be able to manage other's public keys to be able to put them on your contact list.  Messages from public keys not on your list will be discarded.  Only direct messages will be handled by OutNetMsg.  Messages distributed to multiple recepients have to be handled by corresponding services.
+* As described above, OutNet is able to advertise many existing services such as your web site, ftp, ssh and some P2P software, however there is a need for OutNet notification service.  OutNetMsg receives messages addressed to your public key.  If it is from some one you trust (their public key is on your white list), it tries to open the message using the protocol/mime specified in the message.  OutNetMsg can display the message, offer to open the message or file, forward it to one of the services running on your system (for example, by acting as a TCP wrapper) or suggest you install a corresponding protocol handler / service.  For example it might be possible to open a Zoom session this way.  It has to be able to manage other's public keys to be able to put them on your contact list.  Messages from public keys not on your list will be discarded.  Only direct messages will be handled by OutNetMsg.  Messages distributed to multiple recepients have to be handled by corresponding services.
 
 
-* Another significant service is a public key rating system.  You should be able to rate your interactions with owners of a public key.  It might be possible to combine the rating sytem service with OutNetMsg since both manage public keys.
+* Another significant service is a public key rating system.  You should be able to rate your interactions with owners of a public key.  It might be possible to combine the rating sytem service with OutNetMsg since both manage public keys.  Intention of this service is different than the "Web of trust" (https://en.wikipedia.org/wiki/Web_of_trust).  In OutNet the key comes first and the name is secondary.  The name is not important unless verified through personal communication.  The rating does not state if you know the entity in real life or what type of transaction/interaction you had maintaining privacy.
