@@ -6,14 +6,13 @@ OutNet is a distributed directory for distributed internet services running over
 
 This document describes two services OutNetList and OutNetDir.  Both services run over HTTP on different port numbers.
 
-"OutNet List" provides a list of IPv4 addresses, corresponding port numbers and ages of nodes participating in the OutNet.  Age is a number of minutes since the server has last been seen on line.  This 16 bit value allows for nodes to be up to 45.5 days old. In addition, "OutNet List" provides information about a local "OutNet Dir" service.
+OutNetList provides a list of IPv4 addresses, corresponding port numbers and ages of nodes participating in the OutNet.  Age is a number of minutes since the server has last been seen on line.  This 16 bit value allows for nodes to be up to 45.5 days old. In addition, OutNetList provides information about the local OutNetDir service.
 
-"OutNet Dir" and is a service that lists other types of distributed services running locally.  "OutNet Dir" does not have to run on the same machine/IP where "OutNet List" is running.  One can choose not to run any local services other than "OutNet List" and disable this service.
+OutNetDir and is a service that lists other types of distributed services running locally.  OutNetDir does not have to run on the same machine/IP where OutNetList is running.  One can choose not to run any local services other than OutNetList and disable this service.
 
-Querying "OutNet List" port will return the following structure:
+Querying OutNetList port will return the following structure:
 
 struct ResponsePocket {
-    ushort dirPort; // port for querying "OutNet Dir" or 0 if it is not running
     vector<HostPort> list;
 };
 
@@ -23,10 +22,18 @@ struct HostPort { // all fields are in the network byte order
     uint16 age;
 };
 
+Fist HostPort in the OutNetList response contains the address of the OutNetDir service.
 
-* Fist HostPort in the OutNetList response can contain the address of the OutNetDir
 * Response data is encoded using application octet-stream mime type
-* Desig it to be transparent and undetectable by your ISP.
+* Design it to be transparent and undetectable by ISPs so it can not be blocked.
 * OutNetDir (or should it be OutNetList?) should allow queries by service type
-* change "running locally" to "run by the same individual or organization"
+* change "running locally" in the text above to "run by the same individual or organization"
 * how will the services provide IDs (public keys) of the service?
+* OutNetList is capable of "opening a port in your router" via UPnP in order to be accessible from outside of your network.
+* OutNetDir is capable of "opening ports in your router" via UPnP in order for your distributed services to accept connections.
+* OutNetList becomes a peer list for your local distributed services.  They can find peers by querying OutNetList.
+* Make a service capable of searching for a "public key <-> IP" mapping.  Or "public key hash" to IP mapping.
+* To support other distributed services we need a library that does public key encryption/signatures or/and open a TLS connection using those keys?
+* OutNet notification service (OutNetBootstrap) that offers to install a corresponding distributed service for P2P communication/file sharing/stream sharing(based on protocol/mime). It has to be able to display/manage other's public keys. (public key = URL)
+* Although OutNetList and OutNetDir run over HTTP to bypass some firewalls and network restrictions, your distributed services do not have to run over HTTP.  However OutNetList and OutNetDir do not support HTTP proxies since being behind a proxy prohibits someone from connecting to you.  This makes you a ghost on OutNet since you will be using other people's resources without providing back.
+
