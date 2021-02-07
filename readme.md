@@ -12,6 +12,7 @@ OutNetDir and is a service that lists other types of distributed services runnin
 
 Querying OutNetList port will return the following information:
 
+```cpp
 struct Response {
     string signature; // PGP/GPG signature
     string publicKey; // PGP/GPG public key
@@ -31,6 +32,7 @@ struct HostPort { // all fields are in the network byte order
     uint16 port;
     uint16 age; // in minutes (up to 45.5 days old) (reserve the values over 65,500 ???)
 };
+```
 
 
 * Response data is binary and is encoded using application octet-stream mime type
