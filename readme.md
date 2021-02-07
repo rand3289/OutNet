@@ -13,18 +13,23 @@ OutNetDir and is a service that lists other types of distributed services runnin
 Querying OutNetList port will return the following information:
 
 struct Response {
-    HostPort OutNetDir; // points to the local OutNetDir service or filled with zeros.
-    HostPort OutNetDirLocal; //is it needed??? non-routable ip of the OutNetDir service (local/behind the router 192.168.x.x or 10.x.x.x)
-    vector<HostPort> list;   // list of remote OutNetList instances
-    string name;      // public key hashes can be used instead.  MD5 might work since hashing a key.
     string signature; // PGP/GPG signature
     string publicKey; // PGP/GPG public key
+    SignedMessage msg; // message sigened by digital signature
 }; // no e-mail field to prevent network-wide spam!
+
+struct SignedMessage{
+    uint32 dateTime;         // time since epoch in seconds (code for overflow using modulo arithmetics)
+    string name;             // Name of person or entity. Public key hashes can be used instead.  MD5 might work since hashing a key.
+    HostPort OutNetDir;      // points to the local OutNetDir service or filled with zeros.
+    HostPort OutNetDirLocal; // is it needed??? non-routable ip of the OutNetDir service (local/behind the router 192.168.x.x or 10.x.x.x)
+    vector<HostPort> list;   // list of remote OutNetList instances
+};
 
 struct HostPort { // all fields are in the network byte order
     uint32 host;
     uint16 port;
-    uint16 age;
+    uint16 age; // in minutes (up to 45.5 days old) (reserve the values over 65,500 ???)
 };
 
 
