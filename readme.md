@@ -7,13 +7,11 @@ OutNet is a distributed directory for distributed internet services running over
 
 ## Proposed services
 
-This document describes two services OutNetList and OutNetDir.  Both services run over HTTP on different port numbers.  Port numbers can change.  Mechanisms/protocols required to implement these services are HTTP 1.1, UPnP and digital signatures.
+This document describes two services OutNetList and OutNetDir.
 
-OutNetList provides a list of IPv4 addresses, corresponding port numbers and ages of nodes participating in the OutNet.  Age is a number of minutes since the server has last been seen on line.  In addition, OutNetList provides information about the local OutNetDir service.
+OutNetDir is a service that lists other types of services you run.  OutNetDir is able to advertise services such as your web site, ftp, ssh as well as P2P or distributed services.  One can choose not to run OutNetDir or any local services other than OutNetList.  OutNetDir does not have to run on the same machine/IP where OutNetList is running.
 
-OutNetDir and is a service that lists other types of distributed services running locally.  OutNetDir does not have to run on the same machine/IP where OutNetList is running.  One can choose not to run OutNetDir or any local services other than OutNetList.
-
-Querying OutNetList port will return one SignedResponse or UnsignedResponse (pseudocode):
+OutNetList provides a list of IPv4 addresses, corresponding port numbers and ages of nodes participating in the OutNet.  Age is a number of minutes since the server has last been seen on line.  In addition, OutNetList provides information about the local OutNetDir service.  When OutNetList starts, it tries to contact all known remote OutNetList and OutNetDir severs. It collects their information and public keys.  Remote OutNetList servers should have the ability to query your server back over the same connection when contacted and send only a "delta" of the information.  Querying OutNetList will return a SignedResponse or an UnsignedResponse described below in pseudocode:
 
 ```cpp
 struct SignedResponse {
@@ -42,31 +40,21 @@ struct HostPort { // all fields are in the network byte order
 ```
 
 
-* OutNetList and OutNetDir run over HTTP to bypass some firewalls and network restrictions.  Your distributed services do not have to run over HTTP.
-* OutNetDir does not support HTTP proxies since being behind a proxy prohibits someone from connecting to you.  OutNetList should have the capability to connect through proxies in the future since it supports exchange of information in addition to queries.
-
-
-* Response data is binary and is encoded using application octet-stream mime type
-* Design it without protocol identifiers (packet/stream format signature) to be less detectable and less likely to be blocked.
-* change "running locally" in the text above to "run by the same individual or organization"
-* There is NO e-mail field shared by any services to prevent network-wide spam.
-
-
-* When OutNetList starts, it tries to contact all known remote OutNetList and OutNetDir severs. It collects their information and public keys.  Remote OutNetList servers should have the ability to query your server back over the same connection when contacted and send only a "delta" of the information.
-* Should OutNetList allow queries by service type?
-* Should OutNetList support querying by timestamp (all information newer than t seconds)?
-* Should OutNetList allow queries by "public key" or "public key hash"?  Make a separate service OutNetID for searching "public key <--> IP" mapping?
-* OutNetList becomes a peer list for your other local distributed services.  They can find peers by querying OutNetList.
+* OutNetList and OutNetDir run over HTTP to bypass some firewalls and network restrictions.  They can run on different port numbers that can change over time.  Your other services do not have to run over HTTP.
+* OutNetList Response data is binary and is encoded using application octet-stream mime type
+* Design OutNet without protocol identifiers (packet/stream format signature) to be less detectable and less likely to be blocked.
+* OutNetDir does not support HTTP proxies since being behind a proxy prohibits someone from connecting to you and your services.  OutNetList should have the capability to connect through proxies if it supports exchange of information in addition to queries.
 * OutNetList can deny connections to outside IPs if frequency of requests coming from them is high.
+* There is NO e-mail field shared by any services to prevent network-wide spam. OutNetMsg should be used (see below).
+* OutNetDir and OutNetList should sign the response with their private key and supply a public key for signature verification.  A signed response must contain a GMT date/time stamp.
 
 
-* OutNetDir and OutNetList can sign the response with their private key and supply a public key for signature verification.  Response must contain a GMT date/time as part of the signed response.  Do not provide "time zone" information to increase privacy.  As another privacy measure, OutNetList and OutNetDir are not required to sign their responses.
-
-
+* Mechanisms/protocols required to implement these services are HTTP 1.1, UPnP and digital signatures.
 * OutNetList and OutNetDir are capable of "opening a port in your router" via UPnP in order to be accessible from outside of your network.
 * In addition OutNetDir is capable of "opening" additional ports for your distributed services to accept connections.
 * OutNetList (and OutNetDir?) can also tell your other local services the "routable/public/external" IP.
-* To support other distributed services OutNet provides a library for signature creation and verification using private and public key. (Your private key does not have to be shared with your other services???)
+* OutNetList has a peer list for your other local distributed services.  They can find peers by querying OutNetList.
+* To support other distributed services OutNet provides a library for signature creation and verification using private and public key. (Your private key does not have to be shared with your other services)
 
 
 * OutNetDir reply should be based on existing standards.  One such possibility is a modified service URL format in "Service Location Protocol" (section 4.1 of rfc2608) (https://en.wikipedia.org/wiki/Service_Location_Protocol).  OutNet URLs have to contain routable (public/external) IP addresses instead of host names.  In addition, one does not want to automatically expose all available local network services on the internet.  Example: service:msg:http://8.8.8.8:4321/messenger?pub_key_hash=
@@ -75,12 +63,21 @@ struct HostPort { // all fields are in the network byte order
 
 ##  Other Base Services
 
-* As described above, OutNet is able to advertise many existing services such as your web site, ftp, ssh and some P2P software, however there is a need for OutNet notification service.  OutNetMsg receives messages addressed to your public key.  If it is from some one you trust (their public key is on your white list), it tries to open the message using the protocol/mime specified in the message.  OutNetMsg can display the message, offer to open the message or file, forward it to one of the services running on your system (for example, by acting as a TCP wrapper) or suggest you install a corresponding protocol handler / service.  For example it might be possible to open a Zoom session this way.  It has to be able to manage other's public keys to be able to put them on your contact list.  Messages from public keys not on your list will be discarded.  Only direct messages will be handled by OutNetMsg.  Messages distributed to multiple recepients have to be handled by corresponding services.
+* There is a need for OutNet notification service.  OutNetMsg (OutNetDirect???) receives messages addressed to your public key.  If it is from some one you trust (their public key is on your white list), it tries to open the message using the protocol/mime specified in the message.  OutNetMsg can display the message, offer to open/save the message or file, forward it to one of the services running on your system (for example, by acting as a TCP wrapper) or suggest you install a corresponding protocol handler / service.  For example it might be possible to open a Zoom session this way.
+It has to be able to manage other's public keys to be able to put them on your contact list.  It should be possible to create "groups" of public keys. It should be able to share public keys and public key lists with others and notify of updates.  Messages from public keys not on your list will be discarded.  Only direct (non-public) messages will be handled by OutNetMsg.  Public messages or publicly shared files should be handled by other services.  HTTPS can be used to ensure end-to-end encryption (no https proxies).
 
 
-* Another significant service is a public key rating system.  You should be able to rate your interactions with owners of a public key.  It might be possible to combine the rating sytem service with OutNetMsg since both manage public keys.  Intention of this service is different than the "Web of trust" (https://en.wikipedia.org/wiki/Web_of_trust).  In OutNet the key comes first and the name is secondary.  The name is not important unless verified through personal communication.  The rating does not state if you know the entity in real life or what type of transaction/interaction you had maintaining privacy.  OutNetList services that sign replys can also be rated.
+* While OutNetMsg takes care of direct communication, there is a need for distributed message board service similar to twitter, parler, reddit or newsgroups.  Public messages and files exchanged by this service (OutNetExchange/OutNetShare) are not addressed to an individual but reach users subscribed on a particular subject.  Subject (thread) can have a hierarchical structure for example: local.USA.SanFrancisco.pizza  similar to a usenet group (section 3.2 in rfc977).  software.x86.linux.games.myBlaster can be used to distribute software.  Alternatively a public key (or it's hash) could become a subject allowing subscription to an individual source.
+OutNetShare tries to duplicate usenet while removing some of it's problems:  Need for a usenet server (not everyone has it).  Use of a SINGLE server (all articles had to be in one place).  Variable article size limits.  NNTP is a text based protocol.  Spam (anyone could post / no signatures / no ratings).
 
 
-* Software Distribution serverice.  It is important for authors to be able to distribute software for any platform without involving a third party.  It can be done using conventional https of sftp protocols advertised by OutNetDir service.  Securyty (virus/trojan free) of the application can be ensured by the rating service.  Rating service lays at the center of trust in a distrubuted system.  Software releases have to be signed by a private key of the author.  Authors's public keys in turn will be rated by users.  Same way you trust in Microsoft, Google or Apple software distribution, individual authors will have to earn your thrust in their public keys.
+* Another significant service is a public key rating system.  Rating service lays at the center of trust in a distrubuted system.  You should be able to rate your interactions with owners of a public key.  Intention of this service is different than the "Web of trust" (https://en.wikipedia.org/wiki/Web_of_trust).  In OutNet the key comes first and the name is secondary.  The name is not important unless verified through personal communication.  The rating does not state if you know the entity or entity's name in real life.  It rates a specific type of transaction/interaction you had.  For example an instance of a running OutNetList service can be rated.  An internet purchase of an item description signed by a key can be rated.  A software/release signed by a key can be rated.  Securyty (virus/trojan free) of the content can be ensured by the rating service.  Software or content releases have to be signed by a private key of the author.  Authors's public keys in turn will be rated by users.  The way you trust in Microsoft, Google or Apple's content distribution system, individual authors have to earn your thrust in their public keys.  Rating should always contain a subject as described in OutNetExchange since an owner of a key can provide multiple services. For example sell items or services and at the same time distribute free software.  His web store should not be rated highly just because he makes great freeware video games.
 
-* Authentication service is needed to enable authentication on any conventional (server based) internet resource using your public/private key pair.
+
+* OutNetSearch service is used to index information (subjects+content) distributed by local services and share it with other search services or local distributed services.  For example, query OutNetList by service type / by timestamp (all information newer than t seconds) / by other OutNetList service "public key" or "public key hash".  The later will allow you to find/access the services a particular key owner provides.
+
+
+* Authentication service is needed to enable seamless authentication on any conventional (server based) internet resource using your public/private key pair.  Similar to authentication via amazon/google/yahoo/facebook.
+
+
+* Cryptocurrency payment system?
