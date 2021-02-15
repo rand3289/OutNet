@@ -1,15 +1,17 @@
 ##  OutNet - you are the internet!
 
-As computers get faster the need for centralized services should decrease, yet major corporations push services into clouds to maintain control.  Enslavement by facebook, twitter, instagram, search engines, cloud providers and software stores can be avoided by distributing the equivalent of the server parts of these services among users.  Everyone can run a tiny search engine or a tiny cloud at home.  How will the other users find your services?  Domain names allow others to find your services on the internet.  The problem with using domain namesor host names is that they can be shut down by third parties.  The alternative is the OutNet.  Instead of a domain or a user name, a public key from a locally generated public/private key pair is used to identify services.  The goals of OutNet is to decentralize the internet making it resistant to control and sensorship.  A small bonus is you no longer have to pay to maintain your domain name.  OutNet provides complete anonymity.  Your real name is no longer needed to provide services on the internet.  Your IP address however will be visible to the world unless used in conjunction with VPN or TOR.
+As computers get faster the need for centralized services should decrease, yet major corporations push services into clouds to maintain control.  Enslavement by facebook, twitter, instagram, search engines, cloud providers and software stores can be avoided by distributing the equivalent of the server parts of these services among users.  Everyone can run a tiny search engine or a tiny cloud at home.  How will the other users find your services?  Domain names allow others to find your services on the internet.  The problem with using domain namesor host names is that they can be shut down by third parties.  
 
-OutNet is a distributed directory for distributed internet services running over TCP/IPv4.  It is designed to find distributed services on the internet.  Services such as web pages, ftp servers, messengers, forums, video conferences, "Distributed Rating System" and others.  OutNet helps you find other nodes providing same type of service.  However, it is your responsibility as a service provider to make your service work with other nodes.
+
+The alternative is the OutNet.  OutNet is a distributed directory designed to find other conventional or distributed services on the internet.  Services such as web pages, ftp servers, messengers, forums, video conferences, P2P and distributed services.  Another goals of OutNet is to decentralize the internet making it resistant to control and sensorship.  A small bonus is you no longer have to pay to maintain your domain name.  OutNet provides anonymity.  Instead of a domain or a user name, a public key from a locally generated public/private key pair is used to identify you, your services and services provided by others.  Your real name is no longer needed to provide or consume services on the internet.  Your IP address however will be visible to the world unless used in conjunction with a VPN.
 
 
 ## Proposed services
 
-This document describes two services OutNetList and OutNetDir.
+This document describes two services OutNetList and OutNetDir.  Both services run on your machines.  One can choose not to run OutNetDir or any local services other than OutNetList.  
 
-OutNetDir is a service that lists other types of services you run.  OutNetDir is able to advertise services such as your web site, ftp, ssh as well as P2P or distributed services.  One can choose not to run OutNetDir or any local services other than OutNetList.  OutNetDir does not have to run on the same machine/IP where OutNetList is running.
+OutNetDir is a service that lists other types of services you run such as your web site, P2P or distributed services.  OutNetDir can be based on existing standards.  One such possibility is a modified service URL format in "Service Location Protocol" (section 4.1 of rfc2608) (https://en.wikipedia.org/wiki/Service_Location_Protocol).  OutNet URLs have to contain routable (public/external) IP addresses instead of host names.  In addition, one does not want to automatically expose all available local network services on the internet.  Example: service:msg:http://8.8.8.8:4321/messenger?pub_key_hash=  
+
 
 OutNetList provides a list of IPv4 addresses, corresponding port numbers and ages of nodes participating in the OutNet.  Age is a number of minutes since the server has last been seen on line.  In addition, OutNetList provides information about the local OutNetDir service.  When OutNetList starts, it tries to contact all known remote OutNetList and OutNetDir severs. It collects their information and public keys.  Remote OutNetList servers should have the ability to query your server back over the same connection when contacted and send only a "delta" of the information.  Querying OutNetList will return a SignedResponse or an UnsignedResponse described below in pseudocode:
 
@@ -44,6 +46,8 @@ struct HostPort { // all fields are in the network byte order
 * OutNetList Response data is binary and is encoded using application octet-stream mime type
 * Design OutNet without protocol identifiers (packet/stream format signature) to be less detectable and less likely to be blocked.
 * OutNetDir does not support HTTP proxies since being behind a proxy prohibits someone from connecting to you and your services.  OutNetList should have the capability to connect through proxies if it supports exchange of information in addition to queries.
+* OutNetDir should avoid including itself in the service list, however OutNetList should be included if available.
+* OutNetDir does not have to run on the same machine/IP where OutNetList is running.
 * OutNetList can deny connections to outside IPs if frequency of requests coming from them is high.
 * There is NO e-mail field shared by any services to prevent network-wide spam. OutNetMsg should be used (see below).
 * OutNetDir and OutNetList should sign the response with their private key and supply a public key for signature verification.  A signed response must contain a GMT date/time stamp.
@@ -55,10 +59,6 @@ struct HostPort { // all fields are in the network byte order
 * OutNetList (and OutNetDir?) can also tell your other local services the "routable/public/external" IP.
 * OutNetList has a peer list for your other local distributed services.  They can find peers by querying OutNetList.
 * To support other distributed services OutNet provides a library for signature creation and verification using private and public key. (Your private key does not have to be shared with your other services)
-
-
-* OutNetDir reply should be based on existing standards.  One such possibility is a modified service URL format in "Service Location Protocol" (section 4.1 of rfc2608) (https://en.wikipedia.org/wiki/Service_Location_Protocol).  OutNet URLs have to contain routable (public/external) IP addresses instead of host names.  In addition, one does not want to automatically expose all available local network services on the internet.  Example: service:msg:http://8.8.8.8:4321/messenger?pub_key_hash=
-* OutNetDir should avoid including itself in the service list, however OutNetList should be included if available.
 
 
 ##  Other Base Services
