@@ -13,34 +13,29 @@ This document describes two services OutNetList and OutNetDir.  Both services ru
 OutNetDir is a service that lists other types of services you run such as your web site, P2P or distributed services.  OutNetDir can be based on existing standards.  One such possibility is a modified service URL format in "Service Location Protocol" (section 4.1 of rfc2608) (https://en.wikipedia.org/wiki/Service_Location_Protocol).  OutNet URLs have to contain routable (public/external) IP addresses instead of host names.  In addition, one does not want to automatically expose all available local network services on the internet.  Example: service:msg:http://8.8.8.8:4321/messenger?pub_key_hash=  
 
 
-OutNetList provides a list of IPv4 addresses, corresponding port numbers and ages of nodes participating in the OutNet.  Age is a number of minutes since the server has last been seen on line.  In addition, OutNetList provides information about the local OutNetDir service.  When OutNetList starts, it tries to contact all known remote OutNetList and OutNetDir severs. It collects their information and public keys.  Remote OutNetList servers should have the ability to query your server back over the same connection when contacted and send only a "delta" of the information.  Querying OutNetList will return a SignedResponse or an UnsignedResponse described below in pseudocode:
+OutNetList provides a list of IPv4 addresses, corresponding port numbers and ages of nodes participating in the OutNet.  Age is a number of minutes since the server has last been seen on line.  In addition, OutNetList provides information about the local OutNetDir service.  When OutNetList starts, it tries to contact some of the known remote OutNetList and OutNetDir severs. It collects their information and public keys.  Remote OutNetList servers should have the ability to query your server back over the same connection when contacted and send only a "delta" of the information.  Requests to OutNetList should include a range of items to return ex: [0-900] inclusive.  Querying OutNetList will return a response described below in pseudocode:
 
 ```cpp
-struct SignedResponse {
-    string publicKey;  // PGP/GPG public key
-    string signature;  // PGP/GPG signature
-    SignedMessage msg; // message sigened by the digital signature
+struct Response {
+    string publicKey;  // PGP/GPG public key - send this first so that remote can close connection if key is black listed
+    SignedMessage msg; // un-encrypted message signed by the digital signature
+    string signature;  // PGP/GPG signature - send this last so it can be computed while data is being sent
 };
 
 struct SignedMessage {
-    uint32 dateTime;         // time since epoch in seconds of when this message was created
-    string name;             // Name of person or entity. Public key hashes can be used instead.  MD5 might work since hashing a key.
+    uint64 dateTime;         // seconds from epoch to this message creation time (use UTC time. No time zone info == GMT???)
     HostPort OutNetDir;      // points to the OutNetDir service or filled with zeros. (port=0 if unused)
-    vector<HostPort> list;   // list of remote OutNetList instances
-};
-
-struct UnsignedResponse {
-    HostPort OutNetDir;      // points to the local OutNetDir service or filled with zeros.
     vector<HostPort> list;   // list of remote OutNetList instances
 };
 
 struct HostPort { // all fields are in the network byte order
     uint32 host;  // IPv4 address
     uint16 port;  // IPv4 port number (1-65535, 0=reserved)
-    uint16 age;   // in minutes (up to 45.5 days old) (reserve the values over 65,500   ex: 0xFFFE = "coming soon", 0xFFFF = "do not use")
+    uint16 age;   // in minutes (up to 45.5 days old) (reserve values over 65,500  ex: 0xFFFE = "IO error", 0xFFFD = "duplicate signature", 0xFFFC="coming soon", 0xFFFB="broken signature", 0xFFFA="unresponsive", 0xFFF9="wrong protocol", 0xFFF8="untrusted", etc...)
 };
 ```
 
+OutNetList can be queried to return a list of discovered OutNetDir services and their EXPECTED public keys.  OutNetList and OutNetDir can have different public keys.
 
 * OutNetList and OutNetDir run over HTTP to bypass some firewalls and network restrictions.  They can run on different port numbers that can change over time.  Your other services do not have to run over HTTP.
 * OutNetList Response data is binary and is encoded using application octet-stream mime type
@@ -50,7 +45,7 @@ struct HostPort { // all fields are in the network byte order
 * OutNetDir does not have to run on the same machine/IP where OutNetList is running.
 * OutNetList can deny connections to outside IPs if frequency of requests coming from them is high.
 * There is NO e-mail field shared by any services to prevent network-wide spam. OutNetMsg should be used (see below).
-* OutNetDir and OutNetList should sign the response with their private key and supply a public key for signature verification.  A signed response must contain a GMT date/time stamp.
+* OutNetDir and OutNetList should sign the response with their private key and supply a public key for signature verification.  A signed response must contain a UTC(GMT) date/time stamp.
 
 
 * Mechanisms/protocols required to implement these services are HTTP 1.1, UPnP and digital signatures.
@@ -79,10 +74,65 @@ A hybrid model can be implemented where large files are distributed using BitTor
 * Another significant service is a public key rating system.  Rating service lays at the center of trust in a distrubuted system.  You should be able to rate your interactions with owners of a public key.  Intention of this service is different than the "Web of trust" (https://en.wikipedia.org/wiki/Web_of_trust).  In OutNet the key comes first and the name is secondary.  The name is not important unless verified through personal communication.  The rating does not state if you know the entity or entity's name in real life.  It rates a specific type of transaction/interaction you had.  For example an instance of a running OutNetList service can be rated.  An internet purchase of an item description signed by a key can be rated.  A software/release signed by a key can be rated.  Securyty (virus/trojan free) of the content can be ensured by the rating service.  Software or content releases have to be signed by a private key of the author.  Authors's public keys in turn will be rated by users.  The way you trust in Microsoft, Google or Apple's content distribution system, individual authors have to earn your thrust in their public keys.  Rating should always contain a subject as described in OutNetExchange since an owner of a key can provide multiple services. For example sell items or services and at the same time distribute free software.  His web store should not be rated highly just because he makes great freeware video games.
 
 
-* OutNetSearch service is used to index information (subjects+content) distributed by local services and share it with other search services or local distributed services.  For example, query data collected by OutNetList by service type / by timestamp (all information newer than t seconds) / by other OutNetList service "public key" or "public key hash".  The later will allow you to find/access the services a particular public key owner provides.
+* OutNetSearch service is used to index information (keys, subjects, content) distributed by local services and share it with other search services or local distributed services.  For example, query data collected by local OutNetList.  Query local or remote OutNetDir services.  Return node IP:port information by service type or timestamp.  Return OutNetList service IP:port by "public key".  The later will allow you to find/access the services a particular public key owner provides.
 
 
 * Authentication service is needed to enable seamless authentication on any conventional (server based) internet resource using your public/private key pair.  Similar to authentication via amazon/google/yahoo/facebook.
 
 
 * Cryptocurrency payment system?
+
+
+----------------------------------------  Feb 16, 2021  ---------------------------------------
+Should there be ONE service named OutNet?
+Should the OutNetList SignedMessage include a list of services instead of pointing to OutNetDir?
+
+Types of responses (list of IPs are always limited by query's range):
+* list of local services
+* list of IP:port:age
+* list of local services + list of IP:port:age
+should the following be unsigned responses?
+* list of [IP:port:age + remote public key + list of remote services] where keys are NOT empty.
+* list of [IP:port:age + remote public key + one remote service] query by service type. (return list of remote services?)
+* list of [IP:port:age + one remote service] query by service type.
+* [IP:port:age + list of remote services] query by public key.
+* list of IP:port:age.  query by age (age range?)
+
+
+* use a bit field for what to return in response? call it query type:
+    + local public key  (LKEY)
+    + current datetime (TIME)
+    + local service list (LSVC)
+    + local service list limited by service type/protocol (LSVCL)  [REMOVE???]
+    + counts of filtered records, IP:port:age, non-null public keys, local services, remote services etc... (COUNTS)
+
+    + IP   (IP)
+    + port (PORT)
+    + age  (AGE)
+    + remote public key (RKEY)
+    + remote service list (RSVC)
+    + remote service list limited by service type/protocol (RSVCL)
+
+    + signature (sign the whole message) (SIGN) (setting SIGN sets LKEY bit)
+
+* accept a list of parameters limiting a query:
+    + index range of (IP,PORT,AGE,RKEY,RSVC) ex: [0-500] to be able to retrieve n records at a time (RANGE)
+    + range of age?
+    + remote public key NOT empty ( can there be multiple keys? use key count?) (RKEYC)
+    + remote service list NOT empty ( use Remote Service Count) (RSVCC)
+    + local service list NOT empty  ( use Local  Service Count) (LSVCC) [REMOVE???]
+
+    + remote service type/protocol exact string match
+    + local service type/protocol exact string match [REMOVE???]
+    + remote public key exact string match
+
+* For operators greater/less/equal allowed operands are RANGE, AGE, RKEYC, IP, PORT, RSVCC, [LSVCC]
+* For operator string equal allowed operands are RKEY, RSVC, [LSVC]
+* Examples: RKEYC_GT_0 or LSVCC_LT_10 or RSVC_EQ_HTTP or FILTER=RANGE_GT_500,RANGE_LT_900
+* Create actual methods to filter records named RKEYC_GT(uint32 count) etc... switch() on the name of the function as if it was a uint64.
+
+* "query type" defines response format
+* Query parameters define the subset of the returned information
+* Requiring "query type" allows for protocol extension/versioning.
+* Handle "query type" internally as a 64 bit unsigned int.
+* If any of the received bit fields or query parameters are not defined, they are ignored
