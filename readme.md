@@ -8,30 +8,30 @@ The alternative is the OutNet.  OutNet is a distributed directory designed to fi
 
 ## Proposed service
 
-OutNe is a service that runs on your machine.  It gathers and provides a list of IPv4 addresses, corresponding port numbers and ages of nodes participating in the OutNet.  Age is a number of minutes since the server has last been seen on line.  In addition, OutNet lists other types of services you run such as your web site, P2P or distributed services.  OutNet can be based on existing standards.  One such possibility is a modified service URL format in "Service Location Protocol" (section 4.1 of rfc2608) (https://en.wikipedia.org/wiki/Service_Location_Protocol).  OutNet URLs have to contain routable (public/external) IP addresses instead of host names.  In addition, one does not want to automatically expose all available local network services on the internet.  Example: service:msg:http://8.8.8.8:4321/messenger?pub_key_hash=  
+OutNet is a service that runs on your machine.  It gathers and provides a list of IPv4 addresses, corresponding port numbers and ages of nodes participating in the OutNet.  Age is a number of minutes since the server has last been seen on line.  In addition, OutNet lists other types of services you run such as your web site, P2P or distributed services.  OutNet can be based on existing standards.  One such possibility is a modified service URL format in "Service Location Protocol" (section 4.1 of rfc2608) (https://en.wikipedia.org/wiki/Service_Location_Protocol).  OutNet URLs have to contain routable (public/external) IP addresses instead of host names.  Example: service:msg:http://8.8.8.8:4321/messenger?pub_key_hash=    OutNet is different from SLP since one does not want to automatically expose ALL available local services on the internet.
 
-  When OutNet starts, it tries to contact some of the known remote OutNet severs. It collects their information such as public keys and list of services they are advertising.  Remote OutNet servers should have the ability to query your server back over the same connection when contacted and send only a "delta" of the information.  Requests to OutNet should include a range of items to return ex: [0-900] inclusive.  Querying OutNet will return a response described below in pseudocode:
+When OutNet starts, it tries to contact some of the known remote OutNet severs. It collects their information such as public keys and list of services they are advertising.  Remote OutNet servers should have the ability to query your server back over the same connection when contacted and send only a "delta" of the information.  Requests to OutNet should include a range of items to return ex: [0-900] inclusive.  Querying OutNet will return a response described below in pseudocode:
 
 ```cpp
 struct Response {
-    string publicKey;        // PGP/GPG public key - send this first so that remote can close connection if key is black listed
-    uint64 dateTime;         // seconds from epoch to this message creation time (UTC/GMT).  Prevents replay attacks with old data.
-    vector<string> services; // local services we are trying to advertise
-    Statistics counts;       // counts of filtered records, IP:port:age, non-null public keys, local services, remote services etc.
-    vector<HostInfo> list;   // list of remote OutNet instances
-    string signature;        // PGP/GPG whole message signature - send this last so it can be computed while data is being sent
+    string publicKey;         // PGP/GPG public key - send this first so that remote can close connection if key is black listed
+    uint64 dateTime;          // seconds from epoch to this message creation time (UTC/GMT).  Prevents replay attacks with old data.
+    vector<string> services;  // local services we are trying to advertise
+    Statistics counts;        // counts of filtered records, IP:port:age, non-null public keys, local services, remote services etc.
+    vector<HostInfo> list;    // list of remote OutNet instances
+    string signature;         // PGP/GPG whole message signature - send this last so it can be computed while data is being sent
 };
 
-struct HostInfo { // all fields are in the network byte order
-    uint32 host;  // IPv4 address
-    uint16 port;  // IPv4 port number (1-65535, 0=reserved)
-    uint16 age;   // in minutes (up to 45.5 days old) (reserve values over 65,500  ex: 0xFFFE = "IO error", 0xFFFD = "duplicate signature", 0xFFFC="coming soon", 0xFFFB="broken signature", 0xFFFA="unresponsive", 0xFFF9="wrong protocol", 0xFFF8="untrusted", etc...)
-    string key;   // remote OutNet service' public key
+struct HostInfo {             // all fields are in the network byte order
+    uint32 host;              // IPv4 address
+    uint16 port;              // IPv4 port number (1-65535, 0=reserved)
+    uint16 age;               // in minutes (up to 45.5 days old)
+    string key;               // remote OutNet service' public key
     vector<string> rservices; // remote services
 };
 ```
 
-
+* Reserve age values over 65500  ex: 0xFFFE = "IO error", 0xFFFD = "duplicate signature", 0xFFFC="coming soon", 0xFFFB="broken signature", 0xFFFA="unresponsive", 0xFFF9="wrong protocol", 0xFFF8="untrusted", etc...
 * OutNet runs over HTTP to bypass some firewalls and network restrictions.  It can run on different port numbers that can change over time.  Your other services do not have to run over HTTP.
 * OutNet response data is binary and is encoded using application octet-stream mime type
 * Design OutNet without protocol identifiers (packet/stream format signature) to be less detectable and less likely to be blocked.
@@ -47,7 +47,7 @@ struct HostInfo { // all fields are in the network byte order
 * It can "open" additional ports for your distributed services to accept connections.
 * OutNet can tell your other local services the "routable/public/external" IP.
 * OutNet has a peer list for your other local distributed services.  They can find peers by querying it.
-* To support other distributed services OutNet provides a library for signature creation and verification using private and public key. (Your private key does not have to be shared with your other services)
+* To support other distributed services OutNet provides a library for signature creation and verification using private and public key.  Your private key does not have to be shared with your other services.
 
 
 ## Querying OutNet service
@@ -64,7 +64,7 @@ One way OutNet can be queried is to return a list of discovered OutNet services 
 * [IP:port:age + list of remote services]  query by public key.
 
 
-* Returned information is specified by passing a bit field called SELECTION:
+* Returned information is specified by passing a bit field called SELECT represented by a number:
     + local public key  (LKEY)
     + current datetime (TIME)
     + local service list (LSVC)
@@ -80,7 +80,7 @@ One way OutNet can be queried is to return a list of discovered OutNet services 
 
     + signature (sign the whole message) (SIGN)
 
-* Returned records are limited by a parameter called FILTER:
+* Returned records are limited by a parameter string called FILTER:
     + range of HostInfo records ex: [0-500] to be able to retrieve n records at a time (RANGE)
     + age range of HostInfo records
     + remote public key NOT empty (use RKEYC - Remote Key Count.  Can there be multiple keys?)
@@ -94,13 +94,13 @@ One way OutNet can be queried is to return a list of discovered OutNet services 
 
 * For operators greater/less/equal allowed operands are RANGE, AGE, RKEYC, IP, PORT, RSVCC, [LSVCC]
 * For operator string equal allowed operands are RKEY, RSVC, LSVC
-* Examples: RKEYC_GT_0 or LSVCC_LT_10 or RSVC_EQ_HTTP or FILTER=RANGE_GT_500,RANGE_LT_900
+* REST call (http get) Example: SELECT=14&FILTER=RANGE_GT_500,RANGE_LT_900,RSVC_EQ_HTTP,RKEYC_GT_0
 * Create actual methods to filter records named RKEYC_GT(uint32 count) etc... switch() on the name of the function as if it was a uint64.
 
-* SELECTION defines response format
 * Query parameters define the subset of the returned information
-* Requiring SELECTION allows for protocol extension/versioning.
-* Handle SELECTION bit field internally as a 64 bit unsigned int.
+* SELECT defines response format
+* SELECT allows for protocol extension/versioning.
+* Internally handle SELECT bit field as a 64 bit unsigned int.
 * If any of the received bit fields or query parameters are not defined, they are ignored
 
 
