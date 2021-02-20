@@ -31,6 +31,8 @@ struct HostInfo {             // all fields are in the network byte order
 };
 ```
 
+Since one does not want to expose ALL available local services on the internet, OutNet does not discover local services.  Local services can register with OutNet or be added via configuration files.  Service descriptions have to contain routable (public/external) IP addresses instead of host names.  If OutNet determines your service is behind a NAT router and IP is a non-routable IP, it will replace your non-routable IP with it's own external routable IP when listing your service.  In addition, OutNet will open a port in the router via UPnP protocol that will allow your service to accept connections.
+
 * Mechanisms/protocols required to implement OutNet are HTTP 1.1, UPnP and digital signatures (RSA or BSD signify/minisign).
 * OutNet runs as a REST service over HTTP to bypass some firewalls and network restrictions.  It can run on different port numbers that can change over time.  Your other services do not have to run over HTTP or TCP.
 * OutNet can sign responses with a private key and supply a public key for signature verification.
@@ -45,9 +47,6 @@ struct HostInfo {             // all fields are in the network byte order
 
 
 ## Describing services
-
-Since one does not want to expose ALL available local services on the internet, OutNet does not discover local services.  Local services can register with OutNet or be added via configuration files.  Service descriptions have to contain routable (public/external) IP addresses instead of host names.  If OutNet determines your service is behind a NAT router and IP is a non-routable IP, it will replace your non-routable IP with it's own external routable IP when listing your service.  In addition, OutNet will open a port in the router via UPnP protocol that will allow your service to accept connections.
-
 
 OutNet can be based on existing standards.  For example, list of services can be based on modified service description format of DNS-SD (section 4.1.2 of rfc6763), SLP (section 4.1 of rfc2608), Bonjour, SSDP or MDNS.  Service description has to contain at least the following fields: type of service (ex: printer), actual protocol (ex:ipp), IP, port number, user defined name/description/path/attribute.  
 
