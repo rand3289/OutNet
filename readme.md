@@ -31,6 +31,21 @@ struct HostInfo {             // all fields are in the network byte order
 };
 ```
 
+* Mechanisms/protocols required to implement OutNet are HTTP 1.1, UPnP and digital signatures (RSA or BSD signify/minisign).
+* OutNet runs as a REST service over HTTP to bypass some firewalls and network restrictions.  It can run on different port numbers that can change over time.  Your other services do not have to run over HTTP or TCP.
+* OutNet can sign responses with a private key and supply a public key for signature verification.
+* OutNet can deny connections to external/routable IPs if frequency of requests coming from them is high.
+* Any service can register itself with OutNet by signing it's URL with the same private key OutNet is using and sending the signed URL to the local instance of OutNet.
+* Local services can register with OutNet using multicast at which point they receive OutNet's unicast address for querying.
+* OutNet has a peer list for your other local services.  They can find their peers by querying a local OutNet instance.
+* OutNet should include itself in the service list.  This advertises the external/routable/public IP for other services to use.
+* OutNet is capable of "opening a port in your router" via UPnP in order to be accessible from outside of your network.
+* It can "open" additional ports for your distributed services to accept connections.
+* To support other distributed services OutNet provides a library for signature creation uning private key and verification using public key.  Your private key does not have to be shared with your other services.
+
+
+## Describing services
+
 Since one does not want to expose ALL available local services on the internet, OutNet does not discover local services.  Local services can register with OutNet or be added via configuration files.  Service descriptions have to contain routable (public/external) IP addresses instead of host names.  If OutNet determines your service is behind a NAT router and IP is a non-routable IP, it will replace your non-routable IP with it's own external routable IP when listing your service.  In addition, OutNet will open a port in the router via UPnP protocol that will allow your service to accept connections.
 
 
@@ -45,19 +60,6 @@ Since no host names are used, service description encoding can be limited to pri
 Examples: "printer:lpr:8.8.8.8:54321:2nd floor printer"  
 Same device, different protocol:  "printer:ipp:8.8.8.8:54321:2nd floor printer"  
 Key-value pairs are described in rfc6763 section 6.  
-
-
-* Mechanisms/protocols required to implement OutNet are HTTP 1.1, UPnP and digital signatures (RSA or BSD signify/minisign).
-* OutNet runs as a REST service over HTTP to bypass some firewalls and network restrictions.  It can run on different port numbers that can change over time.  Your other services do not have to run over HTTP or TCP.
-* OutNet can sign responses with a private key and supply a public key for signature verification.
-* OutNet can deny connections to external/routable IPs if frequency of requests coming from them is high.
-* Any service can register itself with OutNet by signing it's URL with the same private key OutNet is using and sending the signed URL to the local instance of OutNet.
-* Local services can register with OutNet using multicast at which point they receive OutNet's unicast address for querying.
-* OutNet has a peer list for your other local services.  They can find their peers by querying a local OutNet instance.
-* OutNet should include itself in the service list.  This advertises the external/routable/public IP for other services to use.
-* OutNet is capable of "opening a port in your router" via UPnP in order to be accessible from outside of your network.
-* It can "open" additional ports for your distributed services to accept connections.
-* To support other distributed services OutNet provides a library for signature creation uning private key and verification using public key.  Your private key does not have to be shared with your other services.
 
 
 ## OutNet service query parameters
