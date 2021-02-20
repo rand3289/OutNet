@@ -65,32 +65,33 @@ Key-value pairs are described in rfc6763 section 6.
 OutNet can be queried to return local info and/or a filtered list of discovered remote OutNet services.  For example a query can limit the results by service type, availability of "remote public keys" or what fields are included in response.  Requests to OutNet can include a range of items to return ex: [0-900] inclusive.  Records in the response are always ordered by age.
 
 Returned fields are specified by passing a "bit field" called SELECT represented by a number:
-    * local public key  (LKEY=1)
-    * current datetime (TIME=2)
-    * local service list (LSVC=4)
-    * counts of filtered records, IP:port:age, non-null public keys, local services, remote services etc... (COUNTS=8)
-    * IP   (IP=16)
-    * port (PORT=32)
-    * age  (AGE=64)
-    * remote public key (RKEY=128)
-    * remote service list (RSVC=256)
-    * signature (sign the whole message) (SIGN=512)
-    * remote service list filtered by service type/protocol (RSVCL=1024)
-    * local service list filtered by service type/protocol (LSVCL=2048)
+* local public key  (LKEY=1)
+* current datetime (TIME=2)
+* local service list (LSVC=4)
+* counts of filtered records, IP:port:age, non-null public keys, local services, remote services etc... (COUNTS=8)
+* IP   (IP=16)
+* port (PORT=32)
+* age  (AGE=64)
+* remote public key (RKEY=128)
+* remote service list (RSVC=256)
+* signature (sign the whole message) (SIGN=512)
+* remote service list filtered by service type/protocol (RSVCL=1024)
+* local service list filtered by service type/protocol (LSVCL=2048)
 
 
 Where as fields are controlled by SELECT parameter, returned records are limited by FILTER parameter:
-    * local service type/protocol exact string match
-    * range of HostInfo records ex: [0-500] to be able to retrieve n records at a time (RANGE)
-    * IP range or equal
-    * port range or equal
-    * age range of HostInfo records
-    * remote public key count (RKEYC) (one key per service is allowed but OutNet can receive different keys from other OutNet services)
-    * remote public key exact string match
-    * remote service list count (RSVCC)
-    * remote service type/protocol exact string match
+* local service type/protocol exact string match
+* range of HostInfo records ex: [0-500] to be able to retrieve n records at a time (RANGE)
+* IP range or equal
+* port range or equal
+* age range of HostInfo records
+* remote public key count (RKEYC) (one key per service is allowed but OutNet can receive different keys from other OutNet services)
+* remote public key exact string match
+* remote service list count (RSVCC)
+* remote service type/protocol exact string match
 
 
+Notes
 * For numeric operators greater/less/equal allowed operands are an immediate plus one of RANGE, AGE, RKEYC, IP, PORT, RSVCC
 * For operator "string equal" allowed operands are a constant string plust one of RKEY, RSVC, LSVC
 * REST call (http get) Example: SELECT=2036&FILTER=RANGE_GT_500,RANGE_LT_900,RSVC_EQ_HTTP,RKEYC_GT_0
