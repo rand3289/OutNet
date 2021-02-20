@@ -14,12 +14,12 @@ When OutNet starts, it tries to contact some of the known remote OutNet severs. 
 
 ```cpp
 struct Response {
-    string publicKey;         // PGP/GPG public key - send this first so that remote can close connection if key is black listed
+    string publicKey;         // RSA public key - send this first so that remote can close connection if key is black listed
     uint64 dateTime;          // seconds from epoch to this message creation time (UTC/GMT).  Prevents replay attacks with old data.
     vector<string> services;  // local services we are trying to advertise
     Statistics counts;        // counts of total IP:port:age records, non-null public keys, local services, remote services etc.
     vector<HostInfo> list;    // list of remote OutNet instances
-    string signature;         // PGP/GPG whole message signature - send this last so it can be computed while data is being sent
+    string signature;         // RSA whole message digital signature - send this last so it can be computed while data is being sent
 };
 
 struct HostInfo {             // all fields are in the network byte order
@@ -34,13 +34,20 @@ struct HostInfo {             // all fields are in the network byte order
 Since one does not want to expose ALL available local services on the internet, OutNet does not discover local services.  Local services can register with OutNet or be added via configuration files.  Service descriptions have to contain routable (public/external) IP addresses instead of host names.  If OutNet determines your service is behind a NAT router and IP is a non-routable IP, it will replace your non-routable IP with it's own external routable IP when listing your service.  In addition, OutNet will open a port in the router via UPnP protocol that will allow your service to accept connections.
 
 
-OutNet can be based on existing standards.  For example, list of services can be based on modified service URL format of DNS-SD (section 4.1.2 of rfc6763), SLP (section 4.1 of rfc2608), Bonjour, SSDP or MDNS.  Service description has to contain at least the following: type of service (ex: printer), actual protocol (ex:ipp), internet protocol (tcp or udp), service instance description, IP and port number.  Since no host names are used, service description encoding can be limited to printable ASCII characters with the exception of service instance description where UTF-8 can be used. IP:port can be binary.  Maximum field lengths are TBD.  DNS-SD limits service names to 15 characters.  Instead of (logical) type of service + protocol, one can use a type + subtype or type+class.  Alternatively attributes can describe the service via key-value pairs.  Other format possibilities are "service priority", "extended attribute", "path" or type of data (block/stream/file/list/key-value pair/etc...)  
-Examples: "printer:lpr:8.8.8.8:4321:2nd floor printer"  
-Here is the same device, different protocol:  "printer:ipp:8.8.8.8:4321:2nd floor printer"  
+OutNet can be based on existing standards.  For example, list of services can be based on modified service description format of DNS-SD (section 4.1.2 of rfc6763), SLP (section 4.1 of rfc2608), Bonjour, SSDP or MDNS.  Service description has to contain at least the following fields: type of service (ex: printer), actual protocol (ex:ipp), IP, port number, user defined name/description/path/attribute.  
+
+Other possible fields: version, internet protocol (tcp or udp), piority[0-9] or type of data (service/device/block/stream/file/messages/image/audio/video/conference/game/xml/json/yaml/soap/rpc/wsdl/feed(structured data)/list/key-value/url/binary/text/unicode/ascii/base64/uuencoded/printer/speaker/display/blockchain/cryptocurrency/geolocation/weather/virtualreality/time).  
+
+Maximum field lengths are TBD.  DNS-SD limits service names to 15 characters.  Proposed lengths: priority(char[1]), service class(char[16]), protocol(char[16]), ipproto(char[3]), IP(char[15]), port(char[5]), description or path(char[32]).  Maximum service description in the range of 96 - 128 bytes.
+
+Since no host names are used, service description encoding can be limited to printable ASCII characters.  
+
+Examples: "printer:lpr:8.8.8.8:54321:2nd floor printer"  
+Same device, different protocol:  "printer:ipp:8.8.8.8:54321:2nd floor printer"  
 Key-value pairs are described in rfc6763 section 6.  
 
 
-* Mechanisms/protocols required to implement this service are HTTP 1.1, UPnP and digital signatures.
+* Mechanisms/protocols required to implement OutNet are HTTP 1.1, UPnP and digital signatures (RSA or BSD signify/minisign).
 * OutNet runs as a REST service over HTTP to bypass some firewalls and network restrictions.  It can run on different port numbers that can change over time.  Your other services do not have to run over HTTP or TCP.
 * OutNet can sign responses with a private key and supply a public key for signature verification.
 * OutNet can deny connections to external/routable IPs if frequency of requests coming from them is high.
