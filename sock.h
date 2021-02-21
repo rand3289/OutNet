@@ -1,28 +1,36 @@
 #ifndef SOCK_H_INCLUDED
 #define SOCK_H_NCLUDED
 
-#include <windows.h>
+#ifdef WIN32
+    #include <winsock2.h>
+    typedef SOCKADDR_IN sockaddr_in;
+#else // posix
+    #include <netinet/in.h> // sockaddr_in
+    typedef int SOCKET;
+#endif
 
-class Sock {
-	WSADATA wsd;
+#define ANY_PORT 0
+//typedef unsigned long IP; // sockaddr_in::sin_addr.s_addr defines it as "unsigned long"
+
+
+class Sock { // TCP socket
 	SOCKET s;
-	SOCKADDR_IN ip;	// used for a server
-	char peek; // used in readLine()
+	sockaddr_in ip;	// ip.sin_port can be used to find the server port if listen(ANY_PORT) was used
+	char peek;      // used in readLine()
 public:
+	Sock();
+	Sock(SOCKET socket); // wrap a socket in the Sock class
+	~Sock();             // calls close()
 
-	int conn(const char * ip, int port);
+	int conn(const char * ip, int port); // connect to remote server
 	int close(void);
 
 	int read(char * buffer, int size);
 	int readLine(char* buffer);
 	int write(const char * buffer, int size);
 
-	int listen(unsigned short port);	// server - start listening for a connection
-	SOCKET accept();					// server - accept an incoming connection and return a client socket
-	Sock(SOCKET client_socket);			// server - wrap a client socket in the Sock class.
-
-	Sock();
-	~Sock(); // calls close
+	int listen(unsigned short port); // server - start listening for a connection
+	SOCKET accept();                 // server - accept an incoming connection and return a client socket
 };
 
-#endif // !defined(SOCK_H_INCLUDED)
+#endif // SOCK_H_INCLUDED
