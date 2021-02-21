@@ -1,4 +1,4 @@
-##  OutNet - you are the internet!
+##  OutNet - you are the internet! (n3+? f+n3t? fn3t? VsemVsem?  HomNet? Findnet? Authornet? Nondns? Disdns?)
 
 As computers get faster the need for centralized services should decrease, yet major corporations push services into clouds to maintain control.  Enslavement by facebook, twitter, instagram, search engines, cloud providers and software stores can be avoided by distributing the equivalent of the server parts of these services among users.  Everyone can run a tiny search engine or a tiny cloud at home.  How will the other users find your services?  Domain names allow others to find your services on the internet.  The problem with using domain namesor host names is that they can be shut down by third parties.  Most users on the internet do not have a registered domain name.
 
@@ -43,7 +43,6 @@ Since one does not want to expose ALL available local services on the internet, 
 * OutNet should include itself in the service list.  This advertises the external/routable/public IP for other services to use.
 * OutNet is capable of "opening a port in your router" via UPnP in order to be accessible from outside of your network.
 * It can "open" additional ports for your distributed services to accept connections.
-* To support other distributed services OutNet provides a library for signature creation uning private key and verification using public key.  Your private key does not have to be shared with your other services.
 
 
 ## Describing services
@@ -123,6 +122,12 @@ Notes
 
 
 ##  Future Base Services
+
+* To support other distributed services OutNet provides a library for signature creation uning private key and verification using public key.  Your private key does not have to be shared with your other services.  In addition OutNet needs to provide libraries to register your service with outnet and help you query the OutNet service.
+
+
+* OutNet query tool.  The simplest thing one can write that is based on OutNet is a query tool to find certain types of services and launch a client that supports that service.  For example a query tool can query the OutNet service and request a list of servers for your favorite game.  Present it for your selection in a UI.  When you click a certain server it will start the game and give it a URL (ip and port) on the command line.
+
 
 * There is a need for OutNet notification service.  One of the reasons is there is NO e-mail field shared by the OutNet service to prevent network-wide spam.  OutNetMsg (OutNetDirect???) receives messages addressed to your public key.  If it is from some one you trust (their public key is on your white list), it tries to open the message using the protocol/mime specified in the message.  OutNetMsg can display the message, offer to open/save the message or file, forward it to one of the services running on your system (for example, by acting as a TCP wrapper) or suggest you install a corresponding protocol handler / service.  For example it might be possible to open a Zoom session this way.
 It has to be able to manage other's public keys to be able to put them on your contact list.  It should be possible to create "groups" of public keys. It should be able to share public keys and public key lists with others and notify of updates.  Messages from public keys not on your list will be discarded.  Only direct (non-public) messages will be handled by OutNetMsg.  Public messages or publicly shared files should be handled by other services.  HTTPS can be used to ensure end-to-end encryption (no https proxies).
