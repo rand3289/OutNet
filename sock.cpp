@@ -5,7 +5,7 @@ using namespace std;
 #ifdef WIN32
     #pragma comment(lib, "Ws2_32.lib") // link to winsock2 library
     #define close(s) closesocket(s)
-    #define UNREACHABLE WSAECONNRESET
+//    #define UNREACHABLE WSAECONNRESET
     #undef errno // do not use stdlib version in this file
     #define errno WSAGetLastError()
     typedef int socklen_t;
@@ -17,8 +17,7 @@ using namespace std;
     #include <sys/socket.h>
     #define INVALID_SOCKET (-1)
     #define SOCKET_ERROR   (-1)
-    #define UNREACHABLE    ECONNREFUSED
-    #define WSACleanup()
+//    #define UNREACHABLE    ECONNREFUSED
 #endif
 
 
@@ -92,7 +91,6 @@ int Sock::listen(unsigned short port){
 	ip.sin_family=AF_INET;
 	ip.sin_port=htons(port);
 	ip.sin_addr.s_addr = INADDR_ANY;
-//	int err = 0;
 
 	if ( SOCKET_ERROR==bind(s, (sockaddr*) &ip, size)){
 		cerr << "error binding to port " << port << " error:" << errno << endl;
@@ -121,7 +119,6 @@ Sock::Sock(SOCKET socket): peek(0) {
 
 Sock::~Sock(){
 	close();
-//	WSACleanup(); // unloads ws2_32.dll on windows
 }
 
 

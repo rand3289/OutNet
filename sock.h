@@ -9,7 +9,7 @@
     typedef int SOCKET;
 #endif
 
-#define ANY_PORT 0
+//#define ANY_PORT 0
 //typedef unsigned long IP; // sockaddr_in::sin_addr.s_addr defines it as "unsigned long"
 
 
@@ -18,6 +18,7 @@ class Sock { // TCP socket
 	sockaddr_in ip;	// ip.sin_port can be used to find the server port if listen(ANY_PORT) was used
 	char peek;      // used in readLine()
 public:
+    constexpr const static unsigned short ANY_PORT = 0;
 	Sock();
 	Sock(SOCKET socket); // wrap a socket in the Sock class
 	~Sock();             // calls close()
@@ -29,7 +30,7 @@ public:
 	int readLine(char* buffer);
 	int write(const char * buffer, int size);
 
-	int listen(unsigned short port); // server - start listening for a connection
+	int listen(unsigned short port = ANY_PORT); // server - start listening for a connection
 	SOCKET accept();                 // server - accept an incoming connection and return a client socket
 };
 
