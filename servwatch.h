@@ -2,6 +2,7 @@
 #define SERVWATCH_H_INCLUDED
 #include "data.h"
 #include "config.h"
+#include "upnp.h"
 #include <thread>
 #include <chrono>
 using namespace std;
@@ -10,7 +11,8 @@ using namespace std::chrono;
 
 class ServiceWatch{
     Config& config;
-    LocalData data;
+    LocalData& data;
+    UPnP upnp;
 public:
     ServiceWatch(Config& configuration, LocalData& ldata): config(configuration), data(ldata) {}
     int checkRegistration();

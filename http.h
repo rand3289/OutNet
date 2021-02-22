@@ -2,6 +2,7 @@
 #define HTTP_H_INCLUDED
 
 #include "data.h"
+#include "sign.h"
 #include "sock.h"
 #include <vector>
 #include <string>

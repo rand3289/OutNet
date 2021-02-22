@@ -4,7 +4,7 @@
 #include "http.h"
 #include "sock.h"
 #include "config.h"
-#include "collect.h"
+#include "crawler.h"
 #include "servwatch.h"
 #include <vector>
 #include <string>
@@ -23,8 +23,8 @@ int main(int argc, char* argv[]){
 
     // create the information collector thread here (there could be many in the future)
     // when rdata is updated, it calls config.save(rdata);
-    Collector collect(config, rdata);
-    std::thread search( &Collector::run, &collect);
+    Crawler crawler(config, rdata);
+    std::thread search( &Crawler::run, &crawler);
 
     // create a thread that registers services (from files and via connections)
     // when ldata is updated, it calls config.save(ldata);
