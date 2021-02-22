@@ -1,5 +1,5 @@
 #ifndef SOCK_H_INCLUDED
-#define SOCK_H_NCLUDED
+#define SOCK_H_INCLUDED
 
 #ifdef WIN32
     #include <winsock2.h>
@@ -10,7 +10,7 @@
 #endif
 
 //#define ANY_PORT 0
-//typedef unsigned long IP; // sockaddr_in::sin_addr.s_addr defines it as "unsigned long"
+typedef unsigned long IP; // sockaddr_in::sin_addr.s_addr defines it as "unsigned long"
 
 
 class Sock { // TCP socket
@@ -31,7 +31,8 @@ public:
 	int write(const char * buffer, int size);
 
 	int listen(unsigned short port = ANY_PORT); // server - start listening for a connection
-	SOCKET accept();                 // server - accept an incoming connection and return a client socket
+	SOCKET accept(); // server - accept an incoming connection and return a client socket
+	int getPort(){ return ip.sin_port; } // bound server port
 };
 
 #endif // SOCK_H_INCLUDED
