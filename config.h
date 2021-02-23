@@ -4,12 +4,12 @@
 
 class Config{
 public:
-    int loadFromDisk(LocalData& ldata, RemoteData& rdata);
-    int getPort(unsigned short defaultPort);
-    int getWatcherRefreshRate(); // seconds for ServiceWatcher to look for new services
-    int save(unsigned short port);
-    int save(LocalData& ldata);
-    int save(RemoteData& rdata);
+    int loadFromDisk(LocalData& ldata, RemoteData& rdata){ return 0; }
+    int getPort(unsigned short defaultPort){ return 0; }
+    int getWatcherRefreshRate(){ return 0; } // seconds for ServiceWatcher to look for new services
+    int save(unsigned short port){ return 0; }
+    int save(LocalData& ldata){ return 0; }
+    int save(RemoteData& rdata){ return 0; }
 };
 
 #endif // CONFIG_H_INCLUDED

@@ -9,6 +9,7 @@
 #include <vector>
 #include <string>
 #include <thread>
+#include <iostream>
 using namespace std;
 //#include <chrono>
 //using namespace std::chrono;
@@ -36,9 +37,11 @@ int main(int argc, char* argv[]){
     // but if service ran before, reuse the port number
     unsigned short port = config.getPort(Sock::ANY_PORT);
     Sock socket = Sock(port);
+    socket.listen();
+
     port = socket.getPort(); // get bound server port number from socket
     config.save(port);
-    socket.listen();
+    cout << "Running on port " << ntohs(port) << endl;
 
     while(true){
         SOCKET connection = socket.accept();

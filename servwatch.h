@@ -15,8 +15,8 @@ class ServiceWatch{
     UPnP upnp;
 public:
     ServiceWatch(Config& configuration, LocalData& ldata): config(configuration), data(ldata) {}
-    int checkRegistration();
-    int updateLocalData(LocalData& data);
+    int checkRegistration() { return 0; }
+    int updateLocalData(LocalData& data) { return 0; }
     int run(){
         while(true){
             std::this_thread::sleep_for( seconds(config.getWatcherRefreshRate()) );

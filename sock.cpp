@@ -143,7 +143,7 @@ int Sock::read(char* buff, int size){
 		cerr << "Socket not initialized - Can't read." << endl;
 		return -1;
 	}
-	return recv(s,buff,size,0);
+	return recv(s,buff,size,MSG_DONTWAIT);
 }
 
 

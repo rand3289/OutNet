@@ -29,7 +29,7 @@ struct LocalData {
     vector<string> services;
     vector<Service> servicesFields;
 public:
-    LocalData();
+    LocalData(){}
 //    LocalData(PubKey& pubkey);
     int addService(const string& service){
         unique_lock rlock(lMutex);
@@ -44,6 +44,22 @@ public:
     int writeServices(Sock& sock, vector<string>& serviceFilter, vector<string>& protocolFilter);
     // shared_lock rlock(mutex);
 };
+
+
+struct Fields{
+    uint32_t host;
+    uint16_t port;
+    uint16_t spare;
+    Fields(): spare(0) {}
+};
+
+union HostPort {
+    uint64_t value;
+    Fields fields;
+    HostPort(): fields() {}
+    bool operator=(const HostPort& rhs) const { return value == rhs.value; }
+};
+
 
 struct HostInfo {                  // host/port fields are in the network byte order
     uint32_t host;                 // IPv4 address

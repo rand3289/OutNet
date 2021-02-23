@@ -1,16 +1,15 @@
-##  OutNet - you are the internet! (n3+? f+n3t? fn3t? VsemVsem?  HomNet? Findnet? Authornet? Nondns? Disdns?)
+##  N3+1 - you are the internet!
 
 As computers get faster the need for large service providers should decrease, yet major corporations maintain control of your data by building more centralized services.   Use of centralized services can be avoided by distributing the equivalent of the server parts of these services among users.  Everyone can run a tiny search engine, a phone app store or a social network at home.  This model requires linking many small service providers in a P2P network.  Currently domain names allow you to find services on the internet.  There are problems with using domain names for distributed services.  Most users on the internet do not have a registered domain name that you have to pay for.  You can not point your domain name to your home IP address since it may change.  Domain names can be shut down by third parties.
 
 
-The alternative is the OutNet.  OutNet is an open source distributed directory protocol designed to find conventional or distributed services on the internet.  Services such as web pages, game servers, ftp servers, messengers, forums, video conferences, P2P and distributed services.  Another goals of OutNet is to decentralize the internet making it resistant to control and sensorship.  A small bonus is you no longer have to pay to maintain your domain name.  OutNet provides anonymity.  Instead of a domain or a user name, a public key from a locally generated public/private key pair is used to identify you, your services and services provided by others.  Your real name is no longer needed to provide or consume services on the internet.  Your IP address however will be visible to the world unless used in conjunction with a VPN.
+The alternative is the N3+1 (pronounced net one).  N3+1 is an open source distributed directory protocol designed to find conventional or distributed services on the internet.  Services such as web pages, game servers, ftp servers, messengers, forums, video conferences, P2P and distributed services.  Another goals of N3+1 is to decentralize the internet making it resistant to control and sensorship.  A small bonus is you no longer have to pay to maintain your domain name.  N3+1 provides anonymity.  Instead of a domain or a user name, a public key from a locally generated public/private key pair is used to identify you, your services and services provided by others.  Your real name is no longer needed to provide or consume services on the internet.  Your IP address however will be visible to the world unless used in conjunction with a VPN.
 
 
 ## Proposed service
+ N3+1 is implemented by a service with the same name that runs on your machine.  It gathers and provides a list of IPv4 addresses, corresponding port numbers and ages of nodes participating in the N3+1.  In addition, N3+1 lists the types of remote services and local services you run such as your web sites, game servers and P2P services.
 
-OutNet is implemented by a service with the same name that runs on your machine.  It gathers and provides a list of IPv4 addresses, corresponding port numbers and ages of nodes participating in the OutNet.  In addition, OutNet lists the types of remote services and local services you run such as your web sites, game servers and P2P services.
-
-When OutNet starts, it tries to contact some of the known remote OutNet severs. It collects their information such as public keys and list of services they advertise.  Local services can query OutNet to find a list of peers.  Querying OutNet will return a response described below in pseudocode:
+When N3+1 starts, it tries to contact some of the known remote N3+1 severs. It collects their information such as public keys and list of services they advertise.  Local services can query N3+1 to find a list of peers.  Querying N3+1 will return a response described below in pseudocode:
 
 ```cpp
 struct Response {
@@ -18,7 +17,7 @@ struct Response {
     uint64 dateTime;          // seconds from epoch to this message creation time (UTC/GMT).  Prevents replay attacks with old data.
     vector<string> services;  // local services we are trying to advertise
     Statistics counts;        // counts of total IP:port:age records, non-null public keys, local services, remote services etc.
-    vector<HostInfo> list;    // list of remote OutNet instances
+    vector<HostInfo> list;    // list of remote N3+1 instances
     string signature;         // RSA whole message digital signature - send this last so it can be computed while data is being sent
 };
 
@@ -26,28 +25,27 @@ struct HostInfo {             // all fields are in the network byte order
     uint32 host;              // IPv4 address
     uint16 port;              // IPv4 port number (1-65535, 0=reserved)
     uint16 age;               // in minutes (up to 45.5 days old) since the server has been seen on line
-    string key;               // remote OutNet service' public key
+    string key;               // remote N3+1 service' public key
     vector<string> rservices; // remote services
 };
 ```
 
-Since one does not want to expose ALL available local services on the internet, OutNet does not discover local services.  Local services can register with OutNet or be added via configuration files.  Service descriptions have to contain routable (public/external) IP addresses instead of host names.  If OutNet determines your service is behind a NAT router and IP is a non-routable IP, it will replace your non-routable IP with it's own external routable IP when listing your service.  In addition, OutNet will open a port in the router via UPnP protocol that will allow your service to accept connections.
+Since one does not want to expose ALL available local services on the internet, N3+1 does not discover local services.  Local services can register with N3+1 or be added via configuration files.  Service descriptions have to contain routable (public/external) IP addresses instead of host names.  If N3+1 determines your service is behind a NAT router and IP is a non-routable IP, it will replace your non-routable IP with it's own external routable IP when listing your service.  In addition, N3+1 will open a port in the router via UPnP protocol that will allow your service to accept connections.
 
-* Mechanisms/protocols required to implement OutNet are HTTP 1.1, UPnP and digital signatures (RSA or BSD signify/minisign).
-* OutNet runs as a REST service over HTTP to bypass some firewalls and network restrictions.  It can run on different port numbers that can change over time.  Your other services do not have to run over HTTP or TCP.
-* OutNet can sign responses with a private key and supply a public key for signature verification.
-* OutNet can deny connections to external/routable IPs if frequency of requests coming from them is high.
-* Any service can register itself with OutNet by signing it's URL with the same private key OutNet is using and sending the signed URL to the local instance of OutNet.
-* Local services can register with OutNet using multicast at which point they receive OutNet's unicast address for querying.
-* OutNet has a peer list for your other local services.  They can find their peers by querying a local OutNet instance.
-* OutNet should include itself in the service list.  This advertises the external/routable/public IP for other services to use.
-* OutNet is capable of "opening a port in your router" via UPnP in order to be accessible from outside of your network.
+* Mechanisms/protocols required to implement N3+1 are HTTP 1.1, UPnP and digital signatures (RSA or BSD signify/minisign).
+* N3+1 runs as a REST service over HTTP to bypass some firewalls and network restrictions.  It can run on different port numbers that can change over time.  Your other services do not have to run over HTTP or TCP.
+* N3+1 can sign responses with a private key and supply a public key for signature verification.
+* N3+1 can deny connections to external/routable IPs if frequency of requests coming from them is high.
+* Any service can register itself with N3+1 by signing it's URL with the same private key N3+1 is using and sending the signed URL to the local instance of N3+1.
+* Local services can register with N3+1 using multicast at which point they receive N3+1's unicast address for querying.
+* N3+1 has a peer list for your other local services.  They can find their peers by querying a local N3+1 instance.
+* N3+1 should include itself in the service list.  This advertises the external/routable/public IP for other services to use.
+* N3+1 is capable of "opening a port in your router" via UPnP in order to be accessible from outside of your network.
 * It can "open" additional ports for your distributed services to accept connections.
 
 
 ## Describing services
-
-OutNet can be based on existing standards.  For example, list of services can be based on modified service description format of DNS-SD (section 4.1.2 of rfc6763), SLP (section 4.1 of rfc2608), Bonjour, SSDP or MDNS.  Service description has to contain at least the following fields: type of service (ex: printer), actual protocol (ex:ipp), IP, port number, user defined name/description/path/attribute.  
+ N3+1 can be based on existing standards.  For example, list of services can be based on modified service description format of DNS-SD (section 4.1.2 of rfc6763), SLP (section 4.1 of rfc2608), Bonjour, SSDP or MDNS.  Service description has to contain at least the following fields: type of service (ex: printer), actual protocol (ex:ipp), IP, port number, user defined name/description/path/attribute.  
 
 Other possible fields: version, internet protocol (tcp or udp), piority[0-9] or type of data (service/device/block/stream/file/messages/image/audio/video/conference/game/ xml/json/yaml/soap/rpc/wsdl/feed(structured data)/list/key-value/url/ binary/text/unicode/ascii/base64/uuencoded/ printer/speaker/display/ blockchain/cryptocurrency/geolocation/weather/virtualreality/time).  
 
@@ -60,9 +58,8 @@ Same device, different protocol:  "printer:ipp:8.8.8.8:54321:2nd floor printer"
 Key-value pairs are described in rfc6763 section 6.  
 
 
-## OutNet service query parameters
-
-OutNet can be queried to return local info and/or a filtered list of discovered remote OutNet services.  For example a query can limit the results by service type, availability of "remote public keys" or what fields are included in response.  Requests to OutNet can include a range of items to return ex: [0-900] inclusive.  Records in the response are always ordered by age.
+## N3+1 service query parameters
+ N3+1 can be queried to return local info and/or a filtered list of discovered remote N3+1 services.  For example a query can limit the results by service type, availability of "remote public keys" or what fields are included in response.  Requests to N3+1 can include a range of items to return ex: [0-900] inclusive.  Records in the response are always ordered by age.
 
 Returned fields are specified by passing a "bit field" called SELECT represented by a number:
 * local public key  (LKEY=1)
@@ -85,7 +82,7 @@ Where as fields are controlled by SELECT parameter, returned records are limited
 * IP range or equal
 * port range or equal
 * age range of HostInfo records
-* remote public key count (RKEYC) (one key per service is allowed but OutNet can receive different keys from other OutNet services)
+* remote public key count (RKEYC) (one key per service is allowed but N3+1 can receive different keys from other N3+1 services)
 * remote public key exact string match
 * remote service list count (RSVCC)
 * remote service type/protocol exact string match
@@ -105,8 +102,8 @@ Notes
 * host:port pair forms an ID for any record
 * Create actual methods to filter records named RKEYC_GT(uint32 count) etc... switch() on the name of the function as if it was a uint64
 
-* OutNet response data is binary to save bandwidth and is encoded using application octet-stream mime type
-* Design OutNet without protocol identifiers (packet/stream format signature) to be less detectable and less likely to be blocked.
+* N3+1 response data is binary to save bandwidth and is encoded using application octet-stream mime type
+* Design N3+1 without protocol identifiers (packet/stream format signature) to be less detectable and less likely to be blocked.
 * Add the ability to query your server back over the same connection when contacted and send only a "delta" of the information.
 * Reserve age values over 65500  ex: 0xFFFE = "IO error", 0xFFFD = "duplicate signature", 0xFFFC="coming soon", 0xFFFB="broken signature", 0xFFFA="unresponsive", 0xFFF9="wrong protocol", 0xFFF8="untrusted", 0xFFF0="offline", etc...
 
@@ -114,26 +111,26 @@ Notes
 ### Security against network splits
 
 * Small world network properties can be used to find relatively small semi-isolated connectivity islands that might be trying to split the network and eliminate them.  This might require user interaction.
-* OutNet needs to verify HostInfo records received from other OutNet instances by contacting the host in the record.  An OutNet service raiting should be incremented for each verified record and decremented for each failed verification.  Records received from OutNet services with negative rating should not be shared with other OutNet services.
+* N3+1 needs to verify HostInfo records received from other N3+1 instances by contacting the host in the record.  An N3+1 service raiting should be incremented for each verified record and decremented for each failed verification.  Records received from N3+1 services with negative rating should not be shared with other N3+1 services.
 * Age of each record can be taken into account when rating ???
 * Younger records should be validated first if record age is taken into account during rating.
 * New records from highly rated services should be verified first.
-* OutNet services returning HostInfo records without any overlap with existing records should receive negative rating (- # of records???) After the verification the raiting will raise above 0.
+* N3+1 services returning HostInfo records without any overlap with existing records should receive negative rating (- # of records???) After the verification the raiting will raise above 0.
 
 
 ##  Future Base Services
 
-* To support other distributed services OutNet provides a library for signature creation uning private key and verification using public key.  Your private key does not have to be shared with your other services.  In addition OutNet needs to provide libraries to register your service with outnet and help you query the OutNet service.
+* To support other distributed services N3+1 provides a library for signature creation uning private key and verification using public key.  Your private key does not have to be shared with your other services.  In addition N3+1 needs to provide libraries to register your service with N3+1 and help you query the N3+1 service.
 
 
-* OutNet query tool.  The simplest thing one can write that is based on OutNet is a query tool to find certain types of services and launch a client that supports that service.  For example a query tool can query the OutNet service and request a list of servers for your favorite game.  Present it for your selection in a UI.  When you click a certain server it will start the game and give it a URL (ip and port) on the command line.
+* N3+1 query tool.  The simplest thing one can write that is based on N3+1 is a query tool to find certain types of services and launch a client that supports that service.  For example a query tool can query the N3+1 service and request a list of servers for your favorite game.  Present it for your selection in a UI.  When you click a certain server it will start the game and give it a URL (ip and port) on the command line.
 
 
-* There is a need for OutNet notification service.  One of the reasons is there is NO e-mail field shared by the OutNet service to prevent network-wide spam.  OutNetMsg (OutNetDirect???) receives messages addressed to your public key.  If it is from some one you trust (their public key is on your white list), it tries to open the message using the protocol/mime specified in the message.  OutNetMsg can display the message, offer to open/save the message or file, forward it to one of the services running on your system (for example, by acting as a TCP wrapper) or suggest you install a corresponding protocol handler / service.  For example it might be possible to open a Zoom session this way.
-It has to be able to manage other's public keys to be able to put them on your contact list.  It should be possible to create "groups" of public keys. It should be able to share public keys and public key lists with others and notify of updates.  Messages from public keys not on your list will be discarded.  Only direct (non-public) messages will be handled by OutNetMsg.  Public messages or publicly shared files should be handled by other services.  HTTPS can be used to ensure end-to-end encryption (no https proxies).
+* There is a need for N3+1 notification service.  One of the reasons is there is NO e-mail field shared by the N3+1 service to prevent network-wide spam.  N3+1Msg  N3+1Direct???) receives messages addressed to your public key.  If it is from some one you trust (their public key is on your white list), it tries to open the message using the protocol/mime specified in the message.  N3+1Msg can display the message, offer to open/save the message or file, forward it to one of the services running on your system (for example, by acting as a TCP wrapper) or suggest you install a corresponding protocol handler / service.  For example it might be possible to open a Zoom session this way.
+It has to be able to manage other's public keys to be able to put them on your contact list.  It should be possible to create "groups" of public keys. It should be able to share public keys and public key lists with others and notify of updates.  Messages from public keys not on your list will be discarded.  Only direct (non-public) messages will be handled by N3+1Msg.  Public messages or publicly shared files should be handled by other services.  HTTPS can be used to ensure end-to-end encryption (no https proxies).
 
 
-* While OutNetMsg takes care of direct communication, there is a need for distributed message board service similar to twitter, parler, reddit or newsgroups.  Public messages and files exchanged by this service (OutNetExchange/OutNetX/OutNetShare) are not addressed to an individual but reach users subscribed on a particular subject.  Subject (thread) can have a hierarchical structure for example: local.USA.SanFrancisco.pizza  similar to a usenet group (section 3.2 in rfc977).  software.x86.linux.games.myBlaster can be used to distribute software.  Alternatively a public key (or it's hash) could become a subject allowing subscription to an individual source.  A hybrid model can be implemented where large files are distributed using BitTorrent and small files or file meta data propagate similar to usenet articles.  OutNetExchange can duplicate some usenet features while avoiding these problems:
+* While N3+1Msg takes care of direct communication, there is a need for distributed message board service similar to twitter, parler, reddit or newsgroups.  Public messages and files exchanged by this service  N3+1Exchange N3+1X N3+1Share) are not addressed to an individual but reach users subscribed on a particular subject.  Subject (thread) can have a hierarchical structure for example: local.USA.SanFrancisco.pizza  similar to a usenet group (section 3.2 in rfc977).  software.x86.linux.games.myBlaster can be used to distribute software.  Alternatively a public key (or it's hash) could become a subject allowing subscription to an individual source.  A hybrid model can be implemented where large files are distributed using BitTorrent and small files or file meta data propagate similar to usenet articles.  N3+1Exchange can duplicate some usenet features while avoiding these problems:
     + Spam (anyone could post / no signatures / no ratings).
     + Need for a usenet server (not everyone has it).
     + Use of a SINGLE server (all articles have to be in one place).
@@ -141,11 +138,11 @@ It has to be able to manage other's public keys to be able to put them on your c
     + NNTP is a text based protocol.
 
 
-* Another significant service is a public key rating system.  OutNetRate rating service lays at the center of trust in a distrubuted system.  You should be able to rate your interactions with owners of a public key.  Intention of this service is different than the "Web of trust" (https://en.wikipedia.org/wiki/Web_of_trust).  In OutNet the key comes first and the name is secondary.  The name is not important unless verified through personal communication.  The rating does not state if you know the entity or entity's name in real life.  It rates a specific type of transaction/interaction you had.  For example an instance of a running OutNet service can be rated.  An internet purchase of an item description signed by a key can be rated.  A software/release signed by a key can be rated.  Securyty (virus/trojan free) of the content can be ensured by the rating service.  Software or content releases have to be signed by a private key of the author.  Authors's public keys in turn will be rated by users.  The way you trust in Microsoft, Google or Apple's content distribution system, individual authors have to earn your thrust in their public keys.  Rating should always contain a subject as described in OutNetExchange since an owner of a key can provide multiple services.  For example sell items or services and at the same time distribute free software.  His web store should not be rated highly just because he makes great freeware video games.
+* Another significant service is a public key rating system.  N3+1Rate rating service lays at the center of trust in a distrubuted system.  You should be able to rate your interactions with owners of a public key.  Intention of this service is different than the "Web of trust" (https://en.wikipedia.org/wiki/Web_of_trust).  In N3+1 the key comes first and the name is secondary.  The name is not important unless verified through personal communication.  The rating does not state if you know the entity or entity's name in real life.  It rates a specific type of transaction/interaction you had.  For example an instance of a running N3+1 service can be rated.  An internet purchase of an item description signed by a key can be rated.  A software/release signed by a key can be rated.  Securyty (virus/trojan free) of the content can be ensured by the rating service.  Software or content releases have to be signed by a private key of the author.  Authors's public keys in turn will be rated by users.  The way you trust in Microsoft, Google or Apple's content distribution system, individual authors have to earn your thrust in their public keys.  Rating should always contain a subject as described in N3+1Exchange since an owner of a key can provide multiple services.  For example sell items or services and at the same time distribute free software.  His web store should not be rated highly just because he makes great freeware video games.
 
 
-* OutNetSearch service is used to index information (keys, subjects, content, file hashes) distributed by local services and EXCHANGE it with other search services or local distributed services.
+* N3+1Search service is used to index information (keys, subjects, content, file hashes) distributed by local services and EXCHANGE it with other search services or local distributed services.
 
 * Authentication service is needed to enable seamless authentication on any conventional (server based) internet resource using your public/private key pair.  Similar to authentication via amazon/google/yahoo/facebook.
 
-* Cryptocurrency system to associate OutNet public keys and wallets.
+* Cryptocurrency system to associate N3+1 public keys and wallets.
