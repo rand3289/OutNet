@@ -36,10 +36,10 @@ int main(int argc, char* argv[]){
     // first time start running on a random port (ANY_PORT)
     // but if service ran before, reuse the port number
     unsigned short port = config.getPort(Sock::ANY_PORT);
-    Sock socket = Sock(port);
-    socket.listen();
+    Sock socket = Sock();
+    socket.listen(port);
 
-    port = socket.getPort(); // get bound server port number from socket
+    port = socket.getBoundPort(); // get bound server port number from socket
     config.save(port);
     cout << "Running on port " << ntohs(port) << endl;
 

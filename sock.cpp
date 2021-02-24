@@ -1,6 +1,7 @@
-#include <iostream>
-using namespace std;
 #include "sock.h"
+#include <iostream>
+#include <cstring> // memset()
+using namespace std;
 
 #ifdef WIN32
     #pragma comment(lib, "Ws2_32.lib") // link to winsock2 library
@@ -75,11 +76,6 @@ SOCKET Sock::accept(){
 }
 
 
-Sock::Sock(): peek(0){
-    initNetwork();
-}
-
-
 int Sock::listen(unsigned short port){
  	s=socket(AF_INET,SOCK_STREAM,0);
 	if(s==INVALID_SOCKET){
@@ -111,9 +107,15 @@ int Sock::listen(unsigned short port){
 }
 
 
-Sock::Sock(SOCKET socket): peek(0) {
+Sock::Sock(): s(INVALID_SOCKET), peek(0) {
+	memset(&ip,0,sizeof(ip));
     initNetwork();
-    s = socket;
+}
+
+
+Sock::Sock(SOCKET socket): s(socket), peek(0) {
+	memset(&ip,0,sizeof(ip));
+    initNetwork();
 }
 
 

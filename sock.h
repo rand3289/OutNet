@@ -18,9 +18,8 @@ class Sock { // TCP socket
 	sockaddr_in ip;	// ip.sin_port can be used to find the server port if listen(ANY_PORT) was used
 	char peek;      // used in readLine()
 public:
-    constexpr const static unsigned short ANY_PORT = 0;
 	Sock();
-	Sock(SOCKET socket); // wrap a socket in the Sock class
+	Sock(SOCKET socket); // wrap an accepted connection socket in the Sock class
 	~Sock();             // calls close()
 
 	int conn(const char * ip, int port); // connect to remote server
@@ -30,9 +29,13 @@ public:
 	int readLine(char* buffer);
 	int write(const char * buffer, int size);
 
-	int listen(unsigned short port = ANY_PORT); // server - start listening for a connection
-	SOCKET accept(); // server - accept an incoming connection and return a client socket
-	int getPort(){ return ip.sin_port; } // bound server port
+    // server - start listening for a connection.  Use ANY_PORT if not binding to a specific port
+    constexpr const static unsigned short ANY_PORT = 0;
+	int listen(unsigned short port);
+	// server - accept an incoming connection and return a client socket
+	SOCKET accept(); // TODO: should this return Sock object ???
+	int getBoundPort(){ return ip.sin_port; } // bound server port even if ANY_PORT was used
+	SOCKET getRawSocket() { return s; }
 };
 
 #endif // SOCK_H_INCLUDED
