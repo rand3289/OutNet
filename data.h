@@ -22,30 +22,18 @@ struct Service{
 };
 
 // TODO: figure out locking mechanisms for LocalData & RemoteData
-// TODO: get key from Signature class
+// TODO: key from Signature class gets filled in
 struct LocalData {
-    PubKey localPubKey;
     shared_mutex lMutex;
+    PubKey localPubKey;
     vector<string> services;
     vector<Service> servicesFields;
-public:
-    LocalData(){}
-//    LocalData(PubKey& pubkey);
-    int addService(const string& service){
-        unique_lock rlock(lMutex);
-        services.push_back(service);
-        servicesFields.emplace(servicesFields.end());
-        servicesFields.back().parse(service);
-//        servicesFields.push_back( Service(service) );
-        return 0;
-    }
-
-    // writes unsigned char size (255max) + string
-    int writeServices(Sock& sock, vector<string>& serviceFilter, vector<string>& protocolFilter);
-    // shared_lock rlock(mutex);
+    // writes unsigned char size (255max) + string without null
+    int send(Sock& sock, vector<string>& filters);
+    int addService(const string& service);
 };
 
-
+/*
 struct Fields{
     uint32_t host;
     uint16_t port;
@@ -59,7 +47,7 @@ union HostPort {
     HostPort(): fields() {}
     bool operator=(const HostPort& rhs) const { return value == rhs.value; }
 };
-
+*/
 
 struct HostInfo {                  // host/port fields are in the network byte order
     uint32_t host;                 // IPv4 address
@@ -70,21 +58,22 @@ struct HostInfo {                  // host/port fields are in the network byte o
     bool verified = false;         // was service queried directly or key found by a relay service?
     int offline = 0;               // server has been checked but found offline this many times
     int rating = 100;              // quality of service for this service
-// TODO: how to preserve where this information come from?  use host:port?
+// TODO: how to preserve where this information come from?  use host:port? referrer???
+
     string getHost();
     int setHost(string& ip);
     uint16_t getPortHostByteOrder(); // convert from network byte order to host byte order
     void setPort(uint16_t portHostByteOrder); // convert from host byte order to network byte order
+
     void resetTime(){ seen = system_clock::now(); }
     void addService(string& service){ services.push_back(service); }
 };
 
 struct RemoteData {
+    shared_mutex rMutex;
     vector<HostInfo> hosts;
-    HostInfo& addEmpty(){
-        hosts.emplace( hosts.end() );
-        return hosts.back();
-    }
+    HostInfo& addEmpty();
+    int send(Sock& sock, vector<string>& filters);
 };
 
 
