@@ -1,40 +1,40 @@
 ##  N3+1 (Net1) - you are the internet!
 
-Reading further requires understanding of the following concepts:
-https://en.wikipedia.org/wiki/Network_service
-https://en.wikipedia.org/wiki/Server
-https://en.wikipedia.org/wiki/Search_engine
-https://en.wikipedia.org/wiki/App_store
-https://en.wikipedia.org/wiki/Social_network
-https://en.wikipedia.org/wiki/Peer-to-peer
-https://en.wikipedia.org/wiki/Distributed_computing
+Reading further requires understanding of the following concepts:  
+https://en.wikipedia.org/wiki/Network_service  
+https://en.wikipedia.org/wiki/Server  
+https://en.wikipedia.org/wiki/Search_engine  
+https://en.wikipedia.org/wiki/App_store  
+https://en.wikipedia.org/wiki/Social_network  
+https://en.wikipedia.org/wiki/Peer-to-peer  
+https://en.wikipedia.org/wiki/Distributed_computing  
 
 As computers get faster the need for large service providers should decrease. More can be done locally on your own computer.  Home users due to their sheer numbers have more computing power than any company.  Yet corporations maintain control of your data by building centralized services.  Use of centralized services can be avoided by distributing the equivalent of the server parts of these services among users of the services.  Everyone can run a tiny search engine, a phone app store or a social network at home.  This model requires linking many small services in a distributed (P2P) network.
 
-Reading further requires understanding of the following concepts:
-https://en.wikipedia.org/wiki/Domain_name
-https://en.wikipedia.org/wiki/BitTorrent_tracker
-https://en.wikipedia.org/wiki/Bulletproof_hosting
+Reading further requires understanding of the following concepts:  
+https://en.wikipedia.org/wiki/Domain_name  
+https://en.wikipedia.org/wiki/BitTorrent_tracker  
+https://en.wikipedia.org/wiki/Bulletproof_hosting  
 
 Currently domain names allow you to find services on the internet.  There are problems with using domain names for distributing services.  A list of computer names or IPs must be maintained in one location.  An example is a BitTorrent tracker.  Most users on the internet do not have a registered domain name.  You have to pay for registering most domains.  You can not point your domain name to your home IP address since it may change.  Domain names can be shut down by third parties.  Bulletproof hosting should loose its place in a free society.  Even on the internet, detrimental aspects can be voted off instead of being regulated.
 
-Reading further requires understanding of the following concepts:
-https://en.wikipedia.org/wiki/Digital_signature
-https://en.wikipedia.org/wiki/Public-key_cryptography
-https://en.wikipedia.org/wiki/Communication_protocol
-https://en.wikipedia.org/wiki/Open_source
+Reading further requires understanding of the following concepts:  
+https://en.wikipedia.org/wiki/Digital_signature  
+https://en.wikipedia.org/wiki/Public-key_cryptography  
+https://en.wikipedia.org/wiki/Communication_protocol  
+https://en.wikipedia.org/wiki/Open_source  
 
 The alternative to private discovery protocols and domain names is the N3+1 (pronounced net one).  N3+1 is an open source distributed service directory communication (network) protocol.  It is designed to find conventional or distributed (P2P) services on the internet.  Services such as web pages, game servers, ftp servers, messengers, forums, video conferences, P2P and distributed services.  Another goals of N3+1 is to decentralize the internet making it resistant to control and sensorship.  N3+1 provides anonymity.  Instead of a domain or a user name, a public key  is used to identify you, your services and services provided by others.  Public key is generated locally.  Your real name is no longer needed to provide or consume services on the internet.  Your IP address however will be visible to the world unless used in conjunction with a VPN.
 
-Reading further requires understanding of the following concepts:
-https://en.wikipedia.org/wiki/Distributed_hash_table
-https://en.wikipedia.org/wiki/Blockchain
-https://en.wikipedia.org/wiki/Domain_Name_System
+Reading further requires understanding of the following concepts:  
+https://en.wikipedia.org/wiki/Distributed_hash_table  
+https://en.wikipedia.org/wiki/Blockchain  
+https://en.wikipedia.org/wiki/Domain_Name_System  
 
 N3+1 can be viewed as a Distributed hash table.  Keys can be network protocols, service types or public keys.  In other ways N3+1 can be thought of as a DNS system which allows finding services on the internet.  N3+1 is different from a blockchain and much simpler. Peers can have a partial view of the information.
 
-Reading further requires understanding of the following concepts:
-https://en.wikipedia.org/wiki/IPv4
+Reading further requires understanding of the following concepts:  
+https://en.wikipedia.org/wiki/IPv4  
 
 ## Proposed implementation
  N3+1 is implemented by a service with the same name that runs on your machine.  It gathers and provides a list of IPv4 addresses, corresponding port numbers and ages of nodes participating in the N3+1.  In addition, N3+1 lists the types of remote services and local services you run such as your web sites, game servers and P2P services.
@@ -60,30 +60,30 @@ struct HostInfo {             // all fields are in the network byte order
 };
 ```
 
-Reading further requires understanding of the following concepts:
-https://en.wikipedia.org/wiki/IPv4
-https://en.wikipedia.org/wiki/Private_network
-https://en.wikipedia.org/wiki/Network_address_translation
-https://en.wikipedia.org/wiki/Router_(computing)
-https://en.wikipedia.org/wiki/Port_(computer_networking)
-https://en.wikipedia.org/wiki/Open_port
-https://en.wikipedia.org/wiki/Universal_Plug_and_Play
-https://en.wikipedia.org/wiki/Connection-oriented_communication
+Reading further requires understanding of the following concepts:  
+https://en.wikipedia.org/wiki/IPv4  
+https://en.wikipedia.org/wiki/Private_network  
+https://en.wikipedia.org/wiki/Network_address_translation  
+https://en.wikipedia.org/wiki/Router_(computing)  
+https://en.wikipedia.org/wiki/Port_(computer_networking)  
+https://en.wikipedia.org/wiki/Open_port  
+https://en.wikipedia.org/wiki/Universal_Plug_and_Play  
+https://en.wikipedia.org/wiki/Connection-oriented_communication  
 
 Since one does not want to expose ALL available local services on the internet, N3+1 does not discover local services.  Local services can register with N3+1 or be added via configuration files.  Service descriptions have to contain routable (public/external) IP addresses instead of host names.  If N3+1 determines your service is behind a NAT router and IP is a non-routable IP, it will replace your non-routable IP with it's own external routable IP when listing your service.  In addition, N3+1 will open a port in the router via UPnP protocol that will allow your service to accept connections.
 
-Reading further requires understanding of the following concepts:
-https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol
-https://en.wikipedia.org/wiki/RSA_(cryptosystem)
-https://en.wikipedia.org/wiki/OpenBSD
-https://en.wikipedia.org/wiki/Representational_state_transfer
-https://en.wikipedia.org/wiki/Firewall
-https://en.wikipedia.org/wiki/Transmission_Control_Protocol
-https://en.wikipedia.org/wiki/URL
-https://en.wikipedia.org/wiki/Multicast
-https://en.wikipedia.org/wiki/Unicast
-https://en.wikipedia.org/wiki/Information_retrieval
-https://en.wikipedia.org/wiki/Wide_area_network
+Reading further requires understanding of the following concepts:  
+https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol  
+https://en.wikipedia.org/wiki/RSA_(cryptosystem)  
+https://en.wikipedia.org/wiki/OpenBSD  
+https://en.wikipedia.org/wiki/Representational_state_transfer  
+https://en.wikipedia.org/wiki/Firewall  
+https://en.wikipedia.org/wiki/Transmission_Control_Protocol  
+https://en.wikipedia.org/wiki/URL  
+https://en.wikipedia.org/wiki/Multicast  
+https://en.wikipedia.org/wiki/Unicast  
+https://en.wikipedia.org/wiki/Information_retrieval  
+https://en.wikipedia.org/wiki/Wide_area_network  
 
 * Mechanisms/protocols required to implement N3+1 are HTTP 1.1, UPnP and digital signatures (RSA or BSD signify/minisign).
 * N3+1 runs as a REST service over HTTP to bypass some firewalls and network restrictions.  It can run on different port numbers that can change over time.  Your other services do not have to run over HTTP or TCP.
@@ -95,13 +95,13 @@ https://en.wikipedia.org/wiki/Wide_area_network
 * It can "open" additional ports for your distributed services to accept connections.
 
 
-Reading further requires understanding of the following concepts:
-https://en.wikipedia.org/wiki/Service_Location_Protocol
-https://en.wikipedia.org/wiki/WS-Discovery
-https://en.wikipedia.org/wiki/Simple_Service_Discovery_Protocol
-https://en.wikipedia.org/wiki/Network_Information_Service
-https://en.wikipedia.org/wiki/Multicast_DNS
-https://en.wikipedia.org/wiki/Bonjour_(software)
+Reading further requires understanding of the following concepts:  
+https://en.wikipedia.org/wiki/Service_Location_Protocol  
+https://en.wikipedia.org/wiki/WS-Discovery  
+https://en.wikipedia.org/wiki/Simple_Service_Discovery_Protocol  
+https://en.wikipedia.org/wiki/Network_Information_Service  
+https://en.wikipedia.org/wiki/Multicast_DNS  
+https://en.wikipedia.org/wiki/Bonjour_(software)  
 
 ## Describing services
  N3+1 can be based on existing standards.  For example, list of services can be based on modified service description format of DNS-SD (section 4.1.2 of rfc6763), SLP (section 4.1 of rfc2608), WS-Discovery, SSDP, NIS, mDNS, Bonjour.  Service description has to contain at least the following fields: type of service (ex: printer), actual protocol (ex:ipp), IP, port number, user defined name/description/path/attribute.  
@@ -166,9 +166,9 @@ Notes
 * Reserve age values over 65500  ex: 0xFFFE = "IO error", 0xFFFD = "duplicate signature", 0xFFFC="coming soon", 0xFFFB="broken signature", 0xFFFA="unresponsive", 0xFFF9="wrong protocol", 0xFFF8="untrusted", 0xFFF0="offline", etc...
 
 
-Reading further requires understanding of the following concepts:
-https://en.wikipedia.org/wiki/Netsplit
-https://en.wikipedia.org/wiki/Botnet
+Reading further requires understanding of the following concepts:  
+https://en.wikipedia.org/wiki/Netsplit  
+https://en.wikipedia.org/wiki/Botnet  
 
 ## Securing against network splits
 
@@ -183,22 +183,22 @@ https://en.wikipedia.org/wiki/Botnet
 Health and stability of the internet should be every user's goal.  A botnet client can masquerade as a regular N3+1 client.  To prevent any botnets from using this service, it is the responsibility of each user to add service description filters as problems come up.  As an alternative to denying service descriptions allowing only certain protocols is an option.  User defined fields might need to be disallowed.  Rating protocols and service types can be utilized (see "rating system" below).
 
 
-Reading further requires understanding of the following concepts:
-https://en.wikipedia.org/wiki/Library_(computing)
-https://en.wikipedia.org/wiki/Client_(computing)
-https://en.wikipedia.org/wiki/Whitelisting
-https://en.wikipedia.org/wiki/Media_type
-https://en.wikipedia.org/wiki/TCP_Wrappers
-https://en.wikipedia.org/wiki/Usenet
-https://en.wikipedia.org/wiki/Messaging_spam
-https://en.wikipedia.org/wiki/Network_News_Transfer_Protocol
-https://en.wikipedia.org/wiki/Web_of_trust
-https://en.wikipedia.org/wiki/Search_engine_indexing
-https://en.wikipedia.org/wiki/Authentication
-https://en.wikipedia.org/wiki/Hash_function
-https://en.wikipedia.org/wiki/Cryptographic_hash_function
-https://en.wikipedia.org/wiki/Cryptocurrency
-https://en.wikipedia.org/wiki/E-commerce
+Reading further requires understanding of the following concepts:  
+https://en.wikipedia.org/wiki/Library_(computing)  
+https://en.wikipedia.org/wiki/Client_(computing)  
+https://en.wikipedia.org/wiki/Whitelisting  
+https://en.wikipedia.org/wiki/Media_type  
+https://en.wikipedia.org/wiki/TCP_Wrappers  
+https://en.wikipedia.org/wiki/Usenet  
+https://en.wikipedia.org/wiki/Messaging_spam  
+https://en.wikipedia.org/wiki/Network_News_Transfer_Protocol  
+https://en.wikipedia.org/wiki/Web_of_trust  
+https://en.wikipedia.org/wiki/Search_engine_indexing  
+https://en.wikipedia.org/wiki/Authentication  
+https://en.wikipedia.org/wiki/Hash_function  
+https://en.wikipedia.org/wiki/Cryptographic_hash_function  
+https://en.wikipedia.org/wiki/Cryptocurrency  
+https://en.wikipedia.org/wiki/E-commerce  
 
 ##  Future Base Services
 

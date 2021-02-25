@@ -20,8 +20,8 @@ int main(int argc, char* argv[]){
     BWLists lists; // Black, White lists
 
     Config config(ldata, lists); // config is aware of service port, LocalData and BWLists
-    config.loadFromDisk(); // TODO: check success/fail, notify user on failure or exit?
-    // create a thread that watches files and watches for BWList updates
+    config.loadFromDisk(); // load ldata // TODO: check failure, notify user or exit?
+    // create a thread that watches files for service and BWList updates
     std::thread watch( &Config::watch, &config);
 
 
@@ -29,12 +29,11 @@ int main(int argc, char* argv[]){
     // it searches and fills rdata while honoring BWLists
     // when rdata is updated, it calls config.save(rdata);
     Crawler crawler(config, rdata, lists);
-    crawler.loadRemoteDataFromDisk();
-    // TODO: should crawler load rdata from disk instead of config?
+    crawler.loadRemoteDataFromDisk(); // load rdata from disk
     std::thread search( &Crawler::run, &crawler);
 
 
-    // create the server
+    // create the server returning queries
     // first time start running on a random port (ANY_PORT)
     // but if service ran before, reuse the port number
     unsigned short port = config.getPort(Sock::ANY_PORT);
