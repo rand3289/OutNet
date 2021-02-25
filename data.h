@@ -5,6 +5,7 @@
 #include <memory> // shared_ptr
 #include <string>
 #include <vector>
+#include <unordered_map>
 #include <mutex>
 #include <shared_mutex> // since C++17
 using namespace std;
@@ -33,7 +34,7 @@ struct LocalData {
     int addService(const string& service);
 };
 
-/*
+
 struct Fields{
     uint32_t host;
     uint16_t port;
@@ -47,18 +48,19 @@ union HostPort {
     HostPort(): fields() {}
     bool operator=(const HostPort& rhs) const { return value == rhs.value; }
 };
-*/
+
 
 struct HostInfo {                  // host/port fields are in the network byte order
     uint32_t host;                 // IPv4 address
     uint16_t port;                 // IPv4 port number (1-65535, 0=reserved)
-    time_point<system_clock> seen; // the server has been seen on line
     shared_ptr<PubKey> key;        // remote service's public key
     vector<string> services;       // remote services list
-    bool verified = false;         // was service queried directly or key found by a relay service?
+
+    time_point<system_clock> seen; // the server has been seen on line
     int offline = 0;               // server has been checked but found offline this many times
-    int rating = 100;              // quality of service for this service
+    bool verified = false;         // was service queried directly or key found by a relay service?
 // TODO: how to preserve where this information come from?  use host:port? referrer???
+    HostPort referrer;
 
     string getHost();
     int setHost(string& ip);
@@ -69,12 +71,25 @@ struct HostInfo {                  // host/port fields are in the network byte o
     void addService(string& service){ services.push_back(service); }
 };
 
+
+// these are remote service properties related to interaction with that service
+class Connections { // TODO: put a limit on connTimes (only last 10 or so remembered).
+    vector<time_point<system_clock> > connTimes; // when did this service connect to us
+    int rating = 100;              // quality of service for this service
+};
+
+
 struct RemoteData {
     shared_mutex rMutex;
     vector<HostInfo> hosts;
+//    unordered_map<HostPort,Connections> connections;
+
     HostInfo& addEmpty();
     int send(Sock& sock, vector<string>& filters);
 };
 
+// Black list and White list structures
+struct BWLists{
+};
 
 #endif // DATA_H_INCLUDED

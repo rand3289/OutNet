@@ -4,10 +4,13 @@
 #include "data.h"
 
 class Crawler {
-    Config& config;
+    Config& config; // TODO: does clawler need access to config? (remove #include "config.h" also)
     RemoteData& data;
+    BWLists& lists;
+    int saveRemoteDataToDisk();
 public:
-    Crawler(Config& configuration, RemoteData& rdata): config(configuration), data(rdata) {}
+    Crawler(Config& configuration, RemoteData& rdata, BWLists& bwlists): config(configuration), data(rdata), lists(bwlists) {}
+    int loadRemoteDataFromDisk();
     int run();
 };
 

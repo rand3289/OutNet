@@ -21,3 +21,13 @@ int Crawler::run(){
     std::copy(newData.begin(), newData.end(), back_inserter(data.hosts));
     return 0; 
 }
+
+// Data is periodically saved.  When service is restarted, it is loaded back up
+// RemoteData does not have to be locked here
+int Crawler::loadRemoteDataFromDisk(){
+    return 0;
+}
+
+int Crawler::saveRemoteDataToDisk(){
+    return 0;
+}

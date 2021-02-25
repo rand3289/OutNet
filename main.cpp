@@ -5,7 +5,6 @@
 #include "sock.h"
 #include "config.h"
 #include "crawler.h"
-#include "servwatch.h"
 #include <vector>
 #include <string>
 #include <thread>
@@ -18,19 +17,22 @@ using namespace std;
 int main(int argc, char* argv[]){
     LocalData ldata;
     RemoteData rdata;
-    Config config; // config is aware of service port, LocalData and RemoteData
-    config.loadFromDisk(ldata, rdata);
-    // TODO: check success/fail, notify user on failure
+    BWLists lists; // Black, White lists
+
+    Config config(ldata, lists); // config is aware of service port, LocalData and BWLists
+    config.loadFromDisk(); // TODO: check success/fail, notify user on failure or exit?
+    // create a thread that watches files and watches for BWList updates
+    std::thread watch( &Config::watch, &config);
+
 
     // create the information collector thread here (there could be many in the future)
+    // it searches and fills rdata while honoring BWLists
     // when rdata is updated, it calls config.save(rdata);
-    Crawler crawler(config, rdata);
+    Crawler crawler(config, rdata, lists);
+    crawler.loadRemoteDataFromDisk();
+    // TODO: should crawler load rdata from disk instead of config?
     std::thread search( &Crawler::run, &crawler);
 
-    // create a thread that registers services (from files and via connections)
-    // when ldata is updated, it calls config.save(ldata);
-    ServiceWatch watcher(config, ldata);
-    std::thread watch( &ServiceWatch::run, &watcher);
 
     // create the server
     // first time start running on a random port (ANY_PORT)
@@ -40,7 +42,7 @@ int main(int argc, char* argv[]){
     socket.listen(port);
 
     port = socket.getBoundPort(); // get bound server port number from socket
-    config.save(port);
+    config.savePort(port);
     cout << "Running on port " << ntohs(port) << endl;
 
     while(true){
