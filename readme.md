@@ -1,12 +1,34 @@
 ##  N3+1 - you are the internet!
 
-As computers get faster the need for large service providers should decrease, yet major corporations maintain control of your data by building more centralized services.   Use of centralized services can be avoided by distributing the equivalent of the server parts of these services among users.  Everyone can run a tiny search engine, a phone app store or a social network at home.  This model requires linking many small service providers in a P2P network.  Currently domain names allow you to find services on the internet.  There are problems with using domain names for distributed services.  Most users on the internet do not have a registered domain name that you have to pay for.  You can not point your domain name to your home IP address since it may change.  Domain names can be shut down by third parties.
+Reading further requires understanding of the following concepts:
+https://en.wikipedia.org/wiki/Network_service
+https://en.wikipedia.org/wiki/Server
+https://en.wikipedia.org/wiki/Search_engine
+https://en.wikipedia.org/wiki/App_store
+https://en.wikipedia.org/wiki/Social_network
+https://en.wikipedia.org/wiki/Domain_name
+https://en.wikipedia.org/wiki/Peer-to-peer
+https://en.wikipedia.org/wiki/Distributed_computing
+https://en.wikipedia.org/wiki/BitTorrent_tracker
+
+As computers get faster the need for large service providers should decrease. More can be done locally on your own computer.  Yet major corporations maintain control of your data by building centralized services.  Use of centralized services can be avoided by distributing the equivalent of the server parts of these services among users of the services.  Everyone can run a tiny search engine, a phone app store or a social network at home.  This model requires linking many small services in a distributed (P2P) network.  Currently domain names allow you to find services on the internet.  There are problems with using domain names for distributing services.  A list of computer names or IPs must be maintained in one location.  An example is a BitTorrent tracker.  Most users on the internet do not have a registered domain name.  You have to pay for registering most domains.  You can not point your domain name to your home IP address since it may change.  Domain names can be shut down by third parties.
+
+Reading further requires understanding of the following concepts:
+https://en.wikipedia.org/wiki/Digital_signature
+https://en.wikipedia.org/wiki/Public-key_cryptography
+https://en.wikipedia.org/wiki/Communication_protocol
+
+The alternative is the N3+1 (pronounced net one).  N3+1 is an open source distributed service directory communication (network) protocol.  It is designed to find conventional or distributed (P2P) services on the internet.  Services such as web pages, game servers, ftp servers, messengers, forums, video conferences, P2P and distributed services.  Another goals of N3+1 is to decentralize the internet making it resistant to control and sensorship.  N3+1 provides anonymity.  Instead of a domain or a user name, a public key  is used to identify you, your services and services provided by others.  Public key is generated locally.  Your real name is no longer needed to provide or consume services on the internet.  Your IP address however will be visible to the world unless used in conjunction with a VPN.
+
+Reading further requires understanding of the following concepts:
+https://en.wikipedia.org/wiki/Distributed_hash_table
+https://en.wikipedia.org/wiki/Blockchain
+https://en.wikipedia.org/wiki/Domain_Name_System
+
+N3+1 can be viewed as a Distributed hash table.  Keys can be network protocols, service types or public keys.  In other ways N3+1 can be thought of as a DNS system which allows finding services on the internet.  N3+1 is different from a blockchain and much simpler. Peers can have a partial view of the information.
 
 
-The alternative is the N3+1 (pronounced net one).  N3+1 is an open source distributed directory protocol designed to find conventional or distributed services on the internet.  Services such as web pages, game servers, ftp servers, messengers, forums, video conferences, P2P and distributed services.  Another goals of N3+1 is to decentralize the internet making it resistant to control and sensorship.  A small bonus is you no longer have to pay to maintain your domain name.  N3+1 provides anonymity.  Instead of a domain or a user name, a public key from a locally generated public/private key pair is used to identify you, your services and services provided by others.  Your real name is no longer needed to provide or consume services on the internet.  Your IP address however will be visible to the world unless used in conjunction with a VPN.
-
-
-## Proposed service
+## Proposed implementation
  N3+1 is implemented by a service with the same name that runs on your machine.  It gathers and provides a list of IPv4 addresses, corresponding port numbers and ages of nodes participating in the N3+1.  In addition, N3+1 lists the types of remote services and local services you run such as your web sites, game servers and P2P services.
 
 When N3+1 starts, it tries to contact some of the known remote N3+1 severs. It collects their information such as public keys and list of services they advertise.  Local services can query N3+1 to find a list of peers.  Querying N3+1 will return a response described below in pseudocode:
@@ -141,7 +163,7 @@ It has to be able to manage other's public keys to be able to put them on your c
 * Another significant service is a public key rating system.  N3+1Rate rating service lays at the center of trust in a distrubuted system.  You should be able to rate your interactions with owners of a public key.  Intention of this service is different than the "Web of trust" (https://en.wikipedia.org/wiki/Web_of_trust).  In N3+1 the key comes first and the name is secondary.  The name is not important unless verified through personal communication.  The rating does not state if you know the entity or entity's name in real life.  It rates a specific type of transaction/interaction you had.  For example an instance of a running N3+1 service can be rated.  An internet purchase of an item description signed by a key can be rated.  A software/release signed by a key can be rated.  Securyty (virus/trojan free) of the content can be ensured by the rating service.  Software or content releases have to be signed by a private key of the author.  Authors's public keys in turn will be rated by users.  The way you trust in Microsoft, Google or Apple's content distribution system, individual authors have to earn your thrust in their public keys.  Rating should always contain a subject as described in N3+1Exchange since an owner of a key can provide multiple services.  For example sell items or services and at the same time distribute free software.  His web store should not be rated highly just because he makes great freeware video games.
 
 
-* N3+1Search service is used to index information (keys, subjects, content, file hashes) distributed by local services and EXCHANGE it with other search services or local distributed services.
+* N3+1Search service is used to index information (keys, subjects, content, file hashes) distributed by local services and EXCHANGE it with other search services or local distributed services.  You control what gets indexed.
 
 * Authentication service is needed to enable seamless authentication on any conventional (server based) internet resource using your public/private key pair.  Similar to authentication via amazon/google/yahoo/facebook.
 

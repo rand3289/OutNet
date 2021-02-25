@@ -5,7 +5,7 @@ using namespace std;
 
 #ifdef WIN32
     #pragma comment(lib, "Ws2_32.lib") // link to winsock2 library
-    #define close(s) closesocket(s)
+    #define ::close(s) closesocket(s)
 //    #define UNREACHABLE WSAECONNRESET
     #undef errno // do not use stdlib version in this file
     #define errno WSAGetLastError()

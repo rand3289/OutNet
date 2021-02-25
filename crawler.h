@@ -8,7 +8,7 @@ class Crawler {
     RemoteData& data;
 public:
     Crawler(Config& configuration, RemoteData& rdata): config(configuration), data(rdata) {}
-    int run(){ return 0; }
+    int run();
 };
 
 #endif // CRAWLER_H_INCLUDED
