@@ -30,11 +30,10 @@ Reading further requires understanding of the following concepts:
 https://en.wikipedia.org/wiki/Distributed_hash_table  
 https://en.wikipedia.org/wiki/Blockchain  
 https://en.wikipedia.org/wiki/Domain_Name_System  
+https://en.wikipedia.org/wiki/IPv4  
 
 N3+1 can be viewed as a Distributed hash table.  Keys can be network protocols, service types or public keys.  In other ways N3+1 can be thought of as a DNS system which allows finding services on the internet.  N3+1 is different from a blockchain and much simpler. Peers can have a partial view of the information.
 
-Reading further requires understanding of the following concepts:  
-https://en.wikipedia.org/wiki/IPv4  
 
 ## Proposed implementation
  N3+1 is implemented by a service with the same name that runs on your machine.  It gathers and provides a list of IPv4 addresses, corresponding port numbers and ages of nodes participating in the N3+1.  In addition, N3+1 lists the types of remote services and local services you run such as your web sites, game servers and P2P services.

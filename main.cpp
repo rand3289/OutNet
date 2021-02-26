@@ -37,25 +37,25 @@ int main(int argc, char* argv[]){
     // first time start running on a random port (ANY_PORT)
     // but if service ran before, reuse the port number
     unsigned short port = config.getPort(Sock::ANY_PORT);
-    Sock socket = Sock();
-    socket.listen(port);
+    Sock server;
+    server.listen(port);
 
-    port = socket.getBoundPort(); // get bound server port number from socket
+    port = server.getBoundPort(); // get bound server port number from socket
     config.savePort(port);
     cout << "Running on port " << ntohs(port) << endl;
 
     while(true){
-        SOCKET connection = socket.accept();
+        SOCKET connection = server.accept();
         Sock conn(connection);
-        
-        Request req(conn);
+
         vector<string> filters; // function + parameter pairs
+        Request req(conn);
         int select = req.parseRequest(filters);
-        // TODO: handle errors (select <= 0)
 
-        Response resp(conn);
-        resp.write(select, filters, ldata, rdata);
-
+        if(select > 0){ // request parsed correctly and we have a data bitmap
+            Response resp(conn);
+            resp.write(select, filters, ldata, rdata);
+        }
         conn.close();
     }
 }
