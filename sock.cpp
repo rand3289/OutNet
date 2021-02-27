@@ -180,31 +180,29 @@ int Sock::read(char* buff, int size){
 		cerr << "Socket not initialized - Can't read." << endl;
 		return -1;
 	}
-	return recv(s,buff,size,MSG_DONTWAIT);
+	return recv(s, buff, size, MSG_DONTWAIT);
 }
 
 
-int Sock::readLine(char* buff){
-		if(peek){
-			*buff = peek;
-			++buff;
-			peek = 0;
-		}
+int Sock::readLine(char* buff, int maxSize){
+	char* origin = buff;
+	if(peek){
+		*buff = peek;
+		++buff;
+		peek = 0;
+	}
 
-		bool newLine = false;
-		while(true){
-			if( read(buff,1) > 0 ){
-				newLine =  newLine || *buff=='\n' || *buff=='\r';
-				if(newLine && *buff!='\n' && *buff!='\r'){
-					peek = *buff; 
-					*buff = 0;
-					return 1;
-				}
-				++buff;
-			} else {
-				return 0;
-			}
-
+	bool newLine = false;
+	while( buff-origin < maxSize-1 ){
+		if( read(buff,1) <= 0 ){ return 0; }
+		newLine =  newLine || *buff=='\n' || *buff=='\r';
+		if(newLine && *buff!='\n' && *buff!='\r'){
+			peek = *buff; 
+			*buff = 0;
+			return 1;
 		}
-		return 1;
+		++buff;
+	} // while
+	*buff = 0;
+	return 1;
 }

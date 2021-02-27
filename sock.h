@@ -28,7 +28,7 @@ public:
 	int close(void);
 
 	int read(char * buffer, int size);
-	int readLine(char* buffer);
+	int readLine(char* buffer, int size);
 	int write(const char * buffer, int size);
 
     // server - start listening for a connection.  Use ANY_PORT if not binding to a specific port
