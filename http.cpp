@@ -15,7 +15,7 @@ int Request::parseRequest(Sock& conn, vector<string>& filters){
         cout << buff;
     }
     cout.flush();
-    return 0;
+    return 2036; // DEBUGGING ONLY!!!
 }
 
 //#include <chrono>

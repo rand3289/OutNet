@@ -55,6 +55,7 @@ int Sock::conn(unsigned long ip, unsigned short port){
 	return 0;
 }
 
+
 int Sock::conn(const char* addr, unsigned short port){
 	hostent* ipent=gethostbyname(addr);
 	if(!ipent){
@@ -70,10 +71,11 @@ int Sock::conn(const char* addr, unsigned short port){
 	return conn(ip, port);
 }
 
+
 SOCKET Sock::accept(){
 	sockaddr_in ipr;	// used for a server
-	unsigned int size = sizeof(ipr);
-	SOCKET serv = ::accept(s, (sockaddr*)&ipr, (socklen_t*)&size);
+	socklen_t size = sizeof(ipr);
+	SOCKET serv = ::accept(s, (sockaddr*)&ipr, &size);
 	if(INVALID_SOCKET == serv ){
 		int err = errno;
 		cerr << "error accepting connection: " << strerror(err) << " (" << err << ")" << endl;
@@ -83,15 +85,14 @@ SOCKET Sock::accept(){
 
 
 SOCKET Sock::accept(Sock& conn){
-	unsigned int size = sizeof(conn.ip);
-	conn.s = ::accept(s, (sockaddr*)&ip, (socklen_t*)&size);
+	socklen_t size = sizeof(conn.ip);
+	conn.s = ::accept(s, (sockaddr*)&conn.ip, &size);
 	if(INVALID_SOCKET == conn.s ){
 		int err = errno;
 		cerr << "error accepting connection: " << strerror(err) << " (" << err << ")" << endl;
 	}
 	return conn.s;
 }
-
 
 
 int Sock::listen(unsigned short port){
@@ -143,13 +144,15 @@ Sock::Sock(): s(INVALID_SOCKET), peek(0) {
 
 
 Sock::Sock(SOCKET socket): s(socket), peek(0) {
-	memset(&ip,0,sizeof(ip));
+	memset(&ip,0,sizeof(ip)); // TODO: fill in ip from socket here???
     initNetwork();
 }
 
 
 Sock::~Sock(){
-	close();
+    if(s != INVALID_SOCKET){
+        close();
+    }
 }
 
 

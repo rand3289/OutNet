@@ -20,3 +20,9 @@ int Config::watch(){
     }
 }
 
+
+int Config::loadFromDisk(LocalData& lData, BWLists& bwLists){
+    ldata = &lData;
+    bwlists = &bwLists;
+    return 0;
+}
