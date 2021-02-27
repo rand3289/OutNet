@@ -131,6 +131,8 @@ Returned fields are specified by passing a "bit field" called SELECT represented
 * signature (sign the whole message) (SIGN=512)
 * remote service list filtered by service type/protocol (RSVCL=1024)
 * local service list filtered by service type/protocol (LSVCL=2048)
+* black list (BLIST=4096)
+* white list (WLIST=8192)
 
 
 Where as fields are controlled by SELECT parameter, returned records are limited by FILTER parameter:

@@ -46,7 +46,7 @@ union HostPort {
     uint64_t value;
     Fields fields;
     HostPort(): fields() {}
-    bool operator=(const HostPort& rhs) const { return value == rhs.value; }
+    bool operator==(const HostPort& rhs) const { return value == rhs.value; }
 };
 
 
@@ -90,6 +90,13 @@ struct RemoteData {
 
 // Black list and White list structures
 struct BWLists{
+    shared_mutex mutx;
+    typedef string Protocol;
+    vector<Protocol> protocolBlackList;
+    vector<HostPort> hostBlackList;
+    vector<HostPort> hostWhiteList;
+    vector<PubKey>   keyBlackList;
+    vector<PubKey>   keyWhiteList;
 };
 
 #endif // DATA_H_INCLUDED

@@ -16,7 +16,6 @@ using namespace std;
     #include <netdb.h> // gethostbyname()
     #include <sys/types.h>
     #include <sys/socket.h>
-    #define INVALID_SOCKET (-1)
     #define SOCKET_ERROR   (-1)
 //    #define UNREACHABLE    ECONNREFUSED
 #endif
@@ -35,53 +34,80 @@ void initNetwork(){
 }
 
 
-int Sock::conn(const char* addr, int port){
+// ip has to be in the network byte order!!!
+int Sock::conn(unsigned long ip, unsigned short port){
  	s=socket(AF_INET,SOCK_STREAM,0);
 	if(s==INVALID_SOCKET){
 		cerr << "Error creating socket." << endl;
-		return 1;
+		return -3;
 	}
 
-	hostent* ipent=gethostbyname(addr);
-	if(!ipent){
-		cerr << "Can't gethostbyname()" << endl;
-		return 2;
-	}
+	sockaddr_in addr;
+	addr.sin_family=AF_INET;
+	addr.sin_port=htons(port);
+	addr.sin_addr.s_addr=ip;
 
-	sockaddr_in ip;
-	ip.sin_family=AF_INET;
-	ip.sin_port=htons(port);
-	ip.sin_addr.s_addr=*((unsigned long *)ipent->h_addr); // h_addr is macro for h_addr_list[0]
-	if(ip.sin_addr.s_addr == INADDR_NONE){
-		cerr << "gethostbyname() returned INADDR_NONE" << endl;
-		return 3;
-	}
-
-	if( connect(s,(sockaddr*)&ip, sizeof(ip) )){
-		int error = errno;
-		return error;
+	if( connect(s, (sockaddr*)&addr, sizeof(addr) )){
+		int err = errno;
+		cerr << "error connecting to remote host via TCP: " << strerror(err) << " (" << err << ")" << endl;
+		return err; // errno returns positive numbers
 	}
 	return 0;
 }
 
+int Sock::conn(const char* addr, unsigned short port){
+	hostent* ipent=gethostbyname(addr);
+	if(!ipent){
+		cerr << "Can't gethostbyname()" << endl;
+		return -1;
+	}
+	unsigned long ip = *(unsigned long*) ipent->h_addr;  // h_addr is a macro for h_addr_list[0]
+	if(ip == INADDR_NONE){
+		cerr << "gethostbyname() returned INADDR_NONE" << endl;
+		return -2;
+	}
+
+	return conn(ip, port);
+}
 
 SOCKET Sock::accept(){
 	sockaddr_in ipr;	// used for a server
 	unsigned int size = sizeof(ipr);
 	SOCKET serv = ::accept(s, (sockaddr*)&ipr, (socklen_t*)&size);
 	if(INVALID_SOCKET == serv ){
-		cerr << "error accepting connection:" << errno << endl;
+		int err = errno;
+		cerr << "error accepting connection: " << strerror(err) << " (" << err << ")" << endl;
 	}
 	return serv;
 }
 
 
+SOCKET Sock::accept(Sock& conn){
+	unsigned int size = sizeof(conn.ip);
+	conn.s = ::accept(s, (sockaddr*)&ip, (socklen_t*)&size);
+	if(INVALID_SOCKET == conn.s ){
+		int err = errno;
+		cerr << "error accepting connection: " << strerror(err) << " (" << err << ")" << endl;
+	}
+	return conn.s;
+}
+
+
+
 int Sock::listen(unsigned short port){
- 	s=socket(AF_INET,SOCK_STREAM,0);
+ 	s = socket(AF_INET, SOCK_STREAM, 0);
 	if(s==INVALID_SOCKET){
-		cerr << "Error creating socket:"<< errno << endl;
+		int err = errno;
+		cerr << "Error creating socket: " << strerror(err) << " (" << err << ")" << endl;
 		return INVALID_SOCKET;
 	}
+
+    int reuse = 1; // allow binding to a port if previous socket is lingering
+    if ( 0 > setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) ){
+		int err = errno;
+        cerr << "Error in setsockopt(SO_REUSEADDR): "<< strerror(err) << " (" << err << ")" << endl;
+		return INVALID_SOCKET;
+    }
 
 	unsigned int size = sizeof(ip);
 	ip.sin_family=AF_INET;
@@ -89,16 +115,19 @@ int Sock::listen(unsigned short port){
 	ip.sin_addr.s_addr = INADDR_ANY;
 
 	if ( SOCKET_ERROR==bind(s, (sockaddr*) &ip, size)){
-		cerr << "error binding to port " << port << " error:" << errno << endl;
+		int err = errno;
+		cerr << "error binding to port " << port << ": " << strerror(err) << " (" << err << ")" << endl;
 		return INVALID_SOCKET;
 	}
 	if ( SOCKET_ERROR==getsockname(s, (sockaddr*) &ip, (socklen_t*)&size)){
-		cerr << "error getting bound socket information:" << errno << endl;
+		int err = errno;
+		cerr << "error getting bound socket information: " << strerror(err) << " (" << err << ")" << endl;
 		return INVALID_SOCKET;
 	}
 
 	if( SOCKET_ERROR == ::listen(s, SOMAXCONN) ){
-		cerr << "error putting the socket into listening mode:" << errno << endl;
+		int err = errno;
+		cerr << "error putting the socket into listening mode: " << strerror(err) << " (" << err << ")" << endl;
 		return INVALID_SOCKET;
 	}
 
@@ -125,7 +154,10 @@ Sock::~Sock(){
 
 
 int Sock::close(void){
-	::close(s);
+	if(::close(s)){
+		int err = errno;
+		cerr << "error closing socket: " << strerror(err) << " (" << err << ")" << endl;
+	}
 	s=INVALID_SOCKET; // Connect checks it
 	return 0;
 }
