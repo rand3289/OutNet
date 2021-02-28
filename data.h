@@ -1,7 +1,6 @@
 #ifndef DATA_H_INCLUDED
 #define DATA_H_INCLUDED
-#include "sock.h"
-#include "sign.h"
+#include "sign.h" // PubKey
 #include <memory> // shared_ptr
 #include <string>
 #include <vector>
@@ -11,6 +10,8 @@
 using namespace std;
 #include <chrono>
 using namespace std::chrono;
+
+class Writer; // from http.h
 
 struct Service{
     string service;
@@ -30,7 +31,7 @@ struct LocalData {
     vector<string> services;
     vector<Service> servicesFields;
     // writes unsigned char size (255max) + string without null
-    int send(Sock& sock, vector<string>& filters);
+    int send(Writer& writer, int select, vector<string>& filters);
     int addService(const string& service);
 };
 
@@ -85,7 +86,7 @@ struct RemoteData {
 //    unordered_map<HostPort,Connections> connections;
 
     HostInfo& addEmpty();
-    int send(Sock& sock, vector<string>& filters);
+    int send(Writer& writer, int select, vector<string>& filters);
 };
 
 // Black list and White list structures
@@ -97,6 +98,7 @@ struct BWLists{
     vector<HostPort> hostWhiteList;
     vector<PubKey>   keyBlackList;
     vector<PubKey>   keyWhiteList;
+    int send(Writer& writer, int select, vector<string>& filters);
 };
 
 #endif // DATA_H_INCLUDED

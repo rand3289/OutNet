@@ -1,4 +1,5 @@
 #include "data.h"
+#include "http.h"
 #include "sign.h"
 #include <memory> // shared_ptr
 #include <string>
@@ -14,27 +15,16 @@ int Service::parse(const string& service){
     return 0; // TODO:
 }
 
-// TODO: move to Sock ???
-// writes unsigned char size (255max) + string without null
-int writeString(Sock& sock, const string& str){
-    constexpr static const int MAX_STR_LEN = 255;
-    unsigned char iclen = str.length();
-    if(str.length() > MAX_STR_LEN){
-        iclen = MAX_STR_LEN;
-        cerr << "WARNING: truncating string: " << str;
-    }
-    sock.write( (char*) &iclen, 1);
-    return 1 + sock.write( (char*) str.c_str(), iclen);
-}
 
+int LocalData::send(Writer& writer, int select, vector<string>& filters){
+    writer.write((char*) &localPubKey, sizeof(localPubKey) );
+    // TODO: delete "local" filters here???
 
-int LocalData::send(Sock& sock, vector<string>& filters){
-    sock.write((char*) &localPubKey, sizeof(localPubKey) );
     // TODO: filter services before sending
     size_t bytes = 0;
     shared_lock lock(lMutex);
     for(auto i: services){
-        bytes+=writeString(sock, i);
+        bytes+=writer.writeString(i);
     }
     return bytes;
 }
@@ -63,6 +53,11 @@ HostInfo& RemoteData::addEmpty(){
 }
 
 
-int RemoteData::send(Sock& sock, vector<string>& filters){
+int RemoteData::send(Writer& writer, int select, vector<string>& filters){
+    return 0; // TODO:
+}
+
+
+int BWLists::send(Writer& writer, int select, vector<string>& filters){
     return 0; // TODO:
 }

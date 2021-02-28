@@ -7,6 +7,19 @@
 #include <cstring>
 using namespace std;
 
+// TODO: move to Sock ???
+int Writer::writeString(const string& str){
+    constexpr static const int MAX_STR_LEN = 255;
+    unsigned char iclen = str.length();
+    if(str.length() > MAX_STR_LEN){
+        iclen = MAX_STR_LEN;
+        cerr << "WARNING: truncating string: " << str;
+    }
+    sock.write( (char*) &iclen, 1);
+    return 1 + sock.write( (char*) str.c_str(), iclen);
+}
+
+
 
 bool tokenize( char** buffer, const char* bufferEnd, char** token ){
     while(*buffer != bufferEnd){ // skip leading separators
@@ -55,11 +68,10 @@ int Request::parseRequest(Sock& conn, vector<string>& filters){
         const char * end = buff+strlen(buff);
         char* token;
         while( tokenize( &start, end, &token) ){
-            // TODO: throw away "HTTP" and "1.1" tokens here???
-            if( strncmp(token, "QUERY=", 6) ){
-                filters.push_back(token);
-            } else {
+            if( strncmp(token, "QUERY=", 6) == 0 ){
                 query = atol(token+6);
+            } else if( strcmp(token,"HTTP") && strcmp(token,"1.1") ){ // throw away these tokens
+                filters.push_back(token);
             }
         }
     }
@@ -67,32 +79,38 @@ int Request::parseRequest(Sock& conn, vector<string>& filters){
 }
 
 
-//#include <chrono>
-//using namespace std::chrono;
-//ss << system_clock::now().time_since_epoch().count();
+int Response::write(Sock& conn, int select, vector<string>& filters, LocalData& ldata, RemoteData& rdata, BWLists& bwlists ){
+    static const string header =  "HTTP/1.1 200 OK\nServer: n3+1\n\n";
+    conn.write(header.c_str(), header.size() ); // no need to sign the header
 
-int Response::write(Sock& conn, int select, vector<string>& filters, LocalData& ldata, RemoteData& rdata, BWLists& lists ){
-    string header = "HTTP/1.1 200 OK\
-Server: n3t1\
-Transfer-Encoding: chunked\r\n\r\n";
+    bool sign = select & SELECTION::SIGN; // TODO: allocate it during class construction???
+    shared_ptr<Writer> writer = sign ? make_shared<SignatureWriter>(conn) : make_shared<Writer>(conn);
+
+//    Writer* writer = & dumbWriter;
+//    if( select & SELECTION::SIGN ){
+//        writer = &signatureWriter;
+//    }
+//    writer->init(conn);
+
+    ldata.send(  *writer, select, filters);
+    rdata.send(  *writer, select, filters);
+    bwlists.send(*writer, select, filters);
+    return 0;
+}
+
+
+void Response::writeDebug(Sock& conn, int select, std::vector<std::string>& filters){
     stringstream ss;
-    ss << "<!DOCTYPE HTML PUBLIC \"\"\"\"><html><body>";
-    ss << "QUERY=" <<  select << " Tokens:<br>";
+    ss << "HTTP/1.1 200 OK\n";
+    ss << "Server: n3+1\n\n"; // "\n" separates headers from html
+    ss << "<html><body>";
+    ss << "<a href='https://github.com/rand3289/OutNet'>INFO</a><br>";
+    ss << "QUERY=" <<  select << "<br>";
     for(auto f: filters){
         ss << f << "<br>";
     }
-    ss << "random challenge string: " << rand() << "<br>";
+    time_t now = time(NULL); 
+    ss << ctime(&now) << "<br>";
     ss << "</body> </html>";
-
-    conn.write(header.c_str(), header.size());
-    conn.write(ss.str().c_str(), ss.str().size());
-
-    // TODO: sort out local and remote filters here ???
-    ldata.send(conn,filters);
-    // TODO: delete "local" filters before sending rdata???
-    rdata.send(conn,filters);
-
-    this_thread::sleep_for(seconds(2)); // DEBUGGING ONLY!!!
-
-    return 0;
+    conn.write(ss.str().c_str(), ss.str().size() );
 }

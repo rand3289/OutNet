@@ -52,6 +52,8 @@ int main(int argc, char* argv[]){
 
         if(select > 0){ // request parsed correctly and we have a data bitmap
             Response::write(conn, select, filters, ldata, rdata, bwlists);
+        } else {
+            Response::writeDebug(conn, select, filters);
         }
     } // while()
 } // main()
