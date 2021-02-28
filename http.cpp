@@ -98,6 +98,11 @@ int Response::write(Sock& conn, int select, vector<string>& filters, LocalData& 
     ldata.send(  *writer, select, filters);
     rdata.send(  *writer, select, filters);
     bwlists.send(*writer, select, filters);
+
+    if(select & SELECTION::SIGN){
+        PubSign* sign = writer->getSignature();
+        conn.write((char*)sign, sizeof(PubSign));
+    }
     return 0;
 }
 

@@ -23,6 +23,7 @@ struct Service{
 //    string userDefinedField; // Do not parse
 //    Service(const string& service);
     int parse(const string& service);
+    bool passFilters(vector<string> filters);
 };
 
 
@@ -49,7 +50,7 @@ struct HostInfo {                  // host/port fields are in the network byte o
     uint32_t host;                 // IPv4 address
     uint16_t port;                 // IPv4 port number (1-65535, 0=reserved)
     shared_ptr<PubKey> key;        // remote service's public key
-    vector<string> services;       // remote services list
+    vector<Service> services;      // remote services list
 
     time_point<system_clock> seen; // the server has been seen on line
     int offline = 0;               // server has been checked but found offline this many times
@@ -63,7 +64,11 @@ struct HostInfo {                  // host/port fields are in the network byte o
     void setPort(uint16_t portHostByteOrder); // convert from host byte order to network byte order
 
     void resetTime(){ seen = system_clock::now(); }
-    void addService(string& service){ services.push_back(service); }
+    void addService(string& service){
+        services.emplace( services.end() )->parse(service);
+    }
+
+    bool passFilters(vector<string> filters);
 };
 
 

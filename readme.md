@@ -129,8 +129,8 @@ Returned fields are specified by passing a "bit field" called SELECT represented
 * remote public key (RKEY=128)
 * remote service list (RSVC=256)
 * signature (sign the whole message) (SIGN=512)
-* remote service list filtered by service type/protocol (RSVCL=1024)
-* local service list filtered by service type/protocol (LSVCL=2048)
+* remote service list filtered by service type/protocol (RSVCF=1024)
+* local service list filtered by service type/protocol (LSVCF=2048)
 * black list (BLIST=4096)
 * white list (WLIST=8192)
 

@@ -17,8 +17,8 @@ enum SELECTION {
     RKEY  = 128,  // remote public key
     RSVC  = 256,  // remote service list
     SIGN  = 512,  // signature (sign the whole message)
-    RSVCL = 1024, // remote service list filtered by service type/protocol
-    LSVCL = 2048, // local service list filtered by service type/protocol
+    RSVCF = 1024, // remote service list filtered by service type/protocol
+    LSVCF = 2048, // local service list filtered by service type/protocol
     BLIST = 4096, // black list
     WLIST = 8192  // white list
 };
