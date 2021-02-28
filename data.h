@@ -13,7 +13,9 @@ using namespace std::chrono;
 
 class Writer; // from http.h
 
+
 struct Service{
+    string fullDescription;
     string service;
     string protocol;
     uint32_t ip;
@@ -23,31 +25,23 @@ struct Service{
     int parse(const string& service);
 };
 
-// TODO: figure out locking mechanisms for LocalData & RemoteData
+
 // TODO: key from Signature class gets filled in
 struct LocalData {
     shared_mutex lMutex;
     PubKey localPubKey;
-    vector<string> services;
-    vector<Service> servicesFields;
-    // writes unsigned char size (255max) + string without null
+    vector<Service> services;
+
     int send(Writer& writer, int select, vector<string>& filters);
     int addService(const string& service);
 };
 
 
-struct Fields{
+struct HostPort {
     uint32_t host;
     uint16_t port;
-    uint16_t spare;
-    Fields(): spare(0) {}
-};
-
-union HostPort {
-    uint64_t value;
-    Fields fields;
-    HostPort(): fields() {}
-    bool operator==(const HostPort& rhs) const { return value == rhs.value; }
+    bool operator==(const HostPort& rhs){ return host==rhs.host && port == rhs.port; }
+    HostPort& operator=(const HostPort& rhs){ host=rhs.host; port=rhs.port; return *this; }
 };
 
 
@@ -60,11 +54,11 @@ struct HostInfo {                  // host/port fields are in the network byte o
     time_point<system_clock> seen; // the server has been seen on line
     int offline = 0;               // server has been checked but found offline this many times
     bool verified = false;         // was service queried directly or key found by a relay service?
-// TODO: how to preserve where this information come from?  use host:port? referrer???
-    HostPort referrer;
+    HostPort referrer;             // preserve where this information come from
 
     string getHost();
     int setHost(string& ip);
+    void setHost(unsigned long ip){ host = ip; } // ip has to be in the network byte order
     uint16_t getPortHostByteOrder(); // convert from network byte order to host byte order
     void setPort(uint16_t portHostByteOrder); // convert from host byte order to network byte order
 
@@ -75,6 +69,7 @@ struct HostInfo {                  // host/port fields are in the network byte o
 
 // these are remote service properties related to interaction with that service
 class Connections { // TODO: put a limit on connTimes (only last 10 or so remembered).
+    unsigned short port;
     vector<time_point<system_clock> > connTimes; // when did this service connect to us
     int rating = 100;              // quality of service for this service
 };
@@ -83,11 +78,10 @@ class Connections { // TODO: put a limit on connTimes (only last 10 or so rememb
 struct RemoteData {
     shared_mutex rMutex;
     vector<HostInfo> hosts;
-//    unordered_map<HostPort,Connections> connections;
-
-    HostInfo& addEmpty();
+    unordered_multimap<unsigned long int,Connections> connections;
     int send(Writer& writer, int select, vector<string>& filters);
 };
+
 
 // Black list and White list structures
 struct BWLists{
@@ -100,5 +94,6 @@ struct BWLists{
     vector<PubKey>   keyWhiteList;
     int send(Writer& writer, int select, vector<string>& filters);
 };
+
 
 #endif // DATA_H_INCLUDED

@@ -12,44 +12,36 @@ using namespace std;
 using namespace std::chrono;
 
 int Service::parse(const string& service){
+    fullDescription = service;
     return 0; // TODO:
+}
+
+
+//TODO:
+string HostInfo::getHost(){ return ""; }
+int HostInfo::setHost(string& ip){ return 0; }
+uint16_t HostInfo::getPortHostByteOrder(){ return ntohs(port); }
+void HostInfo::setPort(uint16_t portHostByteOrder){ port = htons(port); }
+
+
+int LocalData::addService(const string& service){
+//    unique_lock rlock(lMutex);
+    services.emplace(services.end());
+    services.back().parse(service);
+    return 0;
 }
 
 
 int LocalData::send(Writer& writer, int select, vector<string>& filters){
     writer.write((char*) &localPubKey, sizeof(localPubKey) );
     // TODO: delete "local" filters here???
-
     // TODO: filter services before sending
     size_t bytes = 0;
     shared_lock lock(lMutex);
     for(auto i: services){
-        bytes+=writer.writeString(i);
+        bytes+=writer.writeString(i.fullDescription);
     }
     return bytes;
-}
-
-
-int LocalData::addService(const string& service){
-    unique_lock rlock(lMutex);
-    services.push_back(service);
-    servicesFields.emplace(servicesFields.end());
-    servicesFields.back().parse(service);
-    return 0;
-}
-
-//TODO:
-string HostInfo::getHost(){ return ""; }
-int HostInfo::setHost(string& ip){ return 0; }
-
-uint16_t HostInfo::getPortHostByteOrder(){ return ntohs(port); }
-void HostInfo::setPort(uint16_t portHostByteOrder){ port = htons(port); }
-
-
-HostInfo& RemoteData::addEmpty(){
-    unique_lock lock(rMutex);
-    hosts.emplace( hosts.end() );
-    return hosts.back();
 }
 
 
