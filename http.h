@@ -11,11 +11,11 @@
 // Writer and SignatureWriter are helper classes to help components send data
 // when it needs to be signed or not
 struct Writer {
-    Sock& sock;
+    Sock* sock = nullptr;
 public:
-    Writer(Sock& socket): sock(socket) {}
-    inline virtual int write(char* data, size_t size){ return sock.write(data, size); }
+    inline virtual int write(char* data, size_t size){ return sock->write(data, size); }
     inline virtual PubSign* getSignature(){ return nullptr; }
+    inline virtual void init(Sock& socket){ sock = & socket; }
     int writeString(const string& str); // writes unsigned char size (255max) + string without null
 };
 
@@ -23,11 +23,11 @@ public:
 class SignatureWriter: public Writer {
     Signature sign;
 public:
-    SignatureWriter(Sock& socket): Writer(socket) {}
     inline virtual PubSign* getSignature(){ return &sign.getSignature(); }
+    inline virtual void init(Sock& socket){ sock = & socket; sign.init(); }
     inline virtual int write(char* data, size_t size){
         sign.write(data, size);        // sign the data
-        return sock.write(data, size); // send data to remote client
+        return sock->write(data, size); // send data to remote client
     }
 };
 
@@ -39,8 +39,10 @@ public:
 
 
 class Response{
+    Writer dumbWriter;
+    SignatureWriter signatureWriter;
 public:
-    static int write(Sock& conn, int select, std::vector<std::string>& filters, LocalData& ldata, RemoteData& rdata, BWLists& lists);
+    int write(Sock& conn, int select, std::vector<std::string>& filters, LocalData& ldata, RemoteData& rdata, BWLists& lists);
     static void writeDebug(Sock& conn, int select, std::vector<std::string>& filters);
 };
 

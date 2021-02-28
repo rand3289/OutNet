@@ -15,8 +15,8 @@ int Writer::writeString(const string& str){
         iclen = MAX_STR_LEN;
         cerr << "WARNING: truncating string: " << str;
     }
-    sock.write( (char*) &iclen, 1);
-    return 1 + sock.write( (char*) str.c_str(), iclen);
+    sock->write( (char*) &iclen, 1);
+    return 1 + sock->write( (char*) str.c_str(), iclen);
 }
 
 
@@ -74,6 +74,8 @@ int Request::parseRequest(Sock& conn, vector<string>& filters){
                 filters.push_back(token);
             }
         }
+        if(query>0){ break; } // we got all we need
+        cout << "### Query did not parse correctly. Entering HTTP request debug mode. ###" << endl;
     }
     return query;
 }
@@ -83,14 +85,15 @@ int Response::write(Sock& conn, int select, vector<string>& filters, LocalData& 
     static const string header =  "HTTP/1.1 200 OK\nServer: n3+1\n\n";
     conn.write(header.c_str(), header.size() ); // no need to sign the header
 
-    bool sign = select & SELECTION::SIGN; // TODO: allocate it during class construction???
-    shared_ptr<Writer> writer = sign ? make_shared<SignatureWriter>(conn) : make_shared<Writer>(conn);
-
-//    Writer* writer = & dumbWriter;
-//    if( select & SELECTION::SIGN ){
-//        writer = &signatureWriter;
-//    }
+//    bool sign = select & SELECTION::SIGN; // TODO: allocate it during class construction???
+//    shared_ptr<Writer> writer = sign ? make_shared<SignatureWriter>() : make_shared<Writer>();
 //    writer->init(conn);
+
+    Writer* writer = & dumbWriter;
+    if( select & SELECTION::SIGN ){
+        writer = &signatureWriter;
+    }
+    writer->init(conn);
 
     ldata.send(  *writer, select, filters);
     rdata.send(  *writer, select, filters);

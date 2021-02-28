@@ -137,13 +137,13 @@ int Sock::listen(unsigned short port){
 }
 
 
-Sock::Sock(): s(INVALID_SOCKET), peek(0) {
+Sock::Sock(): s(INVALID_SOCKET) {
 	memset(&ip,0,sizeof(ip));
     initNetwork();
 }
 
 
-Sock::Sock(SOCKET socket): s(socket), peek(0) {
+Sock::Sock(SOCKET socket): s(socket) {
 	memset(&ip,0,sizeof(ip)); // TODO: fill in ip from socket here???
     initNetwork();
 }
@@ -184,25 +184,17 @@ int Sock::read(char* buff, int size){
 }
 
 
-int Sock::readLine(char* buff, int maxSize){
-	char* origin = buff;
-	if(peek){
-		*buff = peek;
-		++buff;
-		peek = 0;
+int Sock::readLine(char * buff, int maxSize){
+    char* curr = buff;
+	bool textSeen = false;
+	while( curr-buff < maxSize-1 ){ // skip empty lines (or \r \n left from previous reads)
+		if( read(curr,1) <= 0 ){ break; }
+		if( *curr==0 ) { break; }
+		if( *curr!='\n' && *curr!='\r' ){
+			if(textSeen){ break; }
+			else { ++curr; } // skip leading \r \n
+		} else { textSeen = true; ++curr; }
 	}
-
-	bool newLine = false;
-	while( buff-origin < maxSize-1 ){
-		if( read(buff,1) <= 0 ){ return 0; }
-		newLine =  newLine || *buff=='\n' || *buff=='\r';
-		if(newLine && *buff!='\n' && *buff!='\r'){
-			peek = *buff; 
-			*buff = 0;
-			return 1;
-		}
-		++buff;
-	} // while
-	*buff = 0;
-	return 1;
+	*curr = 0;
+	return curr-buff;
 }

@@ -17,7 +17,6 @@ typedef uint16_t IPPORT;
 class Sock { // TCP socket
 	SOCKET s;
 	sockaddr_in ip;	// ip.sin_port can be used to find the server port if listen(ANY_PORT) was used
-	char peek;      // used in readLine()
 public:
 	Sock();
 	Sock(SOCKET socket); // wrap an accepted connection socket in the Sock class

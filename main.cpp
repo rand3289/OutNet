@@ -43,17 +43,19 @@ int main(int argc, char* argv[]){
     config.savePort(port);
     cout << "Running on port " << ntohs(port) << endl;
 
+    Response response;
+    Sock conn;
     while(true){
-        Sock conn;
         if(INVALID_SOCKET == server.accept(conn) ){ continue; }
 
         vector<string> filters; // function + parameter pairs
         int select = Request::parseRequest(conn, filters);
 
         if(select > 0){ // request parsed correctly and we have a data bitmap
-            Response::write(conn, select, filters, ldata, rdata, bwlists);
+            response.write(conn, select, filters, ldata, rdata, bwlists);
         } else {
             Response::writeDebug(conn, select, filters);
         }
+        conn.close();
     } // while()
 } // main()
