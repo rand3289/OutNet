@@ -15,7 +15,7 @@ int Crawler::run(){
 // TODO: delete HostInfo entries that were offline n number of times???
 // as we go through the list of hosts, if blah.offline > N, delete
 
-    unique_lock rlock(data->rMutex);
+    unique_lock rlock(data->mutx);
     std::copy(newData.begin(), newData.end(), back_inserter(data->hosts));
     return 0; 
 }

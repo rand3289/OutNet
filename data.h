@@ -11,7 +11,7 @@ using namespace std;
 #include <chrono>
 using namespace std::chrono;
 
-class Writer; // from http.h
+class Writer; // from http.h (http.h is not included)
 
 
 struct Service{
@@ -23,13 +23,14 @@ struct Service{
 //    string userDefinedField; // Do not parse
 //    Service(const string& service);
     int parse(const string& service);
-    bool passFilters(vector<string> filters);
+    bool passLocalFilters(vector<string> filters);
+    bool passRemoteFilters(vector<string> filters);
 };
 
 
 // TODO: key from Signature class gets filled in
 struct LocalData {
-    shared_mutex lMutex;
+    shared_mutex mutx;
     PubKey localPubKey;
     vector<Service> services;
 
@@ -63,12 +64,11 @@ struct HostInfo {                  // host/port fields are in the network byte o
     uint16_t getPortHostByteOrder(); // convert from network byte order to host byte order
     void setPort(uint16_t portHostByteOrder); // convert from host byte order to network byte order
 
+    bool passFilters(vector<string> filters);
     void resetTime(){ seen = system_clock::now(); }
     void addService(string& service){
         services.emplace( services.end() )->parse(service);
     }
-
-    bool passFilters(vector<string> filters);
 };
 
 
@@ -81,9 +81,9 @@ class Connections { // TODO: put a limit on connTimes (only last 10 or so rememb
 
 
 struct RemoteData {
-    shared_mutex rMutex;
+    shared_mutex mutx;
     vector<HostInfo> hosts;
-    unordered_multimap<unsigned long int,Connections> connections;
+    unordered_multimap<unsigned long int,Connections> connections;  // key is IP
     int send(Writer& writer, int select, vector<string>& filters);
 };
 

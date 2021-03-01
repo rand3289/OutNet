@@ -7,8 +7,8 @@
 #include <cstring>
 using namespace std;
 
-// TODO: move to Sock ???
-int Writer::writeString(const string& str){
+
+int Writer::writeString(const string& str){ // TODO: move to Sock ???
     constexpr static const int MAX_STR_LEN = 255;
     unsigned char iclen = str.length();
     if(str.length() > MAX_STR_LEN){
@@ -37,7 +37,7 @@ bool tokenize( char** buffer, const char* bufferEnd, char** token ){
     *token = *buffer;
 
     while(*buffer != bufferEnd){
-        char c = **buffer; // TODO: conver this to switch(c) ???
+        char c = **buffer; // TODO: convert this to switch(c) ???
         if( ' '==c || '&'==c || '?'==c || '/'==c || '\r'==c || '\n'==c ) { // end of token
             **buffer=0; // separate strings
             ++*buffer;
@@ -52,7 +52,7 @@ bool tokenize( char** buffer, const char* bufferEnd, char** token ){
 
 // TODO: rewrite Sock class' read / readLine / write to accept timeout
 // look for a line like: GET /?QUERY=2036&PORT_EQ_2132 HTTP/1.1
-int Request::parseRequest(Sock& conn, vector<string>& filters){
+int Request::parse(Sock& conn, vector<string>& filters){
     long int query = 0;
     char buff[2048];
     for(int i=0; i< 10; ++i) { // drop if the other side is slow to send request
@@ -80,30 +80,36 @@ int Request::parseRequest(Sock& conn, vector<string>& filters){
     return query;
 }
 
+void turnBitOff(int* mask, int bit){
+    *mask = *mask & (0xFFFFFFFF^bit);
+}
 
 int Response::write(Sock& conn, int select, vector<string>& filters, LocalData& ldata, RemoteData& rdata, BWLists& bwlists ){
     static const string header =  "HTTP/1.1 200 OK\nServer: n3+1\n\n";
-    conn.write(header.c_str(), header.size() ); // no need to sign the header
+    size_t bytes = conn.write(header.c_str(), header.size() ); // no need to sign the header
 
-//    bool sign = select & SELECTION::SIGN; // TODO: allocate it during class construction???
-//    shared_ptr<Writer> writer = sign ? make_shared<SignatureWriter>() : make_shared<Writer>();
-//    writer->init(conn);
+    // Return "SELECT" field in the response.
+    // If you don't want to share some requested fieds, turn off the bits.
+    turnBitOff(&select, SELECTION::WLKEY);  // do not share your pub key white list (friends)
+    turnBitOff(&select, SELECTION::WLIP);   // b&w lists are not implemented yet
+    turnBitOff(&select, SELECTION::BLKEY);  // b&w lists are not implemented yet
+    turnBitOff(&select, SELECTION::BLIP);   // b&w lists are not implemented yet
+    turnBitOff(&select, SELECTION::BLPROT); // b&w lists are not implemented yet
+    bytes+= conn.write((char*) &select, sizeof(select));
 
-    Writer* writer = & dumbWriter;
-    if( select & SELECTION::SIGN ){
-        writer = &signatureWriter;
-    }
+    bool sign = select & SELECTION::SIGN;
+    Writer* writer = sign ? &signatureWriter : &dumbWriter;
     writer->init(conn);
 
-    ldata.send(  *writer, select, filters);
-    rdata.send(  *writer, select, filters);
-    bwlists.send(*writer, select, filters);
+    bytes+= ldata.send(  *writer, select, filters);
+    bytes+= rdata.send(  *writer, select, filters);
+    bytes+= bwlists.send(*writer, select, filters);
 
-    if(select & SELECTION::SIGN){
+    if(sign){
         PubSign* sign = writer->getSignature();
-        conn.write((char*)sign, sizeof(PubSign));
+        bytes+= conn.write((char*)sign, sizeof(PubSign));
     }
-    return 0;
+    return bytes;
 }
 
 

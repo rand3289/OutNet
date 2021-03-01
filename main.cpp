@@ -49,9 +49,9 @@ int main(int argc, char* argv[]){
         if(INVALID_SOCKET == server.accept(conn) ){ continue; }
 
         vector<string> filters; // function + parameter pairs
-        int select = Request::parseRequest(conn, filters);
+        int select = Request::parse(conn, filters); // select is a "data selection bitmap"
 
-        if(select > 0){ // request parsed correctly and we have a data bitmap
+        if(select > 0){ // request parsed correctly and we have a "data selection bitmap"
             response.write(conn, select, filters, ldata, rdata, bwlists);
         } else {
             Response::writeDebug(conn, select, filters);

@@ -18,7 +18,12 @@ int Service::parse(const string& service){
 }
 
 
-bool Service::passFilters(vector<string> filters){
+bool Service::passLocalFilters(vector<string> filters){
+    return true; // TODO:
+}
+
+
+bool Service::passRemoteFilters(vector<string> filters){
     return true; // TODO:
 }
 
@@ -36,7 +41,7 @@ void HostInfo::setPort(uint16_t portHostByteOrder){ port = htons(port); }
 
 
 int LocalData::addService(const string& service){
-//    unique_lock rlock(lMutex);
+//    unique_lock rlock(mutx);
     return services.emplace( services.end() )->parse(service);
 }
 
@@ -44,7 +49,7 @@ int LocalData::addService(const string& service){
 // relevant "select" flags: LKEY, TIME, LSVC, LSVCF, COUNTS???
 int LocalData::send(Writer& writer, int select, vector<string>& filters){
     size_t bytes = 0;
-    if(select & SELECTION::LKEY){ // send local public key
+    if(select & SELECTION::LKEY){ // send local public key. It does not change. Do not lock.
         bytes += writer.write((char*) &localPubKey, sizeof(localPubKey) );
     }
 
@@ -52,7 +57,7 @@ int LocalData::send(Writer& writer, int select, vector<string>& filters){
     // after 2038 there could be a glitch, but the field will stay 32 bit.
     // timestamp is important to avoid a replay attack
     if(select & SELECTION::TIME){
-        unsigned long now = time(nullptr);
+        unsigned long now = htonl(time(nullptr));
         bytes += writer.write( (char*)&now, sizeof(now));
     }
 
@@ -60,11 +65,10 @@ int LocalData::send(Writer& writer, int select, vector<string>& filters){
 
     // filter service list (toSend). get the count.  write the count.  write list.
     vector<Service*> toSend;
-    bool sendAll = !(select & SELECTION::LSVCF); // TODO: does it make sense to have this flag?
-    shared_lock lock(lMutex);
+    shared_lock lock(mutx);
 
     for(Service& s: services){
-        if(sendAll || s.passFilters(filters) ){
+        if( s.passLocalFilters(filters) ){
             toSend.push_back(&s);
         }
     }
@@ -81,42 +85,59 @@ int LocalData::send(Writer& writer, int select, vector<string>& filters){
 
 // relevant "select" flags: IP, PORT, AGE, RKEY, RSVC, RSVCF
 int RemoteData::send(Writer& writer, int select, vector<string>& filters){
-    size_t bytes = 0;
+    shared_lock lock(mutx);
+
+    vector<HostInfo*> data;
     for(HostInfo& hi: hosts){
         if( hi.passFilters(filters) ){
-            if( select & SELECTION::IP ){
-                unsigned long ip = htonl(hi.host);
-                bytes+= writer.write( (char*)&ip, sizeof(ip) );
-            }
-            if( select & SELECTION::PORT ){
-                unsigned short p = htons(hi.port);
-                bytes+= writer.write( (char*)&p, sizeof(p) );
-            }
-            if( select & SELECTION::AGE ){
-                auto deltaT = system_clock::now() - hi.seen;
-                auto count = deltaT.count()/60000000; // ms to minutes
-                unsigned short age = count > 65500 ? 65500 : count; // reserve all above 65500
-                age = htons(age);
-                bytes+= writer.write( (char*)&age, sizeof(age) );
-            }
-            if( select & SELECTION::RKEY ){
-                bytes+= writer.write( (char*)&hi.key, sizeof(hi.key) );
-            }
-            if( select & SELECTION::RSVC ){
-                bool includeAllServices = !(select & SELECTION::RSVCF);
-                for( Service& s: hi.services ){
-                    if(includeAllServices || s.passFilters(filters)){
-                        bytes+= writer.writeString(s.fullDescription);
-                    }
-                }
-            }
+            data.push_back(&hi);
         }
     }
-    return 0; // TODO:
+
+    size_t bytes = 0; // write record count first
+    unsigned long count = htonl(data.size());
+    bytes+= writer.write((char*) &bytes, sizeof(bytes));
+
+    for(HostInfo* hi: data){
+        if( select & SELECTION::IP ){
+            unsigned long ip = htonl(hi->host);
+            bytes+= writer.write( (char*)&ip, sizeof(ip) );
+        }
+        if( select & SELECTION::PORT ){
+            unsigned short p = htons(hi->port);
+            bytes+= writer.write( (char*)&p, sizeof(p) );
+        }
+        if( select & SELECTION::AGE ){
+            auto deltaT = system_clock::now() - hi->seen;
+            auto count = deltaT.count()/60000000; // ms to minutes
+            unsigned short age = count > 65500 ? 65500 : count; // reserve all above 65500
+            age = htons(age);
+            bytes+= writer.write( (char*)&age, sizeof(age) );
+        }
+        if( select & SELECTION::RKEY ){
+            bytes+= writer.write( (char*)&hi->key, sizeof(hi->key) );
+        }
+        if( select & SELECTION::RSVC ){
+            bool includeAllServices = !(select & SELECTION::RSVCF);
+            vector<Service*> svc;
+            for( Service& s: hi->services ){
+                if(includeAllServices || s.passRemoteFilters(filters)){
+                    svc.push_back(&s);
+                }
+            }
+            unsigned long count = htonl(svc.size());
+            bytes+= writer.write((char*) &count, sizeof(count));
+
+            for( Service* s: svc){
+                bytes+= writer.writeString(s->fullDescription);
+            }
+        } // if RSVC
+    } // for(HostInfo
+    return bytes;
 }
 
 
-// relevant "select" flags: BLIST, WLIST (BLPROT, BLIP, BLKEY, WLIP, WLKEY) [WLPROT does not exist]
+// relevant "select" flags: (BLPROT, BLIP, BLKEY, WLIP, WLKEY) [WLPROT does not exist]
 int BWLists::send(Writer& writer, int select, vector<string>& filters){
     return 0; // TODO:
 }
