@@ -39,7 +39,7 @@ int main(int argc, char* argv[]){
         return 1;
     }
 
-    port = server.getBoundPort(); // get bound server port number from socket
+    port = server.getPort(); // get bound server port number from socket
     config.savePort(port);
     cout << "Running on port " << ntohs(port) << endl;
 
@@ -47,6 +47,13 @@ int main(int argc, char* argv[]){
     Sock conn;
     while(true){
         if(INVALID_SOCKET == server.accept(conn) ){ continue; }
+
+        int hourRate = rdata.addContact(conn.getIP(), conn.getPort() ); // add accepted connection to RemoteData
+        if(hourRate > 3){ // if this host connects too often
+            Response::writeDenied(conn);
+            conn.close();
+            continue;
+        }
 
         vector<string> filters; // function + parameter pairs
         int select = Request::parse(conn, filters); // select is a "data selection bitmap"

@@ -42,6 +42,7 @@ struct LocalData {
 struct HostPort {
     uint32_t host;
     uint16_t port;
+    HostPort(): host(0), port(0) {}
     bool operator==(const HostPort& rhs){ return host==rhs.host && port == rhs.port; }
     HostPort& operator=(const HostPort& rhs){ host=rhs.host; port=rhs.port; return *this; }
 };
@@ -53,38 +54,38 @@ struct HostInfo {                  // host/port fields are in the network byte o
     shared_ptr<PubKey> key;        // remote service's public key
     vector<Service> services;      // remote services list
 
-    time_point<system_clock> seen; // the server has been seen on line
-    int offline = 0;               // server has been checked but found offline this many times
-    bool verified = false;         // was service queried directly or key found by a relay service?
     HostPort referrer;             // preserve where this information come from
+// these are remote service properties related to interaction with that service
+    bool verified = false;         // was service queried directly or key found by a relay service?
+    int offline = 0;               // server has been checked but found offline this many times IN A ROW
+    time_point<system_clock> seen; // the server has been seen on line
+    time_point<system_clock> missed; // last time of attempted contact
+    vector<time_point<system_clock> > connTimes; // when did this service connect to us // TODO: limit to 10
+    int rating = 100; // quality of service for this service when we connect to it
 
     string getHost();
     int setHost(string& ip);
     void setHost(unsigned long ip){ host = ip; } // ip has to be in the network byte order
     uint16_t getPortHostByteOrder(); // convert from network byte order to host byte order
     void setPort(uint16_t portHostByteOrder); // convert from host byte order to network byte order
+    void resetTime(){ seen = system_clock::now(); }
 
     bool passFilters(vector<string> filters);
-    void resetTime(){ seen = system_clock::now(); }
     void addService(string& service){
         services.emplace( services.end() )->parse(service);
     }
 };
 
 
-// these are remote service properties related to interaction with that service
-class Connections { // TODO: put a limit on connTimes (only last 10 or so remembered).
-    unsigned short port;
-    vector<time_point<system_clock> > connTimes; // when did this service connect to us
-    int rating = 100;              // quality of service for this service
-};
-
+#ifndef IPADDR
+    typedef unsigned long IPADDR; // sockaddr_in::sin_addr.s_addr defines it as "unsigned long"
+#endif
 
 struct RemoteData {
     shared_mutex mutx;
-    vector<HostInfo> hosts;
-    unordered_multimap<unsigned long int,Connections> connections;  // key is IP
+    unordered_multimap<IPADDR, HostInfo> hosts;
     int send(Writer& writer, int select, vector<string>& filters);
+    int addContact(IPADDR ip, unsigned short port);
 };
 
 
@@ -98,6 +99,7 @@ struct BWLists{
     vector<PubKey>   keyBlackList;
     vector<PubKey>   keyWhiteList;
     int send(Writer& writer, int select, vector<string>& filters);
+    bool blackListedIP(unsigned long host, unsigned shortport){ return false; } // TODO:
 };
 
 

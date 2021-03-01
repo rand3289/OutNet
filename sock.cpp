@@ -35,19 +35,18 @@ void initNetwork(){
 
 
 // ip has to be in the network byte order!!!
-int Sock::conn(unsigned long ip, unsigned short port){
+int Sock::connect(unsigned long ipaddr, unsigned short port){
  	s=socket(AF_INET,SOCK_STREAM,0);
 	if(s==INVALID_SOCKET){
 		cerr << "Error creating socket." << endl;
 		return -3;
 	}
 
-	sockaddr_in addr;
-	addr.sin_family=AF_INET;
-	addr.sin_port=htons(port);
-	addr.sin_addr.s_addr=ip;
+	ip.sin_family      = AF_INET;
+	ip.sin_port        = htons(port);
+	ip.sin_addr.s_addr = ipaddr;
 
-	if( connect(s, (sockaddr*)&addr, sizeof(addr) )){
+	if( ::connect(s, (sockaddr*)&ip, sizeof(ip) ) ){
 		int err = errno;
 		cerr << "error connecting to remote host via TCP: " << strerror(err) << " (" << err << ")" << endl;
 		return err; // errno returns positive numbers
@@ -56,7 +55,7 @@ int Sock::conn(unsigned long ip, unsigned short port){
 }
 
 
-int Sock::conn(const char* addr, unsigned short port){
+int Sock::connect(const char* addr, unsigned short port){
 	hostent* ipent=gethostbyname(addr);
 	if(!ipent){
 		cerr << "Can't gethostbyname()" << endl;
@@ -68,7 +67,7 @@ int Sock::conn(const char* addr, unsigned short port){
 		return -2;
 	}
 
-	return conn(ip, port);
+	return connect(ip, port);
 }
 
 

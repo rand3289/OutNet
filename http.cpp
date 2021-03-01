@@ -128,3 +128,9 @@ void Response::writeDebug(Sock& conn, int select, std::vector<std::string>& filt
     ss << "</body> </html>";
     conn.write(ss.str().c_str(), ss.str().size() );
 }
+
+
+void Response::writeDenied(Sock& conn){
+    const char* msg = "HTTP/1.1 403 DENIED\n";
+    conn.write(msg, strlen(msg));
+}

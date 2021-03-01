@@ -45,6 +45,25 @@ int LocalData::addService(const string& service){
     return services.emplace( services.end() )->parse(service);
 }
 
+/* TODO:
+int RemoteData::addContact(IPADDR ip, unsigned short port){
+    unique_lock ulock(mutx);
+
+    for( auto it = hosts.find(ip); it != hosts.end(); ++it){
+        if( port == it->second.port ) { // existing host
+            it->second.connTimes.push_back(system_clock::now());
+            // TODO: calculate connection rate per hour and return that number
+        }
+    }
+
+    HostInfo& hi = hosts.emplace(hosts.end())->second;
+    hi.host = ip;
+    hi.port = port;
+    hi.seen = system_clock::now();
+    hi.connTimes.push_back(system_clock::now());
+    return 1;
+}
+*/
 
 // relevant "select" flags: LKEY, TIME, LSVC, LSVCF, COUNTS???
 int LocalData::send(Writer& writer, int select, vector<string>& filters){
@@ -88,9 +107,9 @@ int RemoteData::send(Writer& writer, int select, vector<string>& filters){
     shared_lock lock(mutx);
 
     vector<HostInfo*> data;
-    for(HostInfo& hi: hosts){
-        if( hi.passFilters(filters) ){
-            data.push_back(&hi);
+    for(std::pair<const IPADDR,HostInfo>& hi: hosts){
+        if( hi.second.passFilters(filters) ){
+            data.push_back(&hi.second);
         }
     }
 

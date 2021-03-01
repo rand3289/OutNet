@@ -43,6 +43,7 @@ class Response{
 public:
     int write(Sock& conn, int select, std::vector<std::string>& filters, LocalData& ldata, RemoteData& rdata, BWLists& lists);
     static void writeDebug(Sock& conn, int select, std::vector<std::string>& filters);
+    static void writeDenied(Sock& conn);
 };
 
 

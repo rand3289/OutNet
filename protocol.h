@@ -15,7 +15,7 @@ enum SELECTION {
     LSVC   = (1<<3),  // local service list
     IP     = (1<<4),  // remote service IP
     PORT   = (1<<5),  // remote service port
-    AGE    = (1<<6),  // age - how long ago (minutes) was remote service contacted 
+    AGE    = (1<<6),  // age - how long ago (minutes) was remote service successfuly contacted 
     RKEY   = (1<<7),  // remote public key
     RSVC   = (1<<8),  // remote service list
     RSVCF  = (1<<9),  // remote service list filtered by service type/protocol or send all
