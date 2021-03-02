@@ -33,37 +33,41 @@ bool HostInfo::passFilters(vector<string> filters){
 }
 
 
-//TODO:
-string HostInfo::getHost(){ return ""; }
-int HostInfo::setHost(string& ip){ return 0; }
-uint16_t HostInfo::getPortHostByteOrder(){ return ntohs(port); }
-void HostInfo::setPort(uint16_t portHostByteOrder){ port = htons(port); }
-
-
 int LocalData::addService(const string& service){
-//    unique_lock rlock(mutx);
     return services.emplace( services.end() )->parse(service);
 }
 
-/* TODO:
-int RemoteData::addContact(IPADDR ip, unsigned short port){
+
+time_point<system_clock> RemoteData::addContact(IPADDR ip, unsigned short port){
     unique_lock ulock(mutx);
 
-    for( auto it = hosts.find(ip); it != hosts.end(); ++it){
-        if( port == it->second.port ) { // existing host
-            it->second.connTimes.push_back(system_clock::now());
-            // TODO: calculate connection rate per hour and return that number
+    for( auto range = hosts.equal_range(ip); range.first != range.second; ++range.first){
+        HostInfo& hi = range.second->second;
+        if( port == hi.port ) { // existing host
+            time_point<system_clock> last = hi.called;
+            hi.called = system_clock::now();
+            return last;
         }
     }
 
-    HostInfo& hi = hosts.emplace(hosts.end())->second;
+//    HostInfo& hi = hosts.emplace( ip )->second;
+    HostInfo hi;
     hi.host = ip;
     hi.port = port;
-    hi.seen = system_clock::now();
-    hi.connTimes.push_back(system_clock::now());
-    return 1;
+    hi.called = system_clock::now();
+// TODO: put these into default constructor???
+    hi.signatureVerified = false;
+    hi.offlineCount = 0;
+    hi.seen = system_clock::time_point::min();
+    hi.missed = system_clock::time_point::min();
+    hi.rating = 100;
+    hi.referrer.host = ip; // set referrer to self since that service contacted us
+    hi.referrer.port = port;
+
+    hosts.insert ( make_pair(ip, hi) );
+    return system_clock::time_point::min();
 }
-*/
+
 
 // relevant "select" flags: LKEY, TIME, LSVC, LSVCF, COUNTS???
 int LocalData::send(Writer& writer, int select, vector<string>& filters){

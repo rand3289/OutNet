@@ -10,20 +10,19 @@ enum SELECTION {
     LKEY   = (1<<0),  // local public key
     TIME   = (1<<1),  // current local datetime (to be used with signatures to avoid replay attack)
     SIGN   = (1<<2),  // signature (sign the whole message)
-//  COUNTS = (1<<3),  // total records, non-null public keys, local services, remote services etc...
+    COUNTS = (1<<3),  // local services, total IP records, non-null public keys, remote services
+    LSVC   = (1<<4),  // local service list
 
-    LSVC   = (1<<3),  // local service list
-    IP     = (1<<4),  // remote service IP
-    PORT   = (1<<5),  // remote service port
-    AGE    = (1<<6),  // age - how long ago (minutes) was remote service successfuly contacted 
-    RKEY   = (1<<7),  // remote public key
-    RSVC   = (1<<8),  // remote service list
-    RSVCF  = (1<<9),  // remote service list filtered by service type/protocol or send all
+    IP     = (1<<5),  // remote service IP
+    PORT   = (1<<6),  // remote service port
+    AGE    = (1<<7),  // age - how long ago (minutes) was remote service successfuly contacted 
+    RKEY   = (1<<8),  // remote public key
+    RSVC   = (1<<9),  // remote service list
+    RSVCF  = (1<<10), // remote service list FILTERED by service type/protocol or send all
 
-    BLPROT = (1<<10), // black list for protocols.  WLPROT does not exist
-    BLIP   = (1<<11), // black list for IPs
+    BLIP   = (1<<11), // black list for IP/Port
     BLKEY  = (1<<12), // black list for Public Keys
-    WLIP   = (1<<13), // white list for IPs
+    WLIP   = (1<<13), // white list for IP/Port
     WLKEY  = (1<<14)  // white list for Public Keys
 };
 

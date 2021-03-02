@@ -10,7 +10,8 @@
 
 // Writer and SignatureWriter are helper classes.
 // They help components send data whether it needs to be signed or not.
-struct Writer {
+class Writer {
+protected:
     Sock* sock = nullptr;
 public:
     inline virtual void init(Sock& socket){ sock = & socket; }

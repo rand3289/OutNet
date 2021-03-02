@@ -48,10 +48,10 @@ int main(int argc, char* argv[]){
     while(true){
         if(INVALID_SOCKET == server.accept(conn) ){ continue; }
 
-        int hourRate = rdata.addContact(conn.getIP(), conn.getPort() ); // add accepted connection to RemoteData
-        if(hourRate > 3){ // if this host connects too often
-            Response::writeDenied(conn);
-            conn.close();
+        auto time = rdata.addContact(conn.getIP(), conn.getPort() ); // add accepted connection to RemoteData
+        if(system_clock::now() - time < minutes(10) ){ // if this host connects too often
+            Response::writeDenied(conn); // TODO: decrease HostInfo rating??? (need to lock)
+            conn.close();                // TODO: if host has a non-routable IP, it is local. Do NOT deny.
             continue;
         }
 

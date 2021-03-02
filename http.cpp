@@ -94,7 +94,6 @@ int Response::write(Sock& conn, int select, vector<string>& filters, LocalData& 
     turnBitOff(&select, SELECTION::WLIP);   // b&w lists are not implemented yet
     turnBitOff(&select, SELECTION::BLKEY);  // b&w lists are not implemented yet
     turnBitOff(&select, SELECTION::BLIP);   // b&w lists are not implemented yet
-    turnBitOff(&select, SELECTION::BLPROT); // b&w lists are not implemented yet
     bytes+= conn.write((char*) &select, sizeof(select));
 
     bool sign = select & SELECTION::SIGN;

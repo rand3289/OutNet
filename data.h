@@ -48,27 +48,19 @@ struct HostPort {
 };
 
 
-struct HostInfo {                  // host/port fields are in the network byte order
-    uint32_t host;                 // IPv4 address
-    uint16_t port;                 // IPv4 port number (1-65535, 0=reserved)
-    shared_ptr<PubKey> key;        // remote service's public key
-    vector<Service> services;      // remote services list
-
-    HostPort referrer;             // preserve where this information come from
+struct HostInfo {                    // host/port fields are in the network byte order
+    uint32_t host;                   // IPv4 address
+    uint16_t port;                   // IPv4 port number (1-65535, 0=reserved)
+    shared_ptr<PubKey> key;          // remote service's public key
+    vector<Service> services;        // remote services list
 // these are remote service properties related to interaction with that service
-    bool verified = false;         // was service queried directly or key found by a relay service?
-    int offline = 0;               // server has been checked but found offline this many times IN A ROW
-    time_point<system_clock> seen; // the server has been seen on line
-    time_point<system_clock> missed; // last time of attempted contact
-    vector<time_point<system_clock> > connTimes; // when did this service connect to us // TODO: limit to 10
-    int rating = 100; // quality of service for this service when we connect to it
-
-    string getHost();
-    int setHost(string& ip);
-    void setHost(unsigned long ip){ host = ip; } // ip has to be in the network byte order
-    uint16_t getPortHostByteOrder(); // convert from network byte order to host byte order
-    void setPort(uint16_t portHostByteOrder); // convert from host byte order to network byte order
-    void resetTime(){ seen = system_clock::now(); }
+    bool signatureVerified = false;  // was service queried directly or key found by a relay service?
+    int offlineCount = 0;            // server has been found offline this many times IN A ROW
+    time_point<system_clock> seen;   // last time we successfully connected to it
+    time_point<system_clock> missed; // last time of unsuccessful connect
+    time_point<system_clock> called; // last time this service connected to us
+    int rating = 100;                // our interaction rating for this service
+    HostPort referrer;               // preserve where this information came from (for rating that service)
 
     bool passFilters(vector<string> filters);
     void addService(string& service){
@@ -84,22 +76,23 @@ struct HostInfo {                  // host/port fields are in the network byte o
 struct RemoteData {
     shared_mutex mutx;
     unordered_multimap<IPADDR, HostInfo> hosts;
+
+    // send HostInfo records through the writer to a remote host
     int send(Writer& writer, int select, vector<string>& filters);
-    int addContact(IPADDR ip, unsigned short port);
+    // Remember this host/port.  Return last contact time if we saw it before or time_point::min()
+    time_point<system_clock> addContact(IPADDR ip, unsigned short port);
 };
 
 
 // Black list and White list structures
-struct BWLists{
+struct BWLists {
     shared_mutex mutx;
-    typedef string Protocol;
-    vector<Protocol> protocolBlackList;
     vector<HostPort> hostBlackList;
     vector<HostPort> hostWhiteList;
     vector<PubKey>   keyBlackList;
     vector<PubKey>   keyWhiteList;
     int send(Writer& writer, int select, vector<string>& filters);
-    bool blackListedIP(unsigned long host, unsigned shortport){ return false; } // TODO:
+    bool blackListedIP(unsigned long host, unsigned short port){ return false; } // TODO:
 };
 
 
