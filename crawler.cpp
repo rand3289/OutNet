@@ -1,5 +1,6 @@
 #include "crawler.h"
 #include "sock.h"
+#include "protocol.h"
 #include <memory>
 #include <algorithm>
 #include <mutex>
@@ -7,6 +8,7 @@
 #include <thread>
 #include <iostream>
 #include <sstream>
+#include <cstring>
 using namespace std;
 
 
@@ -39,12 +41,90 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData){
     sock.write(ss.str().c_str(), ss.str().length());
 
 
-    vector<HostInfo> unverifiedData;
-    HostPort self; // our public/ routable ip  // TODO: prevent putting itself into the list
 // parse the response into unverifiedData
 // verify signature if server sent
 // if we requested signature, and the server did not send it, rating -100, dispose of data
 // read PubKey, services and wait till end of parsing / signature verification to lock and copy to "hi"
+    
+    // TODO: read HTTP/1.1 200 OK\nServer: n3+1\n\n
+    char buff[128];
+    sock.readLine(buff, sizeof(buff)); // TODO: check for errors
+    if( nullptr == strstr(buff,"200") ) {
+        cerr << "Error in queryRemoteService() while parsing: " << buff << endl;
+        return 0;
+    }
+    sock.readLine(buff, sizeof(buff)); // skip empty line
+    unsigned int select;
+    sock.read( (char*) &select, sizeof(select)); // TODO: check for errors
+    select = ntohl(select);
+
+    // local data
+    LocalData ld;
+    if(select & SELECTION::LKEY){ // send local public key. It does not change. Do not lock.
+        sock.read((char*)&ld.localPubKey, sizeof(PubKey)); // TODO: check for errors
+    }
+    if(select & SELECTION::TIME){ // send local public key. It does not change. Do not lock.
+        unsigned long time = 0;
+        sock.read((char*)&time, sizeof(time)); // TODO: check for errors
+        time = ntohl(time);
+        // TODO: check that time is not too long in the past ... otherwise it is a replay attack
+    }
+
+    if( select & SELECTION::LSVC ){
+        unsigned short count;
+        sock.read((char*)&count, sizeof(count)); // TODO: check for errors
+        count = ntohs(count);
+        string s;
+        for(int i=0; i < count; ++i){
+            readString(s);
+            ld.addService(s);
+        }
+    }
+
+    // remote data
+    vector<HostInfo> unverifiedData;
+    HostPort self; // our public/ routable ip  // TODO: fill it in !!!
+    unsigned long count = 0; // count is always there even if data is not
+    sock.read((char*)&count, sizeof(count)); // TODO: check for errors
+    count = ntohl(count);
+    for(int i=0; i< count; ++i){
+        unverifiedData.emplace_back();
+        HostInfo& hi = unverifiedData.back();
+
+        if( select & SELECTION::IP ){
+            sock.read((char*)&hi.host,sizeof(hi.host)); // TODO: check for errors
+            hi.host = ntohl(hi.host); // TODO: should we do this to IP?
+        }
+
+        if( select & SELECTION::PORT ){
+            sock.read((char*)&hi.port,sizeof(hi.port)); // TODO: check for errors
+            hi.port = ntohs(hi.port);
+        }
+
+        if( hi.host == self.host && hi.port == self.port ){ // just found myself in the list of IPs
+            unverifiedData.pop_back();
+            continue;
+        }
+        if( select & SELECTION::AGE ){
+            unsigned short age = 0;
+            sock.read((char*)&age, sizeof(age)); // TODO: check for errors
+            age = ntohs(age);
+            hi.seen = system_clock::now() - minutes(age); // TODO: check some reserved values ???
+        }
+        if( select & SELECTION::RKEY ){
+            sock.read( (char*)&hi.key, sizeof(hi.key) );
+        }
+        if( select & SELECTION::RSVC ){
+            unsigned long cnt = 0;
+            sock.read((char*)&cnt, sizeof(cnt)); // TODO: check for errors
+            cnt = ntohl(cnt);
+            string s;
+            for(int i=0; i< cnt; ++i){
+                readString(s); // TODO: check for errors
+                hi.addService(s);
+            }
+        }
+    } // for ( adding HostInfo)
 
     unique_lock ulock2(data->mutx); // release lock after each connection for other parts to work
     hi.signatureVerified = true; // TODO: wait till info is received to mark it verified

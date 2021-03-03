@@ -28,6 +28,8 @@ public:
 
 	int read(char * buffer, int size);
 	int readLine(char* buffer, int size);
+	long readLong(bool& error);
+	short readShort(bool& error);
 	int write(const char * buffer, int size);
 
     // server - start listening for a connection.  Use ANY_PORT if not binding to a specific port
