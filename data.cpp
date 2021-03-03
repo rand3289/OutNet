@@ -123,8 +123,7 @@ int RemoteData::send(Writer& writer, int select, vector<string>& filters){
 
     for(HostInfo* hi: data){
         if( select & SELECTION::IP ){
-            unsigned long ip = htonl(hi->host);
-            bytes+= writer.write( (char*)&ip, sizeof(ip) );
+            bytes+= writer.write( (char*)&hi->host, sizeof(hi->host) ); // writing without htonl()
         }
         if( select & SELECTION::PORT ){
             unsigned short p = htons(hi->port);

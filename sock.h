@@ -10,10 +10,11 @@
     typedef int SOCKET;
 #endif
 
-typedef unsigned long IPADDR; // sockaddr_in::sin_addr.s_addr defines it as "unsigned long"
-typedef uint16_t IPPORT;
+// typedef unsigned long IPADDR; // sockaddr_in::sin_addr.s_addr defines it as "unsigned long"
+// typedef uint16_t IPPORT;
 
 
+// TODO: rewrite Sock class' read() / read*() / write() to accept timeout
 class Sock { // TCP socket
 	SOCKET s;
 	sockaddr_in ip;	// ip.sin_port can be used to find the server port if listen(ANY_PORT) was used
@@ -28,8 +29,8 @@ public:
 
 	int read(char * buffer, int size);
 	int readLine(char* buffer, int size);
-	long readLong(bool& error);
 	short readShort(bool& error);
+	long readLong(bool& error);
 	int write(const char * buffer, int size);
 
     // server - start listening for a connection.  Use ANY_PORT if not binding to a specific port
@@ -37,10 +38,11 @@ public:
 	int listen(unsigned short port);
 	// accept an incoming connection on a listening server socket and return a client socket
 	SOCKET accept();
-	int accept(Sock& connection);
+	int accept(Sock& connection); // recommended way of accepting connection
 	// bound server port even if ANY_PORT was used in listen() or remote port after accept() or connect()
 	unsigned short getPort(){ return ntohs(ip.sin_port); }
-	unsigned long  getIP()  { return ntohl(ip.sin_addr.s_addr); }
+	// remote IP after connect() or after object was returned by accept()
+	unsigned long  getIP()  { return ntohl(ip.sin_addr.s_addr); } 
 	SOCKET getRawSocket()   { return s; }
 };
 

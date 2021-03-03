@@ -50,7 +50,6 @@ bool tokenize( char** buffer, const char* bufferEnd, char** token ){
 }
 
 
-// TODO: rewrite Sock class' read / readLine / write to accept timeout
 // look for a line like: GET /?QUERY=2036&PORT_EQ_2132 HTTP/1.1
 int Request::parse(Sock& conn, vector<string>& filters){
     long int query = 0;
