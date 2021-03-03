@@ -96,7 +96,7 @@ int LocalData::send(Writer& writer, int select, vector<string>& filters){
         }
     }
 
-    unsigned long int count = htonl( toSend.size() );
+    unsigned short count = htons( toSend.size() );
     bytes += writer.write((char*)&count, sizeof(count) );
 
     for(Service* s: toSend){
@@ -147,7 +147,7 @@ int RemoteData::send(Writer& writer, int select, vector<string>& filters){
                     svc.push_back(&s);
                 }
             }
-            unsigned long count = htonl(svc.size());
+            unsigned short count = htons(svc.size());
             bytes+= writer.write((char*) &count, sizeof(count));
 
             for( Service* s: svc){

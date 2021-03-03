@@ -12,13 +12,14 @@
 using namespace std;
 
 
-int Reader::readString(string& str){
-    unsigned char size;
-    int rds = sock->read( (char*)&size, sizeof(size) );
-    if( 1!=rds || size> 255 ){ return -1; } // ERROR
-//    char* buff = const_cast<char*>(str.c_str());
-    // TODO: where the buffer at???
-    return sock->read( buff, size);
+int Reader::readString(char* buff){ // make sure buff is at least 256 char long
+    unsigned char size; // since size is an unsigned char it can not be illegal.
+    int rdsize = sock->read( (char*)&size, sizeof(size) );
+    if( 1!=rdsize ){ return -1; } // ERROR
+    int rddata = sock->read( buff, size);
+    if(rddata!=size){ return -2; } // ERROR
+    buff[size] = 0; // null terminate the string
+    return size;
 }
 
 
@@ -29,7 +30,7 @@ int Crawler::merge(vector<HostInfo>& newData){
 }
 
 
-int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData){
+int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const int select){
     Sock sock;
 
     if( sock.connect(hi.host, hi.port) ){
@@ -40,11 +41,13 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData){
         return 0;
     }
 
-    const int select = 0b111111111; // see SELECTION in protocol.h
     // do we have the service's key? no need to request it.   do we have services???
     stringstream ss;
     ss << "GET /?QUERY=" << select << " HTTP/1.1\n";
-    sock.write(ss.str().c_str(), ss.str().length());
+    if(ss.str().length() != sock.write(ss.str().c_str(), ss.str().length() ) ){
+        cerr << "Error sending HTTP request to " << hi.host << ":" << hi.port << endl;
+        return 0;
+    }
 
     // parse the response into unverifiedData
     // verify signature if server sent
@@ -52,20 +55,24 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData){
     // read PubKey, services and wait till end of parsing / signature verification to lock and copy to "hi"
 
     // read HTTP/1.1 200 OK\nServer: n3+1\n\n
-    char buff[128];
-    sock.readLine(buff, sizeof(buff)); // TODO: check for errors
-    if( nullptr == strstr(buff,"200") ) {
+    char buff[256];
+    int rdsize = sock.readLine(buff, sizeof(buff)-1);
+    if( rdsize < 8 || nullptr == strstr(buff,"200") ) {
         cerr << "Error in queryRemoteService() while parsing: " << buff << endl;
         return 0;
     }
     sock.readLine(buff, sizeof(buff)); // skip empty line
 
-    bool sign = select & SELECTION::SIGN;
+    bool sign = select & SELECTION::SIGN; // if signature is requested, use signatureReader to read
     Reader* reader = sign ? &signatureReader : &dumbReader;
     reader->init(sock);
 
-    bool error = false; 
-    unsigned int selectRet = reader->readLong(error);  // TODO: check for errors
+    bool error = false;
+    unsigned int selectRet = reader->readLong(error);
+    if(error){
+        cerr << "ERROR reading 'select'" << endl;
+        return 0;
+    }
     if( 0==(selectRet & SELECTION::SIGN) ){ // we requested a signature but it was not returned !!!
         cerr << "ERROR: remote refused to sign response.  Disconnecting!" << endl; // this is a security problem
         return 0;
@@ -73,56 +80,106 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData){
 
     // local data
     LocalData ld;
-    if(select & SELECTION::LKEY){ // send local public key. It does not change. Do not lock.
-        reader->read((char*)&ld.localPubKey, sizeof(PubKey)); // TODO: check for errors
+    if(selectRet & SELECTION::LKEY){
+        rdsize = reader->read((char*)&ld.localPubKey, sizeof(PubKey));
+        if( rdsize < sizeof(PubKey) ){
+            cerr << "ERROR: reading remote public key" << endl;
+            return 0;
+        }
     }
-    if(select & SELECTION::TIME){ // send local public key. It does not change. Do not lock.
-        unsigned long time = reader->readLong(error); // TODO: check for errors
+    if(selectRet & SELECTION::TIME){ // send local public key. It does not change. Do not lock.
+        unsigned long time = reader->readLong(error);
+        if(error){
+            cerr << "ERROR reading remote's time." << endl;
+            return 0;
+        }
         // TODO: check that time is not too long in the past ... otherwise it is a replay attack
     }
 
-    if( select & SELECTION::LSVC ){
+    if( selectRet & SELECTION::LSVC ){
         unsigned short count = reader->readShort(error);
-        string s;
+        if(error){
+            cerr << "ERROR reading remote service count." << endl;
+            return 0;
+        }
         for(int i=0; i < count; ++i){
-            reader->readString(s);
-            ld.addService(s);
+            rdsize = reader->readString(buff);
+            if(rdsize <=0){
+                cerr << "ERROR reading remote serices." << endl;
+                return 0;
+            }
+            ld.addService(buff);
         }
     }
 
-    // remote data
-    vector<HostInfo> unverifiedData;
     HostPort self; // our public/ routable ip  // TODO: fill it in !!!  move to class???
-    unsigned long count = reader->readLong(error); // count is always there even if data is not // TODO: check for errors
+
+    // remote data
+    long count = reader->readLong(error); // count is always there even if data is not // TODO: check for errors
+    if(error){
+        cerr << "ERROR reading HostInfo count." << endl;
+        return 0;
+    }
+
+    vector<HostInfo> unverifiedData;
     for(int i=0; i< count; ++i){
         unverifiedData.emplace_back();
         HostInfo& hi = unverifiedData.back();
 
-        if( select & SELECTION::IP ){ // do not use Sock::readLong()
-            reader->read((char*)&hi.host,sizeof(hi.host)); // TODO: check for errors
+        if( selectRet & SELECTION::IP ){ // do not use Sock::readLong() - IP do not need ntohl()
+            rdsize = reader->read((char*)&hi.host,sizeof(hi.host));
+            if(rdsize != sizeof(hi.host)){
+                cerr << "ERROR reading IP." << endl;
+                return 0;
+            }
         }
 
-        if( select & SELECTION::PORT ){
-            hi.port = reader->readShort(error); // TODO: check for errors
+        if( selectRet & SELECTION::PORT ){
+            hi.port = reader->readShort(error);
+            if(error){
+                cerr << "ERROR reading port." << endl;
+                return 0;
+            }
         }
 
         if( hi.host == self.host && hi.port == self.port ){ // just found myself in the list of IPs
             unverifiedData.pop_back();
             continue;
         }
-        if( select & SELECTION::AGE ){
-            unsigned short age = reader->readShort(error); // TODO: check for errors
+
+        if( selectRet & SELECTION::AGE ){
+            unsigned short age = reader->readShort(error);
             hi.seen = system_clock::now() - minutes(age); // TODO: check some reserved values ???
+            if(error){
+                cerr << "ERROR reading age." << endl;
+                return 0;
+            }
         }
-        if( select & SELECTION::RKEY ){
-            reader->read( (char*)&hi.key, sizeof(hi.key) );
+
+        if( selectRet & SELECTION::RKEY ){
+            auto key = make_shared<PubKey> ();
+            rdsize = reader->read( (char*)&*key, sizeof(PubKey) );
+            if(rdsize != sizeof(PubKey) ){
+                cerr << "ERROR reading public key." << endl;
+                return 0;
+            }
+            hi.key = key;
         }
-        if( select & SELECTION::RSVC ){
-            unsigned long cnt = reader->readLong(error); // TODO: check for errors
+
+        if( selectRet & SELECTION::RSVC ){
+            unsigned short cnt = reader->readShort(error);
+            if(error){
+                cerr << "ERROR reading remote service count." << endl;
+                return 0;
+            }
             string s;
             for(int i=0; i< cnt; ++i){
-                reader->readString(s); // TODO: check for errors
-                hi.addService(s);
+                rdsize = reader->readString(buff);
+                if(rdsize <=0){
+                    cerr << "ERROR reading remote serivces." << endl;
+                    return 0;
+                }
+                hi.addService(buff);
             }
         }
     } // for (adding HostInfo)
@@ -179,14 +236,15 @@ int Crawler::run(){
 
         // queryRemoteService(), main() and merge() modify individual HostInfo records
         // iterate over data, connect to each remote service, get the data and place into newData
+        const int select = 0b111111111; // see SELECTION in protocol.h
         for(HostInfo* hi: callList){
-            queryRemoteService(*hi, newData);
+            queryRemoteService(*hi, newData, select);
         }
 
         int count = merge(newData);
-        saveToDisk();
         if( count<=0 ){ this_thread::sleep_for(seconds(60)); }
-    }
+        else { saveToDisk(); } // found new services
+    } // while(true)
     return 0;
 }
 

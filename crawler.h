@@ -11,7 +11,7 @@ public:
     inline virtual void init(Sock& socket){ sock = & socket; }
     inline virtual bool verifySignature(PubSign& signature){ return true; }
     inline virtual int read(char* data, size_t size){ return sock->read(data, size); }
-    int readString(string& str); // reads unsigned char size (255max) + string without null
+    int readString(char* buff); // reads char size (255max) + string without null. Appends 0 to buff
     short readShort(bool& error){ return sock->readShort(error); }
     long  readLong( bool& error){ return sock->readLong( error); }
 };
@@ -37,7 +37,7 @@ class Crawler {
     BWLists& bwlists;
     RemoteData* data=nullptr;
     int merge(vector<HostInfo>& newData);
-    int queryRemoteService(HostInfo& hi, vector<HostInfo>& newData);
+    int queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const int select);
 public:
     Crawler(BWLists& bw_lists): bwlists(bw_lists) {}
     int loadFromDisk(RemoteData& rdata);

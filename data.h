@@ -63,7 +63,7 @@ struct HostInfo {                    // host/port fields are in the network byte
     HostPort referrer;               // preserve where this information came from (for rating that service)
 
     bool passFilters(vector<string> filters);
-    void addService(string& service){
+    void addService(const string& service){
         services.emplace( services.end() )->parse(service);
     }
 };
