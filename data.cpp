@@ -42,7 +42,7 @@ time_point<system_clock> RemoteData::addContact(IPADDR ip, unsigned short port){
     unique_lock ulock(mutx);
 
     for( auto range = hosts.equal_range(ip); range.first != range.second; ++range.first){
-        HostInfo& hi = range.second->second;
+        HostInfo& hi = range.first->second;
         if( port == hi.port ) { // existing host
             time_point<system_clock> last = hi.called;
             hi.called = system_clock::now();

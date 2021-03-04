@@ -63,8 +63,8 @@ int Request::parse(Sock& conn, vector<string>& filters){
         cout.flush(); // DEBUGGING ONLY!!!
         if( strncmp(buff,"GET",3) ){ continue; } // we want http GET query
 
-        char* start = buff + 3;
-        const char * end = buff+strlen(buff);
+        char* start = buff + 3; // skip "GET"
+        const char * end = start+strlen(start);
         char* token;
         while( tokenize( &start, end, &token) ){
             if( strncmp(token, "QUERY=", 6) == 0 ){
