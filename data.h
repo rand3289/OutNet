@@ -79,7 +79,7 @@ struct RemoteData {
 
     // send HostInfo records through the writer to a remote host
     int send(Writer& writer, int select, vector<string>& filters);
-    // Remember this host/port.  Return last contact time if we saw it before or time_point::min()
+    // Remember this host/port.  Return last contact time we saw it before
     time_point<system_clock> addContact(IPADDR ip, unsigned short port);
 };
 

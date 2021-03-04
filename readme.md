@@ -60,7 +60,6 @@ struct HostInfo {             // all fields are in the network byte order
 ```
 
 Reading further requires understanding of the following concepts:  
-https://en.wikipedia.org/wiki/IPv4  
 https://en.wikipedia.org/wiki/Private_network  
 https://en.wikipedia.org/wiki/Network_address_translation  
 https://en.wikipedia.org/wiki/Router_(computing)  

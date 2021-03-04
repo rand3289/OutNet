@@ -58,14 +58,14 @@ time_point<system_clock> RemoteData::addContact(IPADDR ip, unsigned short port){
 // TODO: put these into default constructor???
     hi.signatureVerified = false;
     hi.offlineCount = 0;
-    hi.seen = system_clock::time_point::min();
-    hi.missed = system_clock::time_point::min();
+    hi.seen = std::chrono::system_clock::from_time_t(0); // min() is broken!!!
+    hi.missed = std::chrono::system_clock::from_time_t(0);
     hi.rating = 100;
     hi.referrer.host = ip; // set referrer to self since that service contacted us
     hi.referrer.port = port;
 
     hosts.insert ( make_pair(ip, hi) );
-    return system_clock::time_point::min();
+    return std::chrono::system_clock::from_time_t(0);
 }
 
 
