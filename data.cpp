@@ -137,7 +137,11 @@ int RemoteData::send(Writer& writer, int select, vector<string>& filters){
             bytes+= writer.write( (char*)&age, sizeof(age) );
         }
         if( select & SELECTION::RKEY ){
-            bytes+= writer.write( (char*)&hi->key, sizeof(hi->key) );
+            if(hi->key){
+                char keyCount = 1;
+                bytes+= writer.write( (char*)&keyCount, sizeof(keyCount));
+                bytes+= writer.write( (char*)&*hi->key, sizeof(PubKey) );
+            }
         }
         if( select & SELECTION::RSVC ){
             bool includeAllServices = !(select & SELECTION::RSVCF);

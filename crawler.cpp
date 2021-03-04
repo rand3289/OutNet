@@ -144,13 +144,17 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const i
         }
 
         if( selectRet & SELECTION::RKEY ){
-            auto key = make_shared<PubKey> ();
-            rdsize = reader->read( (char*)&*key, sizeof(PubKey) );
-            if(rdsize != sizeof(PubKey) ){
-                cerr << "ERROR reading public key." << endl;
-                return 0;
+            char keyCount = 0;
+            reader->read((char*) &keyCount, sizeof(keyCount));
+            if(keyCount){
+                auto key = make_shared<PubKey> ();
+                rdsize = reader->read( (char*)&*key, sizeof(PubKey) );
+                if(rdsize != sizeof(PubKey) ){
+                    cerr << "ERROR reading public key." << endl;
+                    return 0;
+                }
+                hi.key = key;
             }
-            hi.key = key;
         }
 
         if( selectRet & SELECTION::RSVC ){
