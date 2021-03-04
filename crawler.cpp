@@ -43,8 +43,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const i
         cerr << "Error in queryRemoteService() while parsing: " << buff << endl;
         return 0;
     }
-    sock.readLine(buff, sizeof(buff)); // skip empty line
-
+    while( sock.readLine(buff, sizeof(buff) ) ) {} // skip till empty line is read (HTTP protocol)
 
     bool error = false;
     unsigned int selectRet = sock.readLong(error);

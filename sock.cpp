@@ -190,13 +190,11 @@ int Sock::read(char* buff, int size){
 
 int Sock::readLine(char * buff, int maxSize){
     char* curr = buff;
-	bool textSeen = false;
 	while( curr-buff < maxSize-1 ){ // skip empty lines (or \r \n left from previous reads)
 		if( read(curr,1) <= 0 ){ break; }
 		if( *curr==0 ) { break; }
-		if( *curr=='\n' || *curr=='\r' ){
-			if(textSeen){ break; } // end of line, otherwise skip prefix \r\n
-		} else { ++curr; textSeen = true; }
+		if( *curr=='\n'){ break; }
+		if( *curr!='\r' ){ ++curr; }  // skip \r
 	}
 	*curr = 0;
 	return curr-buff;
@@ -214,4 +212,14 @@ short Sock::readShort(bool& error){
 	int size = read((char*)&data, sizeof(data) );
 	error = size != sizeof(data);
 	return ntohs(data);
+}
+
+int Sock::writeLong(long data){
+    data = htonl(data);
+    return write( (char*) &data, sizeof(data) );
+}
+
+int Sock::writeShort(short data){
+    data = htons(data);
+    return write( (char*) &data, sizeof(data) );
 }

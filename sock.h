@@ -32,6 +32,8 @@ public:
 	short readShort(bool& error);
 	long readLong(bool& error);
 	int write(const char * buffer, int size);
+	int writeLong(long data);
+	int writeShort(short data);
 
     // server - start listening for a connection.  Use ANY_PORT if not binding to a specific port
     constexpr const static unsigned short ANY_PORT = 0;

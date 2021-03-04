@@ -59,8 +59,8 @@ int Request::parse(Sock& conn, vector<string>& filters){
             this_thread::sleep_for(milliseconds(100));
             continue;
         }
-        cout << buff; // DEBUGGING ONLY!!!
-        cout.flush(); // DEBUGGING ONLY!!!
+        cout << buff << endl; // DEBUGGING ONLY!!!
+        cout.flush();         // DEBUGGING ONLY!!!
         if( strncmp(buff,"GET",3) ){ continue; } // we want http GET query
 
         char* start = buff + 3; // skip "GET"
@@ -98,7 +98,8 @@ int Response::write(Sock& conn, int select, vector<string>& filters, LocalData& 
     Writer* writer = sign ? &signatureWriter : &dumbWriter;
     writer->init(conn);
 
-    bytes+= writer->write((char*) &select, sizeof(select));
+    unsigned int netSelect = htonl(select);
+    bytes+= writer->write((char*) &netSelect, sizeof(netSelect));
     bytes+= ldata.send(  *writer, select, filters);
     bytes+= rdata.send(  *writer, select, filters);
     bytes+= bwlists.send(*writer, select, filters);
