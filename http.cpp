@@ -104,7 +104,7 @@ int Response::write(Sock& conn, int select, vector<string>& filters, LocalData& 
     bytes+= bwlists.send(*writer, select, filters);
 
     if(sign){
-        PubSign* sign = writer->getSignature();
+        const PubSign* sign = writer->getSignature();
         bytes+= conn.write((char*)sign, sizeof(PubSign));
     }
     return bytes;

@@ -159,7 +159,7 @@ int RemoteData::send(Writer& writer, int select, vector<string>& filters){
 }
 
 
-// relevant "select" flags: (BLPROT, BLIP, BLKEY, WLIP, WLKEY) [WLPROT does not exist]
+// relevant "select" flags: BLIP, BLKEY, WLIP, WLKEY
 int BWLists::send(Writer& writer, int select, vector<string>& filters){
     return 0; // TODO:
 }

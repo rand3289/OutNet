@@ -15,7 +15,7 @@ protected:
     Sock* sock = nullptr;
 public:
     inline virtual void init(Sock& socket){ sock = & socket; }
-    inline virtual PubSign* getSignature(){ return nullptr; }
+    inline virtual const PubSign* getSignature(){ return nullptr; }
     inline virtual int write(char* data, size_t size){ return sock->write(data, size); }
     int writeString(const string& str); // writes unsigned char size (255max) + string without null
 };
@@ -25,7 +25,7 @@ class SignatureWriter: public Writer {
     Signature sign;
 public:
     inline virtual void init(Sock& socket){ sock = & socket; sign.init(); }
-    inline virtual PubSign* getSignature(){ return &sign.getSignature(); }
+    inline virtual const PubSign* getSignature(){ return &sign.getSignature(); }
     inline virtual int write(char* data, size_t size){
         sign.write(data, size);        // sign the data
         return sock->write(data, size); // send data to remote client

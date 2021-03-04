@@ -42,8 +42,9 @@ public:
 	// bound server port even if ANY_PORT was used in listen() or remote port after accept() or connect()
 	unsigned short getPort(){ return ntohs(ip.sin_port); }
 	// remote IP after connect() or after object was returned by accept()
-	unsigned long  getIP()  { return ntohl(ip.sin_addr.s_addr); } 
+	unsigned long  getIP()  { return ip.sin_addr.s_addr; } 
 	SOCKET getRawSocket()   { return s; }
+	static unsigned long strToIP(const char* addr);
 };
 
 #endif // SOCK_H_INCLUDED

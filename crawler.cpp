@@ -12,24 +12,6 @@
 using namespace std;
 
 
-int Reader::readString(char* buff){ // make sure buff is at least 256 char long
-    unsigned char size; // since size is an unsigned char it can not be illegal.
-    int rdsize = sock->read( (char*)&size, sizeof(size) );
-    if( 1!=rdsize ){ return -1; } // ERROR
-    int rddata = sock->read( buff, size);
-    if(rddata!=size){ return -2; } // ERROR
-    buff[size] = 0; // null terminate the string
-    return size;
-}
-
-
-int Crawler::merge(vector<HostInfo>& newData){
-    unique_lock ulock(data->mutx);
-//    copy(make_move_iterator(newData.begin()), make_move_iterator(newData.end()), back_inserter(data->hosts));
-    return 0;
-}
-
-
 int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const int select){
     Sock sock;
 
@@ -63,17 +45,14 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const i
     }
     sock.readLine(buff, sizeof(buff)); // skip empty line
 
-    bool sign = select & SELECTION::SIGN; // if signature is requested, use signatureReader to read
-    Reader* reader = sign ? &signatureReader : &dumbReader;
-    reader->init(sock);
 
     bool error = false;
-    unsigned int selectRet = reader->readLong(error);
+    unsigned int selectRet = sock.readLong(error);
     if(error){
         cerr << "ERROR reading 'select'" << endl;
         return 0;
     }
-    if( 0==(selectRet & SELECTION::SIGN) ){ // we requested a signature but it was not returned !!!
+    if( (select & SELECTION::SIGN) && !(selectRet & SELECTION::SIGN) ){ // we requested a signature but it was not returned
         cerr << "ERROR: remote refused to sign response.  Disconnecting!" << endl; // this is a security problem
         return 0;
     }
@@ -81,12 +60,20 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const i
     // local data
     LocalData ld;
     if(selectRet & SELECTION::LKEY){
-        rdsize = reader->read((char*)&ld.localPubKey, sizeof(PubKey));
-        if( rdsize < sizeof(PubKey) ){
+        rdsize = sock.read((char*)&ld.localPubKey, sizeof(PubKey));
+        if( rdsize != sizeof(PubKey) ){
             cerr << "ERROR: reading remote public key" << endl;
             return 0;
         }
     }
+
+    bool sign = selectRet & SELECTION::SIGN; // if signature is requested, use signatureReader to read
+    Reader* reader = sign ? &signatureReader : &dumbReader;
+    reader->init(sock, ld.localPubKey);
+
+    reader->write((char*)&selectRet, sizeof(selectRet)); // we read it using sock before
+    reader->write((char*)&ld.localPubKey, sizeof(PubKey));
+
     if(selectRet & SELECTION::TIME){ // send local public key. It does not change. Do not lock.
         unsigned long time = reader->readLong(error);
         if(error){
@@ -211,6 +198,13 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const i
 }
 
 
+int Crawler::merge(vector<HostInfo>& newData){
+    unique_lock ulock(data->mutx);
+//    copy(make_move_iterator(newData.begin()), make_move_iterator(newData.end()), back_inserter(data->hosts));
+    return 0;
+}
+
+
 // go through RemoteData/HostInfo entries and retrieve more data from those services.
 int Crawler::run(){
     if(nullptr == data){ throw "ERROR: call Crawler::loadFromDisk() before calling Crawler::run()!"; }
@@ -259,4 +253,14 @@ int Crawler::loadFromDisk(RemoteData& rdata){
 int Crawler::saveToDisk(){ // save data to disk
     shared_lock slock(data->mutx);
     return 0;
+}
+
+int Reader::readString(char* buff){ // make sure buff is at least 256 char long
+    unsigned char size; // since size is an unsigned char it can not be illegal.
+    int rdsize = sock->read( (char*)&size, sizeof(size) );
+    if( 1!=rdsize ){ return -1; } // ERROR
+    int rddata = sock->read( buff, size);
+    if(rddata!=size){ return -2; } // ERROR
+    buff[size] = 0; // null terminate the string
+    return size;
 }

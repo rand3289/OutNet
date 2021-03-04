@@ -10,7 +10,20 @@
 #include <string>
 #include <thread>
 #include <iostream>
+#include <cstring> // strstr()
 using namespace std;
+
+
+void bootstrap(RemoteData& rdata, char* hostport){
+    char* colon = strstr(hostport,":");
+    *colon = 0;
+    ++colon;
+    unsigned short port = atoi(colon);
+    unsigned long ip = Sock::strToIP(hostport);
+    if( 0!=ip ){
+        rdata.addContact(ip, port);
+    }
+}
 
 
 int main(int argc, char* argv[]){
@@ -18,6 +31,9 @@ int main(int argc, char* argv[]){
     RemoteData rdata; // They all have internal mutexes
     BWLists bwlists;  // Black and White lists
 
+    if(argc > 1){ // user supplied a host:port on command line to start finding peers
+        bootstrap(rdata, argv[1]);
+    }
     Config config; // config is aware of service port, LocalData and BWLists
     config.loadFromDisk(ldata, bwlists); // load ldata,bwlists // TODO: check failure, notify or exit?
     // create a thread that watches files for service and BWList updates
@@ -41,7 +57,7 @@ int main(int argc, char* argv[]){
 
     port = server.getPort(); // get bound server port number from socket
     config.savePort(port);
-    cout << "Running on port " << ntohs(port) << endl;
+    cout << "Running on port " << port << endl;
 
     Response response;
     Sock conn;

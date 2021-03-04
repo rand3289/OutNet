@@ -1,6 +1,6 @@
 #include "sock.h"
-#include <iostream>
-#include <cstring> // memset()
+#include <iostream> // cerr
+#include <cstring>  // memset()
 using namespace std;
 
 #ifdef WIN32
@@ -55,19 +55,24 @@ int Sock::connect(unsigned long ipaddr, unsigned short port){
 }
 
 
-int Sock::connect(const char* addr, unsigned short port){
-	hostent* ipent=gethostbyname(addr);
+unsigned long Sock::strToIP(const char* addr){
+    hostent* ipent=gethostbyname(addr);
 	if(!ipent){
 		cerr << "Can't gethostbyname()" << endl;
-		return -1;
+		return 0;
 	}
 	unsigned long ip = *(unsigned long*) ipent->h_addr;  // h_addr is a macro for h_addr_list[0]
 	if(ip == INADDR_NONE){
 		cerr << "gethostbyname() returned INADDR_NONE" << endl;
-		return -2;
+		return 0;
 	}
+	return ip;
+}
 
-	return connect(ip, port);
+
+int Sock::connect(const char* addr, unsigned short port){
+	unsigned long ip = strToIP(addr);
+	return 0==ip ? INVALID_SOCKET : connect(ip, port);
 }
 
 
