@@ -38,15 +38,14 @@ int LocalData::addService(const string& service){
 }
 
 
-time_point<system_clock> RemoteData::addContact(IPADDR ip, unsigned short port){
+void RemoteData::addContact(IPADDR ip, unsigned short port){
     unique_lock ulock(mutx);
 
     for( auto range = hosts.equal_range(ip); range.first != range.second; ++range.first){
         HostInfo& hi = range.first->second;
         if( port == hi.port ) { // existing host
-            time_point<system_clock> last = hi.called;
             hi.called = system_clock::now();
-            return last;
+            return;
         }
     }
 
@@ -65,7 +64,6 @@ time_point<system_clock> RemoteData::addContact(IPADDR ip, unsigned short port){
     hi.referrer.port = port;
 
     hosts.insert ( make_pair(ip, hi) );
-    return std::chrono::system_clock::from_time_t(0);
 }
 
 
@@ -166,4 +164,8 @@ int RemoteData::send(Writer& writer, int select, vector<string>& filters){
 // relevant "select" flags: BLIP, BLKEY, WLIP, WLKEY
 int BWLists::send(Writer& writer, int select, vector<string>& filters){
     return 0; // TODO:
+}
+
+bool BWLists::blackListedIP(unsigned long host, unsigned short port){
+    return false; // TODO:
 }

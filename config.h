@@ -20,9 +20,8 @@ class Config{
     int openPorts(vector<string>& services){ return 0; } // open router port using UPnP
     int getRefreshRate(){ return 10; } // seconds for Config to look for files
 public:
-    int getPort(unsigned short defaultPort){ return 33344; } // DEBUGGING !!!
-    int savePort(unsigned short port){ return 0; }
     int loadFromDisk(LocalData& ldata, BWLists& bwlists);
+    int saveToDisk();
     int watch();
 };
 

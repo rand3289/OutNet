@@ -14,7 +14,6 @@
 // typedef uint16_t IPPORT;
 
 
-// TODO: rewrite Sock class' read() / read*() / write() to accept timeout
 class Sock { // TCP socket
 	SOCKET s;
 	sockaddr_in ip;	// ip.sin_port can be used to find the server port if listen(ANY_PORT) was used

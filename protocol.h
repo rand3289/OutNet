@@ -23,7 +23,8 @@ enum SELECTION {
     BLIP   = (1<<11), // black list for IP/Port
     BLKEY  = (1<<12), // black list for Public Keys
     WLIP   = (1<<13), // white list for IP/Port
-    WLKEY  = (1<<14)  // white list for Public Keys
+    WLKEY  = (1<<14), // white list for Public Keys
+    MYIP   = (1<<15)  // return IP where crawler is connecting from
 };
 
 

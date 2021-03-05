@@ -1,4 +1,5 @@
 #include "config.h"
+#include "sock.h" // Sock::ANY_PORT
 #include <thread>
 using namespace std;
 
@@ -23,6 +24,13 @@ int Config::watch(){
 
 int Config::loadFromDisk(LocalData& lData, BWLists& bwLists){
     ldata = &lData;
+    ldata->myPort = Sock::ANY_PORT;
     bwlists = &bwLists;
+
+    return 0;
+}
+
+
+int Config::saveToDisk(){
     return 0;
 }

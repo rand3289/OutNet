@@ -170,6 +170,7 @@ int Sock::close(void){
 }
 
 
+// TODO: rewrite Sock class' read() / read*() / write() to accept timeout
 int Sock::write(const char* buff, int size){
 	if(s==INVALID_SOCKET){
 		cerr << "Socket not initialized - Can't write." << endl;

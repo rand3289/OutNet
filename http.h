@@ -33,8 +33,8 @@ public:
 };
 
 
-struct Request{
-    static int parse(Sock & conn, std::vector<std::string>& filters); // returns QUERY bit field
+struct Request{ // parse() returns QUERY bit field
+    static int parse(Sock & conn, std::vector<std::string>& filters, unsigned short& port);
 };
 
 

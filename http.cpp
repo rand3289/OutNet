@@ -50,8 +50,8 @@ bool tokenize( char** buffer, const char* bufferEnd, char** token ){
 }
 
 
-// look for a line like: GET /?QUERY=2036&PORT_EQ_2132 HTTP/1.1
-int Request::parse(Sock& conn, vector<string>& filters){
+// look for a line like: GET /?QUERY=2036&SPORT=33344&PORT_EQ_2132 HTTP/1.1
+int Request::parse(Sock& conn, vector<string>& filters, unsigned short& port){
     long int query = 0;
     char buff[2048];
     for(int i=0; i< 10; ++i) { // drop if the other side is slow to send request
@@ -67,8 +67,10 @@ int Request::parse(Sock& conn, vector<string>& filters){
         const char * end = start+strlen(start);
         char* token;
         while( tokenize( &start, end, &token) ){
-            if( strncmp(token, "QUERY=", 6) == 0 ){
+            if( strncmp(token, "QUERY=", 6) == 0 ){ // parse QUERY
                 query = atol(token+6);
+            } else if(token, "SPORT=", 6){ // parse remote server port
+                port = atoi(token+6);
             } else if( strcmp(token,"HTTP") && strcmp(token,"1.1") ){ // throw away these tokens
                 filters.push_back(token);
             }
@@ -79,20 +81,17 @@ int Request::parse(Sock& conn, vector<string>& filters){
     return query;
 }
 
-void turnBitOff(int* mask, int bit){
-    *mask = *mask & (0xFFFFFFFF^bit);
+void turnBitsOff(int* mask, int bits){
+    *mask = *mask & (0xFFFFFFFF^bits);
 }
 
 int Response::write(Sock& conn, int select, vector<string>& filters, LocalData& ldata, RemoteData& rdata, BWLists& bwlists ){
-    static const string header =  "HTTP/1.1 200 OK\nServer: n3+1\n\n";
+    static const string header =  "HTTP/1.1 200 OK\n\n";
     size_t bytes = conn.write(header.c_str(), header.size() ); // no need to sign the header
 
-    // Return "SELECT" field in the response.
     // If you don't want to share some requested fieds, turn off the bits.
-    turnBitOff(&select, SELECTION::WLKEY);  // do not share your pub key white list (friends)
-    turnBitOff(&select, SELECTION::WLIP);   // b&w lists are not implemented yet
-    turnBitOff(&select, SELECTION::BLKEY);  // b&w lists are not implemented yet
-    turnBitOff(&select, SELECTION::BLIP);   // b&w lists are not implemented yet
+    turnBitsOff(&select, SELECTION::WLKEY);  // do not share your pub key white list (friends)
+    turnBitsOff(&select, SELECTION::WLIP | SELECTION::BLKEY | SELECTION::BLIP ); // not implemented
 
     bool sign = select & SELECTION::SIGN;
     Writer* writer = sign ? &signatureWriter : &dumbWriter;
@@ -100,13 +99,19 @@ int Response::write(Sock& conn, int select, vector<string>& filters, LocalData& 
 
     unsigned int netSelect = htonl(select);
     bytes+= writer->write((char*) &netSelect, sizeof(netSelect));
+
+    if( select & SELECTION::MYIP ){
+        unsigned long remoteIP = conn.getIP();             // remote IP the way I see it
+        writer->write((char*)&remoteIP, sizeof(remoteIP)); // helps other server find it's NATed IPs
+    }
+
     bytes+= ldata.send(  *writer, select, filters);
     bytes+= rdata.send(  *writer, select, filters);
     bytes+= bwlists.send(*writer, select, filters);
 
     if(sign){
-        const PubSign* sign = writer->getSignature();
-        bytes+= conn.write((char*)sign, sizeof(PubSign));
+        const PubSign* psign = writer->getSignature();
+        bytes+= conn.write((char*)psign, sizeof(PubSign));
     }
     return bytes;
 }
@@ -130,6 +135,6 @@ void Response::writeDebug(Sock& conn, int select, std::vector<std::string>& filt
 
 
 void Response::writeDenied(Sock& conn){
-    const char* msg = "HTTP/1.1 403 DENIED\n";
+    const char* msg = "HTTP/1.1 403 DENIED\n\n";
     conn.write(msg, strlen(msg));
 }

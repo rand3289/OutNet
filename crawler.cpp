@@ -12,20 +12,21 @@
 using namespace std;
 
 
-int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const int select){
+int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const int select, unsigned short sport){
     Sock sock;
-
     if( sock.connect(hi.host, hi.port) ){
         cerr  << "Error connecting to " << hi.host << ":" << hi.port << endl;
         unique_lock ulock(data->mutx); // release lock after each connection for other parts to work
         hi.missed = system_clock::now();
         ++hi.offlineCount;
+        --hi.rating;
         return 0;
     }
 
-    // do we have the service's key? no need to request it.   do we have services???
+//TODO: select if we have remote's public key and turn it off in select if we do
+//TODO: add "filter by time" if remote was contacted some time ago (use hi.seen)
     stringstream ss;
-    ss << "GET /?QUERY=" << select << " HTTP/1.1\n";
+    ss << "GET /?QUERY=" << select << "&SPORT=" << sport <<" HTTP/1.1\n";
     if(ss.str().length() != sock.write(ss.str().c_str(), ss.str().length() ) ){
         cerr << "Error sending HTTP request to " << hi.host << ":" << hi.port << endl;
         return 0;
@@ -71,7 +72,18 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const i
     reader->init(sock, ld.localPubKey);
 
     reader->write((char*)&selectRet, sizeof(selectRet)); // we read it using sock before
-    reader->write((char*)&ld.localPubKey, sizeof(PubKey));
+    if(selectRet & SELECTION::LKEY){
+        reader->write((char*)&ld.localPubKey, sizeof(PubKey));
+    }
+
+    if( selectRet & SELECTION::MYIP ){
+        unsigned int myip = reader->readLong(error);
+        if(error){
+            cerr << "ERROR reading 'my ip'" << endl;
+            return 0;
+        }
+        // TODO: put it in ldata.myIP - ask multiple servers before trusting it
+    }
 
     if(selectRet & SELECTION::TIME){ // send local public key. It does not change. Do not lock.
         unsigned long time = reader->readLong(error);
@@ -209,7 +221,7 @@ int Crawler::merge(vector<HostInfo>& newData){
 
 
 // go through RemoteData/HostInfo entries and retrieve more data from those services.
-int Crawler::run(){
+int Crawler::run(unsigned short sport){
     if(nullptr == data){ throw "ERROR: call Crawler::loadFromDisk() before calling Crawler::run()!"; }
 
     while(true){
@@ -235,7 +247,7 @@ int Crawler::run(){
         // iterate over data, connect to each remote service, get the data and place into newData
         const int select = 0b111111111; // see SELECTION in protocol.h
         for(HostInfo* hi: callList){
-            queryRemoteService(*hi, newData, select);
+            queryRemoteService(*hi, newData, select, sport);
         }
 
         int count = merge(newData);
@@ -253,10 +265,12 @@ int Crawler::loadFromDisk(RemoteData& rdata){
     return 0;
 }
 
+
 int Crawler::saveToDisk(){ // save data to disk
     shared_lock slock(data->mutx);
     return 0;
 }
+
 
 int Reader::readString(char* buff){ // make sure buff is at least 256 char long
     unsigned char size; // since size is an unsigned char it can not be illegal.

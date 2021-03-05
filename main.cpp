@@ -14,71 +14,78 @@
 using namespace std;
 
 
-void bootstrap(RemoteData& rdata, char* hostport){
-    char* colon = strstr(hostport,":");
-    *colon = 0;
-    ++colon;
-    unsigned short port = atoi(colon);
-    unsigned long ip = Sock::strToIP(hostport);
-    if( 0!=ip ){
-        rdata.addContact(ip, port);
+void parseCmd(RemoteData& rdata, int argc, char* exe, char* host, char* port){
+    if(3 == argc){
+        unsigned long ip = Sock::strToIP(host);
+        unsigned short portInt = atoi(port);
+        if( 0!=ip && 0!=portInt ){
+            return rdata.addContact(ip, portInt);
+        }
     }
+    cerr << "ERROR parsing command line parameters." << endl;
+    cerr << "usage: " << exe << " host port" << endl;
 }
 
 
 int main(int argc, char* argv[]){
-    LocalData ldata;  // LocalData, RemoteData  and BWLists are shared among threads
-    RemoteData rdata; // They all have internal mutexes
+    // LocalData, RemoteData  and BWLists are shared among threads.  They all have internal mutexes.
+    LocalData ldata;  // info about local services and local public key
+    RemoteData rdata; // information gathered about remote services
     BWLists bwlists;  // Black and White lists
 
-    if(argc > 1){ // user supplied a host:port on command line to start finding peers
-        bootstrap(rdata, argv[1]);
-    }
+    parseCmd(rdata, argc, argv[0], argv[1], argv[2]);
+
     Config config; // config is aware of service port, LocalData and BWLists
     config.loadFromDisk(ldata, bwlists); // load ldata,bwlists // TODO: check failure, notify or exit?
     // create a thread that watches files for service and BWList updates
     std::thread watch( &Config::watch, &config);
 
+    // create the server returning all queries
+    // first time start running on a random port (ANY_PORT)
+    // but if service ran before, reuse the port number
+    Sock server;
+    if( INVALID_SOCKET == server.listen(ldata.myPort) ){
+        cerr << "ERROR listening for connections on port " << ldata.myPort << ".  Exiting." << endl;
+        return 1;
+    }
+
+    ldata.myPort = server.getPort(); // get bound server port number from socket
+    config.saveToDisk();
+    cout << "Running on port " << ldata.myPort << endl;
+
     // create the information collector thread here (there could be many in the future)
     // it searches and fills rdata while honoring BWLists
     Crawler crawler(bwlists);
     crawler.loadFromDisk(rdata); // load rdata from disk
-    std::thread search( &Crawler::run, &crawler);
+    std::thread search( &Crawler::run, &crawler, ldata.myPort);
 
-    // create the server returning queries
-    // first time start running on a random port (ANY_PORT)
-    // but if service ran before, reuse the port number
-    Sock server;
-    unsigned short port = config.getPort(Sock::ANY_PORT);
-    if( INVALID_SOCKET == server.listen(port) ){
-        cerr << "ERROR listening for connections on port " << port << ".  Exiting." << endl;
-        return 1;
-    }
-
-    port = server.getPort(); // get bound server port number from socket
-    config.savePort(port);
-    cout << "Running on port " << port << endl;
-
+    unordered_map<unsigned long, system_clock::time_point> connTime; // keep track of when someone connects to us
     Response response;
-    Sock conn;
     while(true){
+        Sock conn;
         if(INVALID_SOCKET == server.accept(conn) ){ continue; }
 
-        auto time = rdata.addContact(conn.getIP(), conn.getPort() ); // add accepted connection to RemoteData
-        if(system_clock::now() - time < minutes(10) ){ // if this host connects too often
-            Response::writeDenied(conn); // TODO: decrease HostInfo rating??? (need to lock)
-            conn.close();                // TODO: if host has a non-routable IP, it is local. Do NOT deny.
+        auto& time = connTime[conn.getIP()];            // not taking port into account
+        if( time > system_clock::now() - minutes(10) ){ // if this host connects too often
+            Response::writeDenied(conn);                // preventing abuse
+            conn.close(); // TODO: if host has a non-routable IP, it is local. Do NOT deny.
             continue;
         }
+        time = system_clock::now();
 
+        // parse remote server port, "SELECT field bitmap" and filters from remote's "HTTP get" query
         vector<string> filters; // function + parameter pairs
-        int select = Request::parse(conn, filters); // select is a "data selection bitmap"
+        unsigned short port = 0;
+        int select = Request::parse(conn, filters, port);
+
+        if(port > 0){ // remote sent us its server port.  Add accepted connection to RemoteData
+            rdata.addContact(conn.getIP(), port );
+        }
 
         if(select > 0){ // request parsed correctly and we have a "data selection bitmap"
             response.write(conn, select, filters, ldata, rdata, bwlists);
         } else {
             Response::writeDebug(conn, select, filters);
         }
-        conn.close();
     } // while()
 } // main()

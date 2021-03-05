@@ -31,6 +31,8 @@ struct Service{
 // TODO: key from Signature class gets filled in
 struct LocalData {
     shared_mutex mutx;
+    unsigned long myIP;    // public ip of the local service
+    unsigned short myPort; // local service is running on this port
     PubKey localPubKey;
     vector<Service> services;
 
@@ -79,8 +81,8 @@ struct RemoteData {
 
     // send HostInfo records through the writer to a remote host
     int send(Writer& writer, int select, vector<string>& filters);
-    // Remember this host/port.  Return last contact time we saw it before
-    time_point<system_clock> addContact(IPADDR ip, unsigned short port);
+    // Remember this host/port for crawler to contact
+    void addContact(IPADDR ip, unsigned short port);
 };
 
 
@@ -92,7 +94,7 @@ struct BWLists {
     vector<PubKey>   keyBlackList;
     vector<PubKey>   keyWhiteList;
     int send(Writer& writer, int select, vector<string>& filters);
-    bool blackListedIP(unsigned long host, unsigned short port){ return false; } // TODO:
+    bool blackListedIP(unsigned long host, unsigned short port);
 };
 
 
