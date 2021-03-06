@@ -35,7 +35,7 @@ void initNetwork(){
 
 
 // ip has to be in the network byte order!!!
-int Sock::connect(unsigned long ipaddr, unsigned short port){
+int Sock::connect(uint32_t ipaddr, uint16_t port){
  	s=socket(AF_INET,SOCK_STREAM,0);
 	if(s==INVALID_SOCKET){
 		cerr << "Error creating socket." << endl;
@@ -55,13 +55,13 @@ int Sock::connect(unsigned long ipaddr, unsigned short port){
 }
 
 
-unsigned long Sock::strToIP(const char* addr){
+uint32_t Sock::strToIP(const char* addr){
     hostent* ipent=gethostbyname(addr);
 	if(!ipent){
 		cerr << "Can't gethostbyname()" << endl;
 		return 0;
 	}
-	unsigned long ip = *(unsigned long*) ipent->h_addr;  // h_addr is a macro for h_addr_list[0]
+	uint32_t ip = *(uint32_t*) ipent->h_addr;  // h_addr is a macro for h_addr_list[0]
 	if(ip == INADDR_NONE){
 		cerr << "gethostbyname() returned INADDR_NONE" << endl;
 		return 0;
@@ -70,8 +70,8 @@ unsigned long Sock::strToIP(const char* addr){
 }
 
 
-int Sock::connect(const char* addr, unsigned short port){
-	unsigned long ip = strToIP(addr);
+int Sock::connect(const char* addr, uint16_t port){
+	uint32_t ip = strToIP(addr);
 	return 0==ip ? INVALID_SOCKET : connect(ip, port);
 }
 
@@ -99,7 +99,7 @@ SOCKET Sock::accept(Sock& conn){
 }
 
 
-int Sock::listen(unsigned short port){
+int Sock::listen(uint16_t port){
  	s = socket(AF_INET, SOCK_STREAM, 0);
 	if(s==INVALID_SOCKET){
 		int err = errno;
@@ -114,7 +114,7 @@ int Sock::listen(unsigned short port){
 		return INVALID_SOCKET;
     }
 
-	unsigned int size = sizeof(ip);
+	int size = sizeof(ip);
 	ip.sin_family=AF_INET;
 	ip.sin_port=htons(port);
 	ip.sin_addr.s_addr = INADDR_ANY;
@@ -173,7 +173,8 @@ int Sock::close(void){
 // TODO: rewrite read()/write() to accept a timeout
 // TODO: should read()/write() take void* to avoid a million (char*) casts ???
 
-int Sock::write(const char* buff, int size){
+int Sock::write(const char* buff, size_t size){
+	cout << "WRITE: " << size << endl; // DEBUGGING!!!
 	if(s==INVALID_SOCKET){
 		cerr << "Socket not initialized - Can't write." << endl;
 		return -1;
@@ -182,7 +183,8 @@ int Sock::write(const char* buff, int size){
 }
 
 
-int Sock::read(char* buff, int size){
+int Sock::read(char* buff, size_t size){
+	cout << "READ: " << size << endl; // DEBUGGING!!!
 	if(s==INVALID_SOCKET){
 		cerr << "Socket not initialized - Can't read." << endl;
 		return -1;
@@ -192,9 +194,9 @@ int Sock::read(char* buff, int size){
 }
 
 
-int Sock::readLine(char * buff, int maxSize){
+int Sock::readLine(char * buff, const size_t maxSize){
     char* curr = buff;
-	while( curr-buff < maxSize-1 ){ // skip empty lines (or \r \n left from previous reads)
+	while( (size_t)(curr-buff) < maxSize-1 ){ // skip empty lines (or \r \n left from previous reads)
 		if( read(curr,1) <= 0 ){ break; }
 		if( *curr==0 ) { break; }
 		if( *curr=='\n'){ break; }
@@ -204,26 +206,26 @@ int Sock::readLine(char * buff, int maxSize){
 	return curr-buff;
 }
 
-long Sock::readLong(bool& error){
-    long data;
+uint32_t Sock::read32(bool& error){
+    uint32_t data;
 	int size = read((char*)&data, sizeof(data));
 	error = (size != sizeof(data) );
 	return ntohl(data);
 }
 
-short Sock::readShort(bool& error){
-    short data;
+uint16_t Sock::read16(bool& error){
+    uint16_t data;
 	int size = read((char*)&data, sizeof(data) );
 	error = (size != sizeof(data) );
 	return ntohs(data);
 }
 
-int Sock::writeLong(long data){
+int Sock::write32(uint32_t data){
     data = htonl(data);
     return write( (char*) &data, sizeof(data) );
 }
 
-int Sock::writeShort(short data){
+int Sock::write16(uint16_t data){
     data = htons(data);
     return write( (char*) &data, sizeof(data) );
 }
@@ -234,19 +236,28 @@ int Sock::writeString(const string& str){
     unsigned char iclen = str.length();
     if(str.length() > MAX_STR_LEN){
         iclen = MAX_STR_LEN;
-        cerr << "WARNING: truncating string: " << str;
+        cerr << "WARNING: writeString() truncating string: " << str << endl;
     }
     if( 1 != write( (char*) &iclen, 1) ){ return -1; }
     return 1 + write( (char*) str.c_str(), iclen);
 }
 
 
-int Sock::readString(char* buff){ // make sure buff is at least 256 char long
-    unsigned char size; // since size is an unsigned char it can not be illegal.
+int Sock::readString(char* buff, size_t buffSize){ // make sure buff is at least 256 char long
+    unsigned char size; // since size is an unsigned char it can not be illegal
     int rdsize = read( (char*)&size, sizeof(size) );
     if( 1!=rdsize ){ return -1; } // ERROR
-    int rddata = read( buff, size);
-    if(rddata!=size){ return -2; } // ERROR
+	int original = size;
+	size = size < buffSize ? size : buffSize-1;
+    rdsize = read( buff, size);
+    if( rdsize!=size ){ return -2; } // ERROR
     buff[size] = 0; // null terminate the string
-    return size;
+
+	if(original> size){ // if buffer is too small, read the rest from stream and discard
+		cerr << "WARNING: readString() buffer too small." << endl;
+		char localBuff[256];
+        rdsize = read( localBuff, original-size);
+        if( rdsize!=size ){ return -3; } // ERROR
+	}
+    return original; // return the number of bytes read from socket
 }

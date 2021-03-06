@@ -31,12 +31,12 @@ struct Service{
 struct LocalData {
     shared_mutex mutx;
 //    HostPort self; // public ip of the local service and port it is running on // TODO:
-    unsigned long myIP;    // public ip of the local service
-    unsigned short myPort; // local service is running on this port
+    uint32_t myIP;    // public ip of the local service
+    uint32_t myPort; // local service is running on this port
     PubKey localPubKey;
     vector<Service> services;
 
-    int send(Writer& writer, int select, vector<string>& filters);
+    int send(Writer& writer, uint32_t select, vector<string>& filters);
     int addService(const string& service);
 };
 
@@ -76,7 +76,7 @@ struct HostInfo {                    // host/port fields are in the network byte
 
 
 #ifndef IPADDR
-    typedef unsigned long IPADDR; // sockaddr_in::sin_addr.s_addr defines it as "unsigned long"
+    typedef uint32_t IPADDR; // sockaddr_in::sin_addr.s_addr defines it as "unsigned long"
 #endif
 
 struct RemoteData {
@@ -84,9 +84,9 @@ struct RemoteData {
     unordered_multimap<IPADDR, HostInfo> hosts;
 
     // send HostInfo records through the writer to a remote host
-    int send(Writer& writer, int select, vector<string>& filters);
+    int send(Writer& writer, uint32_t select, vector<string>& filters);
     // Remember this host/port for crawler to contact
-    void addContact(IPADDR ip, unsigned short port);
+    void addContact(IPADDR ip, uint16_t port);
 };
 
 
@@ -97,8 +97,8 @@ struct BWLists {
     vector<HostPort> hostWhiteList;
     vector<PubKey>   keyBlackList;
     vector<PubKey>   keyWhiteList;
-    int send(Writer& writer, int select, vector<string>& filters);
-    bool blackListedIP(unsigned long host, unsigned short port);
+    int send(Writer& writer, uint32_t select, vector<string>& filters);
+    bool blackListedIP(uint32_t host, uint16_t port);
 };
 
 

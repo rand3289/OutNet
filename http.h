@@ -37,7 +37,7 @@ public:
 
 
 struct Request{ // parse() returns QUERY bit field
-    static int parse(Sock & conn, std::vector<std::string>& filters, unsigned short& port);
+    static int parse(Sock & conn, std::vector<std::string>& filters, uint16_t& port);
 };
 
 
@@ -45,8 +45,8 @@ class Response{
     Writer dumbWriter;
     SignatureWriter signatureWriter;
 public:
-    int write(Sock& conn, int select, std::vector<std::string>& filters, LocalData& ldata, RemoteData& rdata, BWLists& lists);
-    static void writeDebug(Sock& conn, int select, std::vector<std::string>& filters);
+    int write(Sock& conn, uint32_t select, std::vector<std::string>& filters, LocalData& ldata, RemoteData& rdata, BWLists& lists);
+    static void writeDebug(Sock& conn, uint32_t select, std::vector<std::string>& filters);
     static void writeDenied(Sock& conn);
 };
 

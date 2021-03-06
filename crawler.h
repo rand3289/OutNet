@@ -12,9 +12,9 @@ public:
     virtual bool verifySignature(PubSign& signature){ return true; }
     virtual int write(char* data, size_t size){ return 0; }
     virtual int read(char* data, size_t size){ return sock->read(data, size); }
-    virtual int readString(char* buff){ return sock->readString(buff); }
-    virtual short readShort(bool& error){ return sock->readShort(error); }
-    virtual long  readLong( bool& error){ return sock->readLong( error); }
+    virtual int readString(char* buff, size_t size){ return sock->readString(buff, size); }
+    virtual uint16_t read16(bool& error){ return sock->read16(error); }
+    virtual uint32_t read32(bool& error){ return sock->read32(error); }
 };
 
 
@@ -29,18 +29,18 @@ public:
         sign.write(data, ret); // sign the data
         return ret;
     }
-    virtual int readString(char* buff){
-        int ret = sock->readString(buff);
+    virtual int readString(char* buff, size_t size){
+        int ret = sock->readString(buff, size);
         sign.write(buff,ret);
         return ret;
     }
-    virtual short readShort(bool& error){
-        short ret = sock->readShort(error);
+    virtual uint16_t read16(bool& error){
+        uint16_t ret = sock->read16(error);
         sign.write((char*)&ret, sizeof(ret));
         return ret;
     }
-    virtual long readLong( bool& error){
-        long  ret = sock->readLong( error);
+    virtual uint32_t read32( bool& error){
+        uint32_t  ret = sock->read32( error);
         sign.write((char*)&ret, sizeof(ret));
         return ret;
     }
@@ -54,7 +54,7 @@ class Crawler {
     BWLists& bwlists;
     RemoteData* data=nullptr;
     int merge(vector<HostInfo>& newData);
-    int queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const int select, HostPort& self);
+    int queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const uint32_t select, HostPort& self);
 public:
     Crawler(LocalData& locData, BWLists& bw_lists): ldata(locData), bwlists(bw_lists) {}
     int loadFromDisk(RemoteData& rdata);

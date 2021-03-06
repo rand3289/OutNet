@@ -11,7 +11,7 @@
 #endif
 #include <string>
 
-// typedef unsigned long IPADDR; // sockaddr_in::sin_addr.s_addr defines it as "unsigned long"
+// typedef uint32_t IPADDR; // but sockaddr_in::sin_addr.s_addr is defined as "unsigned long"
 // typedef uint16_t IPPORT;
 
 
@@ -23,33 +23,33 @@ public:
 	Sock(SOCKET socket); // wrap an accepted connected socket in the Sock class
 	~Sock();             // calls close()
 
-	int connect(const char * ip,  unsigned short port); // connect to remote server
-    int connect(unsigned long ip, unsigned short port); // ip has to be in the network byte order???
+	int connect(const char * ip,  uint16_t port); // connect to remote server
+    int connect(uint32_t ip, uint16_t port); // ip has to be in the network byte order???
 	int close(void);
 
-	int read(char * buffer, int size);
-	int readLine(char* buffer, int size);
-	short readShort(bool& error);
-	long readLong(bool& error);
-	int readString(char* buff); // make sure buff is at least 256 char long
+	int read(char * buffer, size_t size);
+	int readLine(char* buffer, const size_t size);
+	int readString(char* buff, size_t size);
+	uint16_t read16(bool& error);
+	uint32_t read32(bool& error);
 
-	int write(const char * buffer, int size);
-	int writeLong(long data);
-	int writeShort(short data);
+	int write(const char * buffer, size_t size);
+	int write32(uint32_t data);
+	int write16(uint16_t data);
 	int writeString(const std::string& str); // TODO: should this be char* for symmetry with readString() ???
 
     // server - start listening for a connection.  Use ANY_PORT if not binding to a specific port
-    constexpr const static unsigned short ANY_PORT = 0;
-	int listen(unsigned short port);
+    constexpr const static uint16_t ANY_PORT = 0;
+	int listen(uint16_t port);
 	// accept an incoming connection on a listening server socket and return a client socket
 	SOCKET accept();
 	int accept(Sock& connection); // recommended way of accepting connection
 	// bound server port even if ANY_PORT was used in listen() or remote port after accept() or connect()
-	unsigned short getPort(){ return ntohs(ip.sin_port); }
+	uint16_t getPort(){ return ntohs(ip.sin_port); }
 	// remote IP after connect() or after object was returned by accept()
-	unsigned long  getIP()  { return ip.sin_addr.s_addr; } 
-	SOCKET getRawSocket()   { return s; }
-	static unsigned long strToIP(const char* addr);
+	uint32_t getIP() { return ip.sin_addr.s_addr; } 
+	SOCKET getRawSocket() { return s; }
+	static uint32_t strToIP(const char* addr);
 };
 
 #endif // SOCK_H_INCLUDED

@@ -42,7 +42,7 @@ int LocalData::addService(const string& service){
 }
 
 
-void RemoteData::addContact(IPADDR ip, unsigned short port){
+void RemoteData::addContact(IPADDR ip, uint16_t port){
     unique_lock ulock(mutx);
 
     for( auto range = hosts.equal_range(ip); range.first != range.second; ++range.first){
@@ -65,8 +65,8 @@ void RemoteData::addContact(IPADDR ip, unsigned short port){
 
 
 // relevant "select" flags: LKEY, TIME, LSVC, LSVCF, COUNTS???
-int LocalData::send(Writer& writer, int select, vector<string>& filters){
-    size_t bytes = 0;
+int LocalData::send(Writer& writer, uint32_t select, vector<string>& filters){
+    int bytes = 0;
     if(select & SELECTION::LKEY){ // send local public key. It does not change. Do not lock.
         bytes += writer.write((char*) &localPubKey, sizeof(localPubKey) );
     }
@@ -75,7 +75,7 @@ int LocalData::send(Writer& writer, int select, vector<string>& filters){
     // after 2038 there could be a glitch, but the field will stay 32 bit.
     // timestamp is important to avoid a replay attack
     if(select & SELECTION::TIME){
-        unsigned long now = htonl(time(nullptr));
+        uint32_t now = htonl(time(nullptr));
         bytes += writer.write( (char*)&now, sizeof(now));
     }
 
@@ -91,7 +91,7 @@ int LocalData::send(Writer& writer, int select, vector<string>& filters){
         }
     }
 
-    unsigned short count = htons( toSend.size() );
+    uint16_t count = htons( toSend.size() );
     bytes += writer.write((char*)&count, sizeof(count) );
 
     for(Service* s: toSend){
@@ -102,7 +102,7 @@ int LocalData::send(Writer& writer, int select, vector<string>& filters){
 
 
 // relevant "select" flags: IP, PORT, AGE, RKEY, RSVC, RSVCF
-int RemoteData::send(Writer& writer, int select, vector<string>& filters){
+int RemoteData::send(Writer& writer, uint32_t select, vector<string>& filters){
     shared_lock lock(mutx);
 
     vector<HostInfo*> data;
@@ -112,8 +112,8 @@ int RemoteData::send(Writer& writer, int select, vector<string>& filters){
         }
     }
 
-    size_t bytes = 0; // write record count first
-    unsigned long count = htonl(data.size());
+    int bytes = 0; // write record count first
+    uint32_t count = htonl(data.size());
     bytes+= writer.write((char*) &count, sizeof(count));
 
     for(HostInfo* hi: data){
@@ -121,13 +121,13 @@ int RemoteData::send(Writer& writer, int select, vector<string>& filters){
             bytes+= writer.write( (char*)&hi->host, sizeof(hi->host) ); // writing without htonl()
         }
         if( select & SELECTION::PORT ){
-            unsigned short p = htons(hi->port);
+            uint16_t p = htons(hi->port);
             bytes+= writer.write( (char*)&p, sizeof(p) );
         }
         if( select & SELECTION::AGE ){
             auto deltaT = system_clock::now() - hi->seen;
             auto count = deltaT.count()/60000000; // ms to minutes
-            unsigned short age = count > 65500 ? 65500 : count; // reserve all above 65500
+            uint16_t age = count > 65500 ? 65500 : count; // reserve all above 65500
             age = htons(age);
             bytes+= writer.write( (char*)&age, sizeof(age) );
         }
@@ -146,7 +146,7 @@ int RemoteData::send(Writer& writer, int select, vector<string>& filters){
                     svc.push_back(&s);
                 }
             }
-            unsigned short count = htons(svc.size());
+            uint16_t count = htons(svc.size());
             bytes+= writer.write((char*) &count, sizeof(count));
 
             for( Service* s: svc){
@@ -159,10 +159,10 @@ int RemoteData::send(Writer& writer, int select, vector<string>& filters){
 
 
 // relevant "select" flags: BLIP, BLKEY, WLIP, WLKEY
-int BWLists::send(Writer& writer, int select, vector<string>& filters){
+int BWLists::send(Writer& writer, uint32_t select, vector<string>& filters){
     return 0; // TODO:
 }
 
-bool BWLists::blackListedIP(unsigned long host, unsigned short port){
+bool BWLists::blackListedIP(uint32_t host, uint16_t port){
     return false; // TODO:
 }

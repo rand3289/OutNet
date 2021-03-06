@@ -5,7 +5,7 @@
 class UPnP {
 public:
     UPnP(){}
-    int openPort(IPADDR ip, unsigned short port){ return 0; }
+    int openPort(IPADDR ip, uint16_t port){ return 0; }
 };
 
 #endif // UPNP_H_INCLUDED

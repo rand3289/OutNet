@@ -17,8 +17,8 @@ using namespace std;
 void parseCmd(RemoteData& rdata, int argc, char* exe, char* host, char* port){
     if(1 == argc) { return; } // no parameters
     if(3 == argc){
-        unsigned long ip = Sock::strToIP(host);
-        unsigned short portInt = atoi(port);
+        uint32_t ip = Sock::strToIP(host);
+        uint16_t portInt = atoi(port);
         if( 0!=ip && 0!=portInt ){
             return rdata.addContact(ip, portInt);
         }
@@ -63,7 +63,7 @@ int main(int argc, char* argv[]){
     crawler.loadFromDisk(rdata); // load rdata from disk
     std::thread search( &Crawler::run, &crawler);
 
-    unordered_map<unsigned long, system_clock::time_point> connTime; // keep track of when someone connects to us
+    unordered_map<uint32_t, system_clock::time_point> connTime; // keep track of when someone connects to us
     Response response;
     while(true){
         Sock conn;
@@ -79,8 +79,8 @@ int main(int argc, char* argv[]){
 
         // parse remote server port, "SELECT field bitmap" and filters from remote's "HTTP get" query
         vector<string> filters; // function + parameter pairs
-        unsigned short port = 0;
-        int select = Request::parse(conn, filters, port);
+        uint16_t port = 0;
+        uint32_t select = Request::parse(conn, filters, port);
 
         if(port > 0){ // remote sent us its server port.  Add accepted connection to RemoteData
             rdata.addContact(conn.getIP(), port );

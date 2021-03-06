@@ -12,7 +12,7 @@
 using namespace std;
 
 
-int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const int select, HostPort& self){
+int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const uint32_t select, HostPort& self){
     Sock sock;
     if( sock.connect(hi.host, hi.port) ){
         cerr  << "Error connecting to " << hi.host << ":" << hi.port << endl;
@@ -48,7 +48,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const i
     while( sock.readLine(buff, sizeof(buff) ) ) {} // skip till empty line is read (HTTP protocol)
 
     bool error = false;
-    unsigned int selectRet = sock.readLong(error);
+    uint32_t selectRet = sock.read32(error);
     if(error){
         cerr << "ERROR reading 'select'" << endl;
         return 0;
@@ -58,9 +58,9 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const i
         return 0;
     }
 
-    unsigned long myip = 0;
+    uint32_t myip = 0;
     if( selectRet & SELECTION::MYIP ){
-        myip = sock.readLong(error);
+        myip = sock.read32(error);
         if(error){
             cerr << "ERROR reading 'my ip'" << endl;
             return 0;
@@ -93,13 +93,13 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const i
     }
 
     if(selectRet & SELECTION::TIME){
-        unsigned long timeRemote = reader->readLong(error);
+        uint32_t timeRemote = reader->read32(error);
         if(error){
             cerr << "ERROR reading remote's time." << endl;
             return 0;
         }
         // check that timestamp is not too long in the past, otherwise it can be a replay attack
-        unsigned long now = time(nullptr); // unix time does not depend on a timezone
+        uint32_t now = time(nullptr); // unix time does not depend on a timezone
         if( now - timeRemote > 10*60 ){
             cerr << "ERROR: remote time stamp is older than 10 minutes!  Discarding data." << endl;
             return 0;
@@ -107,13 +107,13 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const i
     }
 
     if( selectRet & SELECTION::LSVC ){
-        unsigned short count = reader->readShort(error);
+        uint16_t count = reader->read16(error);
         if(error){
             cerr << "ERROR reading remote service count." << endl;
             return 0;
         }
         for(int i=0; i < count; ++i){
-            rdsize = reader->readString(buff);
+            rdsize = reader->readString(buff, sizeof(buff));
             if(rdsize <=0){
                 cerr << "ERROR reading remote serices." << endl;
                 return 0;
@@ -123,18 +123,18 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const i
     }
 
     // remote data
-    long count = reader->readLong(error); // count is always there even if data is not // TODO: check for errors
+    uint32_t count = reader->read32(error); // count is always there even if data is not // TODO: check for errors
     if(error){
         cerr << "ERROR reading HostInfo count." << endl;
         return 0;
     }
 
     vector<HostInfo> unverifiedData;
-    for(int i=0; i< count; ++i){
+    for(uint32_t i=0; i< count; ++i){
         unverifiedData.emplace_back();
         HostInfo& hi = unverifiedData.back();
 
-        if( selectRet & SELECTION::IP ){ // do not use Sock::readLong() - IP do not need ntohl()
+        if( selectRet & SELECTION::IP ){ // do not use Sock::read32() - IP does not need ntohl()
             rdsize = reader->read((char*)&hi.host,sizeof(hi.host));
             if(rdsize != sizeof(hi.host)){
                 cerr << "ERROR reading IP." << endl;
@@ -143,7 +143,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const i
         }
 
         if( selectRet & SELECTION::PORT ){
-            hi.port = reader->readShort(error);
+            hi.port = reader->read16(error);
             if(error){
                 cerr << "ERROR reading port." << endl;
                 return 0;
@@ -156,7 +156,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const i
         }
 
         if( selectRet & SELECTION::AGE ){
-            unsigned short age = reader->readShort(error);
+            uint16_t age = reader->read16(error);
             hi.seen = system_clock::now() - minutes(age); // TODO: check some reserved values ???
             if(error){
                 cerr << "ERROR reading age." << endl;
@@ -182,14 +182,14 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const i
         }
 
         if( selectRet & SELECTION::RSVC ){
-            unsigned short cnt = reader->readShort(error);
+            uint16_t cnt = reader->read16(error);
             if(error){
                 cerr << "ERROR reading remote service count." << endl;
                 return 0;
             }
             string s;
             for(int i=0; i< cnt; ++i){
-                rdsize = reader->readString(buff);
+                rdsize = reader->readString(buff, sizeof(buff));
                 if(rdsize <=0){
                     cerr << "ERROR reading remote serivces." << endl;
                     return 0;
@@ -264,7 +264,7 @@ int Crawler::run(){
 
         // queryRemoteService(), main() and merge() modify individual HostInfo records
         // iterate over data, connect to each remote service, get the data and place into newData
-        const int select = 0b11111111111111111; // see SELECTION in protocol.h
+        const uint32_t select = 0b11111111111111111; // see SELECTION in protocol.h
         for(HostInfo* hi: callList){
             queryRemoteService(*hi, newData, select, self);
         }
