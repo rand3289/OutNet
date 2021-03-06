@@ -1,5 +1,6 @@
 #ifndef SIGN_H_INCLUDED
 #define SIGN_H_INCLUDED
+#include <algorithm>
 
 struct PubSign    { char sign[256]; };
 struct PubKey     { char  key[256]; };
@@ -11,7 +12,7 @@ class Signature {
     PubKey pubKey;
     PrivateKey privateKey;
 public:
-    Signature(){} // TODO: load public & private keys from disk
+    Signature(){ std::fill(pubKey.key, pubKey.key+sizeof(pubKey), 0xFF); } // TODO: load public & private keys from disk
     int init(){ return 0; }                      // clear "PubSign sign"
     int write(const char* data, int size){ return 0; } // compute "PubSign sign" from data chunks
     const PubSign& getSignature(){ return signature; }

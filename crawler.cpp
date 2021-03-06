@@ -58,6 +58,18 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const i
         return 0;
     }
 
+    unsigned long myip = 0;
+    if( selectRet & SELECTION::MYIP ){
+        myip = sock.readLong(error);
+        if(error){
+            cerr << "ERROR reading 'my ip'" << endl;
+            return 0;
+        }
+        if( 0 == self.host ){ // TODO: ask multiple servers before trusting it
+            self.host = myip;
+        }
+    }
+
     // local data
     LocalData ld;
     if(selectRet & SELECTION::LKEY){
@@ -73,19 +85,11 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const i
     reader->init(sock, ld.localPubKey);
 
     reader->write((char*)&selectRet, sizeof(selectRet)); // we read it using sock before
-    if(selectRet & SELECTION::LKEY){
-        reader->write((char*)&ld.localPubKey, sizeof(PubKey));
-    }
-
     if( selectRet & SELECTION::MYIP ){
-        unsigned int myip = reader->readLong(error);
-        if(error){
-            cerr << "ERROR reading 'my ip'" << endl;
-            return 0;
-        }
-        if( 0 == self.host ){ // TODO: ask multiple servers before trusting it
-            self.host = myip;
-        }
+        reader->write((char*)&myip, sizeof(myip));
+    }
+    if(selectRet & SELECTION::LKEY){
+        reader->write((char*)&ld.localPubKey, sizeof(ld.localPubKey));
     }
 
     if(selectRet & SELECTION::TIME){
@@ -260,7 +264,7 @@ int Crawler::run(){
 
         // queryRemoteService(), main() and merge() modify individual HostInfo records
         // iterate over data, connect to each remote service, get the data and place into newData
-        const int select = 0b111111111; // see SELECTION in protocol.h
+        const int select = 0b11111111111111111; // see SELECTION in protocol.h
         for(HostInfo* hi: callList){
             queryRemoteService(*hi, newData, select, self);
         }

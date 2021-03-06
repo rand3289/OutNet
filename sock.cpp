@@ -207,14 +207,14 @@ int Sock::readLine(char * buff, int maxSize){
 long Sock::readLong(bool& error){
     long data;
 	int size = read((char*)&data, sizeof(data));
-	error = size != sizeof(data);
+	error = (size != sizeof(data) );
 	return ntohl(data);
 }
 
 short Sock::readShort(bool& error){
     short data;
 	int size = read((char*)&data, sizeof(data) );
-	error = size != sizeof(data);
+	error = (size != sizeof(data) );
 	return ntohs(data);
 }
 
