@@ -132,9 +132,9 @@ int RemoteData::send(Writer& writer, uint32_t select, vector<string>& filters){
             bytes+= writer.write( &age, sizeof(age) );
         }
         if( select & SELECTION::RKEY ){
+            unsigned char keyCount = hi->key ? 1 : 0;
+            bytes+= writer.write( &keyCount, sizeof(keyCount));
             if(hi->key){
-                char keyCount = 1;
-                bytes+= writer.write( &keyCount, sizeof(keyCount));
                 bytes+= writer.write( &*hi->key, sizeof(PubKey) );
             }
         }
