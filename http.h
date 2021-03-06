@@ -16,7 +16,7 @@ protected:
 public:
     virtual void init(Sock& socket){ sock = & socket; }
     virtual const PubSign* getSignature(){ return nullptr; }
-    virtual int write(char* data, size_t size){ return sock->write(data, size); }
+    virtual int write(void* data, size_t size){ return sock->write(data, size); }
     virtual int writeString(const string& str){ return sock->writeString(str); }
 };
 
@@ -26,7 +26,7 @@ class SignatureWriter: public Writer {
 public:
     virtual void init(Sock& socket){ sock = & socket; sign.init(); }
     virtual const PubSign* getSignature(){ return &sign.getSignature(); }
-    virtual int write(char* data, size_t size){
+    virtual int write(void* data, size_t size){
         sign.write(data, size);         // sign the data
         return sock->write(data, size); // send data to remote client
     }

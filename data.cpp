@@ -68,7 +68,7 @@ void RemoteData::addContact(IPADDR ip, uint16_t port){
 int LocalData::send(Writer& writer, uint32_t select, vector<string>& filters){
     int bytes = 0;
     if(select & SELECTION::LKEY){ // send local public key. It does not change. Do not lock.
-        bytes += writer.write((char*) &localPubKey, sizeof(localPubKey) );
+        bytes += writer.write( &localPubKey, sizeof(localPubKey) );
     }
 
     // I wanted time to be a binary field and I want to use hton?() on it so uint32_t it is.
@@ -76,7 +76,7 @@ int LocalData::send(Writer& writer, uint32_t select, vector<string>& filters){
     // timestamp is important to avoid a replay attack
     if(select & SELECTION::TIME){
         uint32_t now = htonl(time(nullptr));
-        bytes += writer.write( (char*)&now, sizeof(now));
+        bytes += writer.write( &now, sizeof(now));
     }
 
     if( !(select & SELECTION::LSVC) ){ return bytes; } // service list not requiested
@@ -92,7 +92,7 @@ int LocalData::send(Writer& writer, uint32_t select, vector<string>& filters){
     }
 
     uint16_t count = htons( toSend.size() );
-    bytes += writer.write((char*)&count, sizeof(count) );
+    bytes += writer.write( &count, sizeof(count) );
 
     for(Service* s: toSend){
         bytes += writer.writeString(s->fullDescription); // TODO: translate local to NAT IP if needed
@@ -114,28 +114,28 @@ int RemoteData::send(Writer& writer, uint32_t select, vector<string>& filters){
 
     int bytes = 0; // write record count first
     uint32_t count = htonl(data.size());
-    bytes+= writer.write((char*) &count, sizeof(count));
+    bytes+= writer.write( &count, sizeof(count));
 
     for(HostInfo* hi: data){
         if( select & SELECTION::IP ){
-            bytes+= writer.write( (char*)&hi->host, sizeof(hi->host) ); // writing without htonl()
+            bytes+= writer.write( &hi->host, sizeof(hi->host) ); // writing without htonl()
         }
         if( select & SELECTION::PORT ){
             uint16_t p = htons(hi->port);
-            bytes+= writer.write( (char*)&p, sizeof(p) );
+            bytes+= writer.write( &p, sizeof(p) );
         }
         if( select & SELECTION::AGE ){
             auto deltaT = system_clock::now() - hi->seen;
             auto count = deltaT.count()/60000000; // ms to minutes
             uint16_t age = count > 65500 ? 65500 : count; // reserve all above 65500
             age = htons(age);
-            bytes+= writer.write( (char*)&age, sizeof(age) );
+            bytes+= writer.write( &age, sizeof(age) );
         }
         if( select & SELECTION::RKEY ){
             if(hi->key){
                 char keyCount = 1;
-                bytes+= writer.write( (char*)&keyCount, sizeof(keyCount));
-                bytes+= writer.write( (char*)&*hi->key, sizeof(PubKey) );
+                bytes+= writer.write( &keyCount, sizeof(keyCount));
+                bytes+= writer.write( &*hi->key, sizeof(PubKey) );
             }
         }
         if( select & SELECTION::RSVC ){
@@ -147,7 +147,7 @@ int RemoteData::send(Writer& writer, uint32_t select, vector<string>& filters){
                 }
             }
             uint16_t count = htons(svc.size());
-            bytes+= writer.write((char*) &count, sizeof(count));
+            bytes+= writer.write( &count, sizeof(count));
 
             for( Service* s: svc){
                 bytes+= writer.writeString(s->fullDescription);

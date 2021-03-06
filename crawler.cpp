@@ -73,7 +73,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const u
     // local data
     LocalData ld;
     if(selectRet & SELECTION::LKEY){
-        rdsize = sock.read((char*)&ld.localPubKey, sizeof(PubKey));
+        rdsize = sock.read(&ld.localPubKey, sizeof(PubKey));
         if( rdsize != sizeof(PubKey) ){
             cerr << "ERROR: reading remote public key" << endl;
             return 0;
@@ -84,12 +84,12 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const u
     Reader* reader = sign ? &signatureReader : &dumbReader;
     reader->init(sock, ld.localPubKey);
 
-    reader->write((char*)&selectRet, sizeof(selectRet)); // we read it using sock before
+    reader->write(&selectRet, sizeof(selectRet)); // we read it using sock before
     if( selectRet & SELECTION::MYIP ){
-        reader->write((char*)&myip, sizeof(myip));
+        reader->write(&myip, sizeof(myip));
     }
     if(selectRet & SELECTION::LKEY){
-        reader->write((char*)&ld.localPubKey, sizeof(ld.localPubKey));
+        reader->write(&ld.localPubKey, sizeof(ld.localPubKey));
     }
 
     if(selectRet & SELECTION::TIME){
@@ -135,7 +135,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const u
         HostInfo& hi = unverifiedData.back();
 
         if( selectRet & SELECTION::IP ){ // do not use Sock::read32() - IP does not need ntohl()
-            rdsize = reader->read((char*)&hi.host,sizeof(hi.host));
+            rdsize = reader->read( &hi.host,sizeof(hi.host));
             if(rdsize != sizeof(hi.host)){
                 cerr << "ERROR reading IP." << endl;
                 return 0; // discard ALL data from that server because we can not verify signature!
@@ -166,14 +166,14 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const u
 
         if( selectRet & SELECTION::RKEY ){
             char keyCount = 0;
-            rdsize = reader->read((char*) &keyCount, sizeof(keyCount) );
+            rdsize = reader->read( &keyCount, sizeof(keyCount) );
             if( sizeof(keyCount) != rdsize ){
                 cerr << "ERROR reading key count." << endl;
                 return 0;
             }
             if(keyCount){
                 hi.key = make_shared<PubKey> ();
-                rdsize = reader->read( (char*)&*hi.key, sizeof(PubKey) );
+                rdsize = reader->read( &*hi.key, sizeof(PubKey) );
                 if(rdsize != sizeof(PubKey) ){
                     cerr << "ERROR reading public key." << endl;
                     return 0;
@@ -200,7 +200,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const u
     } // for (adding HostInfo)
 
     PubSign signature; // we checked the SIGN bit above
-    if( sizeof(signature) != sock.read((char*)&signature, sizeof(signature) ) ) {
+    if( sizeof(signature) != sock.read( &signature, sizeof(signature) ) ) {
         cerr << "Crawler: ERROR reading signature from remote host" << endl;
         return 0;
     }

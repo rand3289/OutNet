@@ -85,11 +85,11 @@ int Response::write(Sock& conn, uint32_t select, vector<string>& filters, LocalD
     writer->init(conn);
 
     uint32_t netSelect = htonl(select);
-    bytes+= writer->write((char*) &netSelect, sizeof(netSelect));
+    bytes+= writer->write( &netSelect, sizeof(netSelect));
 
     if( select & SELECTION::MYIP ){
         uint32_t remoteIP = conn.getIP();                    // remote IP the way I see it
-        bytes+=writer->write((char*)&remoteIP, sizeof(remoteIP)); // helps other server find it's NATed IPs
+        bytes+=writer->write( &remoteIP, sizeof(remoteIP)); // helps other server find it's NATed IPs
     }
 
     bytes+= ldata.send(  *writer, select, filters);
@@ -98,7 +98,7 @@ int Response::write(Sock& conn, uint32_t select, vector<string>& filters, LocalD
 
     if(sign){
         const PubSign* psign = writer->getSignature();
-        bytes+= conn.write((char*)psign, sizeof(PubSign));
+        bytes+= conn.write( psign, sizeof(PubSign));
     }
     return bytes;
 }

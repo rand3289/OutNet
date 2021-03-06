@@ -171,9 +171,8 @@ int Sock::close(void){
 
 
 // TODO: rewrite read()/write() to accept a timeout
-// TODO: should read()/write() take void* to avoid a million (char*) casts ???
 
-int Sock::write(const char* buff, size_t size){
+int Sock::write(const void* buff, size_t size){
 	cout << "WRITE: " << size << endl; // DEBUGGING!!!
 	if(s==INVALID_SOCKET){
 		cerr << "Socket not initialized - Can't write." << endl;
@@ -183,7 +182,7 @@ int Sock::write(const char* buff, size_t size){
 }
 
 
-int Sock::read(char* buff, size_t size){
+int Sock::read(void* buff, size_t size){
 	cout << "READ: " << size << endl; // DEBUGGING!!!
 	if(s==INVALID_SOCKET){
 		cerr << "Socket not initialized - Can't read." << endl;
@@ -194,40 +193,40 @@ int Sock::read(char* buff, size_t size){
 }
 
 
-int Sock::readLine(char * buff, const size_t maxSize){
-    char* curr = buff;
-	while( (size_t)(curr-buff) < maxSize-1 ){ // skip empty lines (or \r \n left from previous reads)
+int Sock::readLine(void* buff, const size_t maxSize){
+    char* curr = (char*)buff;
+	while( (size_t)(curr-(char*)buff) < maxSize-1 ){ // skip empty lines (or \r \n left from previous reads)
 		if( read(curr,1) <= 0 ){ break; }
 		if( *curr==0 ) { break; }
 		if( *curr=='\n'){ break; }
 		if( *curr!='\r' ){ ++curr; }  // skip \r
 	}
 	*curr = 0;
-	return curr-buff;
+	return curr-(char*)buff;
 }
 
 uint32_t Sock::read32(bool& error){
     uint32_t data;
-	int size = read((char*)&data, sizeof(data));
+	int size = read(&data, sizeof(data));
 	error = (size != sizeof(data) );
 	return ntohl(data);
 }
 
 uint16_t Sock::read16(bool& error){
     uint16_t data;
-	int size = read((char*)&data, sizeof(data) );
+	int size = read(&data, sizeof(data) );
 	error = (size != sizeof(data) );
 	return ntohs(data);
 }
 
 int Sock::write32(uint32_t data){
     data = htonl(data);
-    return write( (char*) &data, sizeof(data) );
+    return write( &data, sizeof(data) );
 }
 
 int Sock::write16(uint16_t data){
     data = htons(data);
-    return write( (char*) &data, sizeof(data) );
+    return write( &data, sizeof(data) );
 }
 
 
@@ -238,20 +237,20 @@ int Sock::writeString(const string& str){
         iclen = MAX_STR_LEN;
         cerr << "WARNING: writeString() truncating string: " << str << endl;
     }
-    if( 1 != write( (char*) &iclen, 1) ){ return -1; }
-    return 1 + write( (char*) str.c_str(), iclen);
+    if( 1 != write( &iclen, 1) ){ return -1; }
+    return 1 + write( str.c_str(), iclen);
 }
 
 
-int Sock::readString(char* buff, size_t buffSize){ // make sure buff is at least 256 char long
+int Sock::readString(void* buff, const size_t buffSize){ // make sure buff is at least 256 char long
     unsigned char size; // since size is an unsigned char it can not be illegal
-    int rdsize = read( (char*)&size, sizeof(size) );
+    int rdsize = read( &size, sizeof(size) );
     if( 1!=rdsize ){ return -1; } // ERROR
 	int original = size;
 	size = size < buffSize ? size : buffSize-1;
     rdsize = read( buff, size);
     if( rdsize!=size ){ return -2; } // ERROR
-    buff[size] = 0; // null terminate the string
+    ((char*)buff)[size] = 0; // null terminate the string
 
 	if(original> size){ // if buffer is too small, read the rest from stream and discard
 		cerr << "WARNING: readString() buffer too small." << endl;

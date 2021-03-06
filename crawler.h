@@ -10,9 +10,9 @@ protected:
 public:
     virtual void init(Sock& socket, PubKey& key){ sock = & socket; }
     virtual bool verifySignature(PubSign& signature){ return true; }
-    virtual int write(char* data, size_t size){ return 0; }
-    virtual int read(char* data, size_t size){ return sock->read(data, size); }
-    virtual int readString(char* buff, size_t size){ return sock->readString(buff, size); }
+    virtual int write(void* data, size_t size){ return 0; }
+    virtual int read(void* data, size_t size){ return sock->read(data, size); }
+    virtual int readString(void* buff, size_t size){ return sock->readString(buff, size); }
     virtual uint16_t read16(bool& error){ return sock->read16(error); }
     virtual uint32_t read32(bool& error){ return sock->read32(error); }
 };
@@ -23,25 +23,25 @@ class SignatureReader: public Reader{
 public:
     virtual void init(Sock& socket, PubKey& key){ sock = & socket; sign.init(key); }
     virtual bool verifySignature(PubSign& signature){ return sign.verify(signature); }
-    virtual int write(char* data, size_t size){ return sign.write(data,size); }
-    virtual int read(char* data, size_t size){
+    virtual int write(void* data, size_t size){ return sign.write(data,size); }
+    virtual int read(void* data, size_t size){
         int ret = sock->read(data,size);
         sign.write(data, ret); // sign the data
         return ret;
     }
-    virtual int readString(char* buff, size_t size){
+    virtual int readString(void* buff, size_t size){
         int ret = sock->readString(buff, size);
         sign.write(buff,ret);
         return ret;
     }
     virtual uint16_t read16(bool& error){
         uint16_t ret = sock->read16(error);
-        sign.write((char*)&ret, sizeof(ret));
+        sign.write(&ret, sizeof(ret));
         return ret;
     }
     virtual uint32_t read32( bool& error){
         uint32_t  ret = sock->read32( error);
-        sign.write((char*)&ret, sizeof(ret));
+        sign.write(&ret, sizeof(ret));
         return ret;
     }
 };

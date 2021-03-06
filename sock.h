@@ -27,13 +27,13 @@ public:
     int connect(uint32_t ip, uint16_t port); // ip has to be in the network byte order???
 	int close(void);
 
-	int read(char * buffer, size_t size);
-	int readLine(char* buffer, const size_t size);
-	int readString(char* buff, size_t size);
+	int read(void* buffer, size_t size);
+	int readLine(void* buffer, const size_t size);
+	int readString(void* buff, const size_t size);
 	uint16_t read16(bool& error);
 	uint32_t read32(bool& error);
 
-	int write(const char * buffer, size_t size);
+	int write(const void* buffer, size_t size);
 	int write32(uint32_t data);
 	int write16(uint16_t data);
 	int writeString(const std::string& str); // TODO: should this be char* for symmetry with readString() ???
