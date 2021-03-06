@@ -28,9 +28,9 @@ struct Service{
 };
 
 
-// TODO: key from Signature class gets filled in
 struct LocalData {
     shared_mutex mutx;
+//    HostPort self; // public ip of the local service and port it is running on // TODO:
     unsigned long myIP;    // public ip of the local service
     unsigned short myPort; // local service is running on this port
     PubKey localPubKey;
@@ -45,12 +45,15 @@ struct HostPort {
     uint32_t host;
     uint16_t port;
     HostPort(): host(0), port(0) {}
-    bool operator==(const HostPort& rhs){ return host==rhs.host && port == rhs.port; }
+    HostPort(const HostPort& rhs): host(rhs.host), port(rhs.port) {}
     HostPort& operator=(const HostPort& rhs){ host=rhs.host; port=rhs.port; return *this; }
+    bool operator==(const HostPort& rhs){ return host==rhs.host && port == rhs.port; }
 };
 
 
+// TODO: replace host/port with HostPort ???
 struct HostInfo {                    // host/port fields are in the network byte order
+    constexpr static const int DEFAULT_RATING = 100;
     uint32_t host;                   // IPv4 address
     uint16_t port;                   // IPv4 port number (1-65535, 0=reserved)
     shared_ptr<PubKey> key;          // remote service's public key
@@ -58,12 +61,13 @@ struct HostInfo {                    // host/port fields are in the network byte
 // these are remote service properties related to interaction with that service
     bool signatureVerified = false;  // was service queried directly or key found by a relay service?
     int offlineCount = 0;            // server has been found offline this many times IN A ROW
+    int rating = 100;                // our interaction rating for this service
     time_point<system_clock> seen;   // last time we successfully connected to it
     time_point<system_clock> missed; // last time of unsuccessful connect
     time_point<system_clock> called; // last time this service connected to us
-    int rating = 100;                // our interaction rating for this service
     HostPort referrer;               // preserve where this information came from (for rating that service)
 
+    HostInfo();
     bool passFilters(vector<string> filters);
     void addService(const string& service){
         services.emplace( services.end() )->parse(service);

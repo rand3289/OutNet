@@ -12,7 +12,7 @@
 using namespace std;
 
 
-int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const int select, unsigned short sport){
+int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const int select, HostPort& self){
     Sock sock;
     if( sock.connect(hi.host, hi.port) ){
         cerr  << "Error connecting to " << hi.host << ":" << hi.port << endl;
@@ -26,8 +26,9 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const i
 //TODO: select if we have remote's public key and turn it off in select if we do
 //TODO: add "filter by time" if remote was contacted some time ago (use hi.seen)
     stringstream ss;
-    ss << "GET /?QUERY=" << select << "&SPORT=" << sport <<" HTTP/1.1\n";
-    if(ss.str().length() != sock.write(ss.str().c_str(), ss.str().length() ) ){
+    ss << "GET /?QUERY=" << select << "&SPORT=" << self.port <<" HTTP/1.1\n";
+    int len = ss.str().length();
+    if(len != sock.write(ss.str().c_str(), len ) ){
         cerr << "Error sending HTTP request to " << hi.host << ":" << hi.port << endl;
         return 0;
     }
@@ -82,16 +83,23 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const i
             cerr << "ERROR reading 'my ip'" << endl;
             return 0;
         }
-        // TODO: put it in ldata.myIP - ask multiple servers before trusting it
+        if( 0 == self.host ){ // TODO: ask multiple servers before trusting it
+            self.host = myip;
+        }
     }
 
-    if(selectRet & SELECTION::TIME){ // send local public key. It does not change. Do not lock.
-        unsigned long time = reader->readLong(error);
+    if(selectRet & SELECTION::TIME){
+        unsigned long timeRemote = reader->readLong(error);
         if(error){
             cerr << "ERROR reading remote's time." << endl;
             return 0;
         }
-        // TODO: check that time is not too long in the past ... otherwise it is a replay attack
+        // check that timestamp is not too long in the past, otherwise it can be a replay attack
+        unsigned long now = time(nullptr); // unix time does not depend on a timezone
+        if( now - timeRemote > 10*60 ){
+            cerr << "ERROR: remote time stamp is older than 10 minutes!  Discarding data." << endl;
+            return 0;
+        }
     }
 
     if( selectRet & SELECTION::LSVC ){
@@ -110,8 +118,6 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const i
         }
     }
 
-    HostPort self; // our public/ routable ip  // TODO: fill it in !!!  move to class???
-
     // remote data
     long count = reader->readLong(error); // count is always there even if data is not // TODO: check for errors
     if(error){
@@ -128,7 +134,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const i
             rdsize = reader->read((char*)&hi.host,sizeof(hi.host));
             if(rdsize != sizeof(hi.host)){
                 cerr << "ERROR reading IP." << endl;
-                return 0;
+                return 0; // discard ALL data from that server because we can not verify signature!
             }
         }
 
@@ -140,8 +146,8 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const i
             }
         }
 
-        if( hi.host == self.host && hi.port == self.port ){ // just found myself in the list of IPs
-            unverifiedData.pop_back();
+        if( selectRet&SELECTION::IP && selectRet&SELECTION::PORT && hi.host==self.host && hi.port==self.port ){
+            unverifiedData.pop_back(); // just found myself in the list of IPs
             continue;
         }
 
@@ -156,15 +162,18 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const i
 
         if( selectRet & SELECTION::RKEY ){
             char keyCount = 0;
-            reader->read((char*) &keyCount, sizeof(keyCount));
+            rdsize = reader->read((char*) &keyCount, sizeof(keyCount) );
+            if( sizeof(keyCount) != rdsize ){
+                cerr << "ERROR reading key count." << endl;
+                return 0;
+            }
             if(keyCount){
-                auto key = make_shared<PubKey> ();
-                rdsize = reader->read( (char*)&*key, sizeof(PubKey) );
+                hi.key = make_shared<PubKey> ();
+                rdsize = reader->read( (char*)&*hi.key, sizeof(PubKey) );
                 if(rdsize != sizeof(PubKey) ){
                     cerr << "ERROR reading public key." << endl;
                     return 0;
                 }
-                hi.key = key;
             }
         }
 
@@ -189,7 +198,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const i
     PubSign signature; // we checked the SIGN bit above
     if( sizeof(signature) != sock.read((char*)&signature, sizeof(signature) ) ) {
         cerr << "Crawler: ERROR reading signature from remote host" << endl;
-        return 0; // TODO:
+        return 0;
     }
 
     // verify signature. If signature can not be verified, discard the data and reduce hi.rating below 0
@@ -199,10 +208,10 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const i
         hi.rating = hi.rating < 0 ? hi.rating-1 : -1;
         hi.offlineCount = 0;
         hi.seen = system_clock::now();
-        return 0; // TODO:
+        return 0;
     }
 
-    std::copy( begin(unverifiedData), end(unverifiedData), back_inserter(newData));
+    std::copy( begin(unverifiedData), end(unverifiedData), back_inserter(newData)); // TODO: use move_iterator?
 
     unique_lock ulock2(data->mutx); // release the lock after each connection to allow other threads to work
     hi.signatureVerified = true;
@@ -221,8 +230,14 @@ int Crawler::merge(vector<HostInfo>& newData){
 
 
 // go through RemoteData/HostInfo entries and retrieve more data from those services.
-int Crawler::run(unsigned short sport){
+int Crawler::run(){
     if(nullptr == data){ throw "ERROR: call Crawler::loadFromDisk() before calling Crawler::run()!"; }
+
+    HostPort self;
+    shared_lock slock(ldata.mutx);
+    self.host = ldata.myIP;
+    self.port = ldata.myPort;
+    slock.unlock();
 
     while(true){
         vector<HostInfo> newData;
@@ -247,7 +262,7 @@ int Crawler::run(unsigned short sport){
         // iterate over data, connect to each remote service, get the data and place into newData
         const int select = 0b111111111; // see SELECTION in protocol.h
         for(HostInfo* hi: callList){
-            queryRemoteService(*hi, newData, select, sport);
+            queryRemoteService(*hi, newData, select, self);
         }
 
         int count = merge(newData);

@@ -32,6 +32,10 @@ bool HostInfo::passFilters(vector<string> filters){
     return true; // TODO:
 }
 
+HostInfo::HostInfo(): host(0), port(0), signatureVerified(false), offlineCount(0), rating(DEFAULT_RATING) {
+    seen = missed = called = system_clock::from_time_t(0); // min() is broken!!!
+}
+
 
 int LocalData::addService(const string& service){
     return services.emplace( services.end() )->parse(service);
@@ -54,15 +58,8 @@ void RemoteData::addContact(IPADDR ip, unsigned short port){
     hi.host = ip;
     hi.port = port;
     hi.called = system_clock::now();
-// TODO: put these into default constructor???
-    hi.signatureVerified = false;
-    hi.offlineCount = 0;
-    hi.seen = std::chrono::system_clock::from_time_t(0); // min() is broken!!!
-    hi.missed = std::chrono::system_clock::from_time_t(0);
-    hi.rating = 100;
     hi.referrer.host = ip; // set referrer to self since that service contacted us
     hi.referrer.port = port;
-
     hosts.insert ( make_pair(ip, hi) );
 }
 
@@ -117,7 +114,7 @@ int RemoteData::send(Writer& writer, int select, vector<string>& filters){
 
     size_t bytes = 0; // write record count first
     unsigned long count = htonl(data.size());
-    bytes+= writer.write((char*) &bytes, sizeof(bytes));
+    bytes+= writer.write((char*) &count, sizeof(count));
 
     for(HostInfo* hi: data){
         if( select & SELECTION::IP ){

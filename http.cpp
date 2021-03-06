@@ -55,7 +55,7 @@ int Request::parse(Sock& conn, vector<string>& filters, unsigned short& port){
         while( tokenize( &start, end, &token) ){
             if( strncmp(token, "QUERY=", 6) == 0 ){ // parse QUERY
                 query = atol(token+6);
-            } else if(token, "SPORT=", 6){ // parse remote server port
+            } else if( strncmp(token, "SPORT=", 6) == 0){ // parse remote server port
                 port = atoi(token+6);
             } else if( strcmp(token,"HTTP") && strcmp(token,"1.1") ){ // throw away these tokens
                 filters.push_back(token);
@@ -88,8 +88,8 @@ int Response::write(Sock& conn, int select, vector<string>& filters, LocalData& 
     bytes+= writer->write((char*) &netSelect, sizeof(netSelect));
 
     if( select & SELECTION::MYIP ){
-        unsigned long remoteIP = conn.getIP();             // remote IP the way I see it
-        writer->write((char*)&remoteIP, sizeof(remoteIP)); // helps other server find it's NATed IPs
+        unsigned long remoteIP = conn.getIP();                    // remote IP the way I see it
+        bytes+=writer->write((char*)&remoteIP, sizeof(remoteIP)); // helps other server find it's NATed IPs
     }
 
     bytes+= ldata.send(  *writer, select, filters);

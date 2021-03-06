@@ -35,6 +35,9 @@ int main(int argc, char* argv[]){
 
     parseCmd(rdata, argc, argv[0], argv[1], argv[2]);
 
+    Signature sign; // load public signature from disk and copy it to ldata
+    memcpy(&ldata.localPubKey, &sign.getPublicKey(), sizeof(PubKey));
+
     Config config; // config is aware of service port, LocalData and BWLists
     config.loadFromDisk(ldata, bwlists); // load ldata,bwlists // TODO: check failure, notify or exit?
     // create a thread that watches files for service and BWList updates
@@ -55,9 +58,9 @@ int main(int argc, char* argv[]){
 
     // create the information collector thread here (there could be many in the future)
     // it searches and fills rdata while honoring BWLists
-    Crawler crawler(bwlists);
+    Crawler crawler(ldata, bwlists);
     crawler.loadFromDisk(rdata); // load rdata from disk
-    std::thread search( &Crawler::run, &crawler, ldata.myPort);
+    std::thread search( &Crawler::run, &crawler);
 
     unordered_map<unsigned long, system_clock::time_point> connTime; // keep track of when someone connects to us
     Response response;

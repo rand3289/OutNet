@@ -24,7 +24,7 @@ int Config::watch(){
 
 int Config::loadFromDisk(LocalData& lData, BWLists& bwLists){
     ldata = &lData;
-    ldata->myPort = Sock::ANY_PORT;
+    ldata->myPort = 33344; // TODO: Sock::ANY_PORT or load from disk
     bwlists = &bwLists;
 
     return 0;

@@ -50,15 +50,16 @@ public:
 class Crawler {
     Reader dumbReader;
     SignatureReader signatureReader;
+    LocalData& ldata;
     BWLists& bwlists;
     RemoteData* data=nullptr;
     int merge(vector<HostInfo>& newData);
-    int queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const int select, unsigned short sport);
+    int queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const int select, HostPort& self);
 public:
-    Crawler(BWLists& bw_lists): bwlists(bw_lists) {}
+    Crawler(LocalData& locData, BWLists& bw_lists): ldata(locData), bwlists(bw_lists) {}
     int loadFromDisk(RemoteData& rdata);
     int saveToDisk();
-    int run(unsigned short sport); // sport = server port
+    int run();
 };
 
 #endif // CRAWLER_H_INCLUDED
