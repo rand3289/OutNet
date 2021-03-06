@@ -95,7 +95,7 @@ int LocalData::send(Writer& writer, int select, vector<string>& filters){
     bytes += writer.write((char*)&count, sizeof(count) );
 
     for(Service* s: toSend){
-        bytes += writer.writeString(s->fullDescription);
+        bytes += writer.writeString(s->fullDescription); // TODO: translate local to NAT IP if needed
     }
     return bytes;
 }

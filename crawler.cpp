@@ -266,7 +266,7 @@ int Crawler::run(){
         }
 
         int count = merge(newData);
-        if( count<=0 ){ this_thread::sleep_for(seconds(60)); }
+        if( count<=0 ){ this_thread::sleep_for( seconds( (rand()%10) +60 ) ); }
         else { saveToDisk(); } // found new services
     } // while(true)
     return 0;

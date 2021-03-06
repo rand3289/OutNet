@@ -15,6 +15,7 @@ using namespace std;
 
 
 void parseCmd(RemoteData& rdata, int argc, char* exe, char* host, char* port){
+    if(1 == argc) { return; } // no parameters
     if(3 == argc){
         unsigned long ip = Sock::strToIP(host);
         unsigned short portInt = atoi(port);
@@ -22,7 +23,7 @@ void parseCmd(RemoteData& rdata, int argc, char* exe, char* host, char* port){
             return rdata.addContact(ip, portInt);
         }
     }
-    cerr << "ERROR parsing command line parameters." << endl;
+    cerr << "ERROR parsing command line parameters.  ";
     cerr << "usage: " << exe << " host port" << endl;
 }
 
