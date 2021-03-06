@@ -7,20 +7,7 @@
 #include <cstring>
 using namespace std;
 
-
-int Writer::writeString(const string& str){ // TODO: move to Sock ???
-    constexpr static const int MAX_STR_LEN = 255;
-    unsigned char iclen = str.length();
-    if(str.length() > MAX_STR_LEN){
-        iclen = MAX_STR_LEN;
-        cerr << "WARNING: truncating string: " << str;
-    }
-    sock->write( (char*) &iclen, 1);
-    return 1 + sock->write( (char*) str.c_str(), iclen);
-}
-
-
-
+// TODO: accept buffer and token by reference ???
 bool tokenize( char** buffer, const char* bufferEnd, char** token ){
     while(*buffer != bufferEnd){ // skip leading separators
         char c = **buffer;
@@ -60,7 +47,6 @@ int Request::parse(Sock& conn, vector<string>& filters, unsigned short& port){
             continue;
         }
         cout << buff << endl; // DEBUGGING ONLY!!!
-        cout.flush();         // DEBUGGING ONLY!!!
         if( strncmp(buff,"GET",3) ){ continue; } // we want http GET query
 
         char* start = buff + 3; // skip "GET"
@@ -81,8 +67,9 @@ int Request::parse(Sock& conn, vector<string>& filters, unsigned short& port){
     return query;
 }
 
-void turnBitsOff(int* mask, int bits){
-    *mask = *mask & (0xFFFFFFFF^bits);
+
+void turnBitsOff(int& mask, int bits){
+    mask = mask & (0xFFFFFFFF^bits); // TODO: return a new mask instead of taking a reference???
 }
 
 int Response::write(Sock& conn, int select, vector<string>& filters, LocalData& ldata, RemoteData& rdata, BWLists& bwlists ){
@@ -90,8 +77,8 @@ int Response::write(Sock& conn, int select, vector<string>& filters, LocalData& 
     size_t bytes = conn.write(header.c_str(), header.size() ); // no need to sign the header
 
     // If you don't want to share some requested fieds, turn off the bits.
-    turnBitsOff(&select, SELECTION::WLKEY);  // do not share your pub key white list (friends)
-    turnBitsOff(&select, SELECTION::WLIP | SELECTION::BLKEY | SELECTION::BLIP ); // not implemented
+    turnBitsOff(select, SELECTION::WLKEY);  // do not share your pub key white list (friends)
+    turnBitsOff(select, SELECTION::WLIP | SELECTION::BLKEY | SELECTION::BLIP ); // not implemented
 
     bool sign = select & SELECTION::SIGN;
     Writer* writer = sign ? &signatureWriter : &dumbWriter;

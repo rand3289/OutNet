@@ -9,6 +9,7 @@
     #define INVALID_SOCKET (-1)
     typedef int SOCKET;
 #endif
+#include <string>
 
 // typedef unsigned long IPADDR; // sockaddr_in::sin_addr.s_addr defines it as "unsigned long"
 // typedef uint16_t IPPORT;
@@ -30,9 +31,12 @@ public:
 	int readLine(char* buffer, int size);
 	short readShort(bool& error);
 	long readLong(bool& error);
+	int readString(char* buff); // make sure buff is at least 256 char long
+
 	int write(const char * buffer, int size);
 	int writeLong(long data);
 	int writeShort(short data);
+	int writeString(const std::string& str); // TODO: should this be char* for symmetry with readString() ???
 
     // server - start listening for a connection.  Use ANY_PORT if not binding to a specific port
     constexpr const static unsigned short ANY_PORT = 0;

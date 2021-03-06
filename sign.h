@@ -13,7 +13,7 @@ class Signature {
 public:
     Signature(){} // TODO: load public & private keys from disk
     int init(){ return 0; }                      // clear "PubSign sign"
-    int write(char* data, int size){ return 0; } // compute "PubSign sign" from data chunks
+    int write(const char* data, int size){ return 0; } // compute "PubSign sign" from data chunks
     const PubSign& getSignature(){ return signature; }
     const PubKey&  getPublicKey(){ return pubKey; }
 };

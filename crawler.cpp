@@ -270,14 +270,3 @@ int Crawler::saveToDisk(){ // save data to disk
     shared_lock slock(data->mutx);
     return 0;
 }
-
-
-int Reader::readString(char* buff){ // make sure buff is at least 256 char long
-    unsigned char size; // since size is an unsigned char it can not be illegal.
-    int rdsize = sock->read( (char*)&size, sizeof(size) );
-    if( 1!=rdsize ){ return -1; } // ERROR
-    int rddata = sock->read( buff, size);
-    if(rddata!=size){ return -2; } // ERROR
-    buff[size] = 0; // null terminate the string
-    return size;
-}

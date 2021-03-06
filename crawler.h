@@ -10,11 +10,11 @@ protected:
 public:
     virtual void init(Sock& socket, PubKey& key){ sock = & socket; }
     virtual bool verifySignature(PubSign& signature){ return true; }
-    virtual int read(char* data, size_t size){ return sock->read(data, size); }
     virtual int write(char* data, size_t size){ return 0; }
-    int readString(char* buff); // reads char size (255max) + string without null. Appends 0 to buff
-    short readShort(bool& error){ return sock->readShort(error); }
-    long  readLong( bool& error){ return sock->readLong( error); }
+    virtual int read(char* data, size_t size){ return sock->read(data, size); }
+    virtual int readString(char* buff){ return sock->readString(buff); }
+    virtual short readShort(bool& error){ return sock->readShort(error); }
+    virtual long  readLong( bool& error){ return sock->readLong( error); }
 };
 
 
@@ -23,12 +23,27 @@ class SignatureReader: public Reader{
 public:
     virtual void init(Sock& socket, PubKey& key){ sock = & socket; sign.init(key); }
     virtual bool verifySignature(PubSign& signature){ return sign.verify(signature); }
+    virtual int write(char* data, size_t size){ return sign.write(data,size); }
     virtual int read(char* data, size_t size){
-        int ret = read(data,size);
+        int ret = sock->read(data,size);
         sign.write(data, ret); // sign the data
         return ret;
     }
-    virtual int write(char* data, size_t size){ return sign.write(data,size); }
+    virtual int readString(char* buff){
+        int ret = sock->readString(buff);
+        sign.write(buff,ret);
+        return ret;
+    }
+    virtual short readShort(bool& error){
+        short ret = sock->readShort(error);
+        sign.write((char*)&ret, sizeof(ret));
+        return ret;
+    }
+    virtual long readLong( bool& error){
+        long  ret = sock->readLong( error);
+        sign.write((char*)&ret, sizeof(ret));
+        return ret;
+    }
 };
 
 

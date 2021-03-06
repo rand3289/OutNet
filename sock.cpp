@@ -224,3 +224,26 @@ int Sock::writeShort(short data){
     data = htons(data);
     return write( (char*) &data, sizeof(data) );
 }
+
+
+int Sock::writeString(const string& str){
+    constexpr static const int MAX_STR_LEN = 255;
+    unsigned char iclen = str.length();
+    if(str.length() > MAX_STR_LEN){
+        iclen = MAX_STR_LEN;
+        cerr << "WARNING: truncating string: " << str;
+    }
+    if( 1 != write( (char*) &iclen, 1) ){ return -1; }
+    return 1 + write( (char*) str.c_str(), iclen);
+}
+
+
+int Sock::readString(char* buff){ // make sure buff is at least 256 char long
+    unsigned char size; // since size is an unsigned char it can not be illegal.
+    int rdsize = read( (char*)&size, sizeof(size) );
+    if( 1!=rdsize ){ return -1; } // ERROR
+    int rddata = read( buff, size);
+    if(rddata!=size){ return -2; } // ERROR
+    buff[size] = 0; // null terminate the string
+    return size;
+}
