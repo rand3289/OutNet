@@ -148,8 +148,11 @@ Sock::Sock(): s(INVALID_SOCKET) {
 
 
 Sock::Sock(SOCKET socket): s(socket) {
-	memset(&ip,0,sizeof(ip)); // TODO: fill in ip from socket here???
-    initNetwork();
+	initNetwork();
+	socklen_t size = sizeof(ip);
+	if( -1 == getpeername(socket, (sockaddr*)&ip, &size) ){ // if it fails, just clear ip
+	    memset( &ip, 0,sizeof(ip) ); // getsockname() instead ???
+	}
 }
 
 
@@ -261,19 +264,22 @@ int Sock::readString(void* buff, const size_t buffSize){ // make sure buff is at
     return original; // return the number of bytes read from socket
 }
 
-
+// https://en.wikipedia.org/wiki/Private_network
 bool Sock::isRoutable(uint32_t ip){ // is it routable or non-routable IP ?
     unsigned char* ipc = (unsigned char*) &ip;
     if( 10 == ipc[0] ){ return false; }
     if( 192 == ipc[0] && 168 == ipc[1] ){ return false; }
     if( 172 == ipc[0] && ipc[1] >= 16 && ipc[1] <=31 ){ return false; }
-    return true;
+    return true; // TODO: make this portable
 }
 
-
-string Sock::ipToString(uint32_t ip){
-	unsigned char* ipc = (unsigned char*) &ip;
-	stringstream ss;
-	ss << ipc[0] << "." << ipc[1] << "." << ipc[2] << "." << ipc[3];
-	return ss.str();
+#include <arpa/inet.h> // inet_ntop()
+string Sock::ipToString(uint32_t ip){ // or check "man inet_ntop"
+    char buff[16];
+    inet_ntop(AF_INET, &ip, buff, sizeof(buff));
+	return string(buff);
+//	unsigned char* ipc = (unsigned char*) &ip;
+//	stringstream ss; // TODO: is ip in network or host byte order ???
+//	ss << ipc[0] << "." << ipc[1] << "." << ipc[2] << "." << ipc[3];
+//	return ss.str();
 }

@@ -3,7 +3,8 @@
 #include "data.h"
 #include "sock.h"
 
-
+// Reader and SignatureReader are helper classes
+// They help Crawler read data while verifying the signature
 class Reader{
 protected:
     Sock* sock = nullptr;

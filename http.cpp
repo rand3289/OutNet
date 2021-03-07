@@ -24,7 +24,7 @@ bool tokenize( char** buffer, const char* bufferEnd, char** token ){
     *token = *buffer;
 
     while(*buffer != bufferEnd){
-        char c = **buffer; // TODO: convert this to switch(c) ???
+        char c = **buffer;
         if( ' '==c || '&'==c || '?'==c || '/'==c || '\r'==c || '\n'==c ) { // end of token
             **buffer=0; // separate strings
             ++*buffer;

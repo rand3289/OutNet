@@ -14,6 +14,7 @@ using namespace std::chrono;
 
 int Service::parse(const string& service){
     fullDescription = service;
+// TODO: translate local to NAT IP if needed
     return 0; // TODO:
 }
 
@@ -95,7 +96,7 @@ int LocalData::send(Writer& writer, uint32_t select, vector<string>& filters){
     bytes += writer.write( &count, sizeof(count) );
 
     for(Service* s: toSend){
-        bytes += writer.writeString(s->fullDescription); // TODO: translate local to NAT IP if needed
+        bytes += writer.writeString(s->fullDescription);
     }
     return bytes;
 }

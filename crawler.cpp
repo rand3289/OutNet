@@ -27,7 +27,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const u
         return 0;
     }
 
-//TODO: select if we have remote's public key and turn it off in select if we do
+//TODO: see if we have remote's public key and turn it off in select if we do
 //TODO: add "filter by time" if remote was contacted some time ago (use hi.seen)
     stringstream ss;
     ss << "GET /?QUERY=" << select << "&SPORT=" << self.port <<" HTTP/1.1\n";
@@ -127,7 +127,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const u
     }
 
     // remote data
-    uint32_t count = reader->read32(error); // count is always there even if data is not // TODO: check for errors
+    uint32_t count = reader->read32(error); // count is always there even if data is not
     if(error){
         cerr << "ERROR reading HostInfo count." << endl;
         return 0;
@@ -226,7 +226,8 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const u
     ++hi.rating;
     hi.offlineCount = 0;
     hi.seen = system_clock::now();
-    return 0; // TODO:
+
+    return unverifiedData.size();
 }
 
 

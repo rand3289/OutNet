@@ -5,7 +5,6 @@
 #include <vector>
 #include <string>
 #include <thread>
-using namespace std;
 
 // loads refresh rate, port, local services, black & white lists from disk
 // stores port on disk
@@ -15,9 +14,9 @@ class Config{
     LocalData* ldata;
     BWLists* bwlists;
 
-    int checkRegistration(vector<string>& services) { return 0; }
-    int updateLocalData(vector<string>& services) { return 0; }
-    int openPorts(vector<string>& services){ return 0; } // open router port using UPnP
+    int checkRegistration(std::vector<std::string>& services) { return 0; }
+    int updateLocalData(std::vector<std::string>& services) { return 0; }
+    int openPorts(std::vector<std::string>& services){ return 0; } // open router port using UPnP
     int getRefreshRate(){ return 10; } // seconds for Config to look for files
 public:
     int loadFromDisk(LocalData& ldata, BWLists& bwlists);
