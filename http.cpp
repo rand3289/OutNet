@@ -1,40 +1,12 @@
 #include "http.h"
 #include "sign.h"
 #include "protocol.h"
+#include "utils.h"
 #include <sstream>
 #include <iostream>
 #include <thread>
 #include <cstring>
 using namespace std;
-
-// TODO: accept buffer and token by reference ???
-bool tokenize( char** buffer, const char* bufferEnd, char** token ){
-    while(*buffer != bufferEnd){ // skip leading separators
-        char c = **buffer;
-        if( 0==c || '\r'==c || '\n'==c ) { // end of line - no more tokens
-            return false;
-        }
-        if( ' '==c || '&'==c || '?'==c || '/'==c ) { // skip separators
-            ++*buffer;
-        } else {
-            break;
-        }
-    }
-
-    *token = *buffer;
-
-    while(*buffer != bufferEnd){
-        char c = **buffer;
-        if( ' '==c || '&'==c || '?'==c || '/'==c || '\r'==c || '\n'==c ) { // end of token
-            **buffer=0; // separate strings
-            ++*buffer;
-            return true;
-        }
-        ++*buffer; // skip to the end of token
-    }
-
-    return false;
-}
 
 
 // look for a line like: GET /?QUERY=2036&SPORT=33344&PORT_EQ_2132 HTTP/1.1
@@ -67,10 +39,6 @@ int Request::parse(Sock& conn, vector<string>& filters, uint16_t& port){
     return query;
 }
 
-
-void turnBitsOff(uint32_t& mask, uint32_t bits){
-    mask = mask & (0xFFFFFFFF^bits); // TODO: return a new mask instead of taking a reference???
-}
 
 int Response::write(Sock& conn, uint32_t select, vector<string>& filters, LocalData& ldata, RemoteData& rdata, BWLists& bwlists ){
     static const string header =  "HTTP/1.1 200 OK\n\n";

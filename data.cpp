@@ -12,10 +12,27 @@ using namespace std;
 #include <chrono>
 using namespace std::chrono;
 
-int Service::parse(const string& service){
+
+HostInfo::HostInfo(): host(0), port(0), signatureVerified(false), offlineCount(0), rating(DEFAULT_RATING) {
+    seen = missed = called = system_clock::from_time_t(0); // time_point::min() is broken (overflows) !!!
+}
+
+
+Service* HostInfo::addService(const string& service){
+    return services.emplace( services.end() )->parse(service); // TODO: if it was not parsed, delete it
+}
+
+
+Service* LocalData::addService(const string& service){
+    return services.emplace( services.end() )->parse(service); // TODO: if it was not parsed, delete it
+}
+
+
+Service* Service::parse(const string& service){
+    originalDescription = service;
+// TODO: translate local to NAT IP
     fullDescription = service;
-// TODO: translate local to NAT IP if needed
-    return 0; // TODO:
+    return this;
 }
 
 
@@ -31,15 +48,6 @@ bool Service::passRemoteFilters(vector<string> filters){
 
 bool HostInfo::passFilters(vector<string> filters){
     return true; // TODO:
-}
-
-HostInfo::HostInfo(): host(0), port(0), signatureVerified(false), offlineCount(0), rating(DEFAULT_RATING) {
-    seen = missed = called = system_clock::from_time_t(0); // min() is broken!!!
-}
-
-
-int LocalData::addService(const string& service){
-    return services.emplace( services.end() )->parse(service);
 }
 
 

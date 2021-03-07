@@ -1,6 +1,7 @@
 #include "crawler.h"
 #include "sock.h"
 #include "protocol.h"
+#include "utils.h"
 #include <memory>
 #include <algorithm>
 #include <mutex>
@@ -12,7 +13,7 @@
 using namespace std;
 
 
-int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const uint32_t select, HostPort& self){
+int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_t select, HostPort& self){
     shared_lock slock(rdata->mutx);
 
     cout << "Connecting to " << Sock::ipToString(hi.host) << ":" << hi.port << endl;
@@ -27,10 +28,21 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const u
         return 0;
     }
 
-//TODO: see if we have remote's public key and turn it off in select if we do
-//TODO: add "filter by time" if remote was contacted some time ago (use hi.seen)
+    // if we have remote's public key, do not request it (turn it off in select)
+    if( hi.signatureVerified ){ // hi.key ???
+        turnBitsOff(select, SELECTION::LKEY);
+    } // if signature remote sends fails to verify, next time we request the key again
+// TODO: track keys/ratings of services that change IP
+
+    // add "filter by time" if remote was contacted some time ago
+    stringstream filters; // what should we use to track of "first seen" for hosts ???
+    if( 0 == hi.offlineCount && hi.seen > system_clock::from_time_t(0) ){
+        int ageMinutes = duration_cast<seconds>(system_clock::now() - hi.seen).count();
+        filters << "&AGE_LT_" << ageMinutes;
+    }
+
     stringstream ss;
-    ss << "GET /?QUERY=" << select << "&SPORT=" << self.port <<" HTTP/1.1\n";
+    ss << "GET /?QUERY=" << select << "&SPORT=" << self.port << filters.str() <<" HTTP/1.1\n";
     int len = ss.str().length();
     if(len != sock.write(ss.str().c_str(), len ) ){
         cerr << "Error sending HTTP request." << endl;

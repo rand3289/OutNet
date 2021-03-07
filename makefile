@@ -2,8 +2,8 @@
 
 CC = g++
 CFLAGS = -g --std=c++17 -Wall -Wextra -Wno-unused-parameter
-DEPS = config.h crawler.h data.h http.h protocol.h sign.h sock.h upnp.h
-OBJ = main.o sock.o data.o crawler.o config.o http.o
+DEPS = config.h crawler.h data.h http.h protocol.h sign.h sock.h upnp.h utils.h
+OBJ = main.o sock.o data.o crawler.o config.o http.o utils.o
 
 %.o: %.cpp $(DEPS)
 	$(CC) $(CFLAGS) -c -o $@ $<
@@ -12,4 +12,4 @@ a.out: $(OBJ)
 	$(CC) -o $@ $^ -lpthread
 
 clean:
-	/bin/rm a.out *.o
+	/bin/rm -f a.out *.o

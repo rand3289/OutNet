@@ -55,7 +55,7 @@ class Crawler {
     BWLists& bwlists;
     RemoteData* rdata=nullptr;
     int merge(vector<HostInfo>& newData);
-    int queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const uint32_t select, HostPort& self);
+    int queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_t select, HostPort& self);
 public:
     Crawler(LocalData& locData, BWLists& bw_lists): ldata(locData), bwlists(bw_lists) {}
     int loadFromDisk(RemoteData& rdata);

@@ -14,15 +14,16 @@ using namespace std::chrono;
 class Writer; // from http.h (http.h is not included)
 
 
-struct Service{
-    string fullDescription;
+struct Service {
+    string fullDescription; // should have external routable IP
+    string originalDescription; // original - copied here in parse
     string service;
     string protocol;
-    uint32_t ip;
+    uint32_t ip; // real IP (local/non-routable IP)
     uint16_t port;
-//    string userDefinedField; // Do not parse
+//    string userDefinedField; // Do not parse ???
 //    Service(const string& service);
-    int parse(const string& service);
+    Service* parse(const string& service);
     bool passLocalFilters(vector<string> filters);
     bool passRemoteFilters(vector<string> filters);
 };
@@ -37,7 +38,7 @@ struct LocalData {
     vector<Service> services;
 
     int send(Writer& writer, uint32_t select, vector<string>& filters);
-    int addService(const string& service);
+    Service* addService(const string& service);
 };
 
 
@@ -52,6 +53,8 @@ struct HostPort {
 
 
 // TODO: replace host/port with HostPort ???
+// TODO: replace seen, missed with lastContact time.  offlineCount tells us if connect succeeded
+// TODO: delete called
 struct HostInfo {                    // host/port fields are in the network byte order
     constexpr static const int DEFAULT_RATING = 100;
     uint32_t host;                   // IPv4 address
@@ -62,16 +65,15 @@ struct HostInfo {                    // host/port fields are in the network byte
     bool signatureVerified = false;  // was service queried directly or key found by a relay service?
     int offlineCount = 0;            // server has been found offline this many times IN A ROW
     int rating = 100;                // our interaction rating for this service
-    time_point<system_clock> seen;   // last time we successfully connected to it
-    time_point<system_clock> missed; // last time of unsuccessful connect
+    time_point<system_clock> met;    // first time I learned about this host
+    time_point<system_clock> seen;   // last time I successfully connected to it
+    time_point<system_clock> missed; // last time of unsuccessful connect attempt
     time_point<system_clock> called; // last time this service connected to us
     HostPort referrer;               // preserve where this information came from (for rating that service)
 
     HostInfo();
     bool passFilters(vector<string> filters);
-    void addService(const string& service){
-        services.emplace( services.end() )->parse(service);
-    }
+    Service* addService(const string& service);
 };
 
 
