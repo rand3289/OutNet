@@ -13,10 +13,14 @@ using namespace std;
 
 
 int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const uint32_t select, HostPort& self){
+    shared_lock slock(rdata->mutx);
+
+    cout << "Connecting to " << Sock::ipToString(hi.host) << ":" << hi.port << endl;
     Sock sock;
     if( sock.connect(hi.host, hi.port) ){
         cerr  << "Error connecting to " << hi.host << ":" << hi.port << endl;
-        unique_lock ulock(data->mutx); // release lock after each connection for other parts to work
+        slock.unlock(); // there is no upgrade mechanism to unique_lock.
+        unique_lock ulock(rdata->mutx); // release lock after each connection for other parts to work
         hi.missed = system_clock::now();
         ++hi.offlineCount;
         --hi.rating;
@@ -29,7 +33,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const u
     ss << "GET /?QUERY=" << select << "&SPORT=" << self.port <<" HTTP/1.1\n";
     int len = ss.str().length();
     if(len != sock.write(ss.str().c_str(), len ) ){
-        cerr << "Error sending HTTP request to " << hi.host << ":" << hi.port << endl;
+        cerr << "Error sending HTTP request." << endl;
         return 0;
     }
 
@@ -207,7 +211,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const u
 
     // verify signature. If signature can not be verified, discard the data and reduce hi.rating below 0
     if( !reader->verifySignature(signature) ){
-        unique_lock ulock2(data->mutx); // release lock after each connection for other parts to work
+        unique_lock ulock2(rdata->mutx); // release lock after each connection for other parts to work
         hi.signatureVerified = false;
         hi.rating = hi.rating < 0 ? hi.rating-1 : -1;
         hi.offlineCount = 0;
@@ -217,7 +221,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const u
 
     std::copy( begin(unverifiedData), end(unverifiedData), back_inserter(newData)); // TODO: use move_iterator?
 
-    unique_lock ulock2(data->mutx); // release the lock after each connection to allow other threads to work
+    unique_lock ulock2(rdata->mutx); // release the lock after each connection to allow other threads to work
     hi.signatureVerified = true;
     ++hi.rating;
     hi.offlineCount = 0;
@@ -227,7 +231,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const u
 
 
 int Crawler::merge(vector<HostInfo>& newData){
-    unique_lock ulock(data->mutx);
+    unique_lock ulock(rdata->mutx);
 //    copy(make_move_iterator(newData.begin()), make_move_iterator(newData.end()), back_inserter(data->hosts));
     return 0;
 }
@@ -235,7 +239,7 @@ int Crawler::merge(vector<HostInfo>& newData){
 
 // go through RemoteData/HostInfo entries and retrieve more data from those services.
 int Crawler::run(){
-    if(nullptr == data){ throw "ERROR: call Crawler::loadFromDisk() before calling Crawler::run()!"; }
+    if(nullptr == rdata){ throw "ERROR: call Crawler::loadFromDisk() before calling Crawler::run()!"; }
 
     HostPort self;
     shared_lock slock(ldata.mutx);
@@ -247,9 +251,9 @@ int Crawler::run(){
         vector<HostInfo> newData;
         vector<HostInfo*> callList;
 
-        shared_lock slock(data->mutx);
+        shared_lock slock(rdata->mutx); // remote data
 
-        for(pair<const IPADDR,HostInfo>& ip_hi: data->hosts){
+        for(pair<const IPADDR,HostInfo>& ip_hi: rdata->hosts){
             HostInfo& hi = ip_hi.second;
             if( hi.rating < 0){ continue; }
             if( system_clock::now() - hi.seen < minutes(60) ){ continue; } // do not contact often
@@ -279,13 +283,13 @@ int Crawler::run(){
 
 // Data is periodically saved.  When service is restarted, it is loaded back up
 // RemoteData does not have to be locked here
-int Crawler::loadFromDisk(RemoteData& rdata){
-    data = &rdata;
+int Crawler::loadFromDisk(RemoteData& remoteData){
+    rdata = &remoteData;
     return 0;
 }
 
 
 int Crawler::saveToDisk(){ // save data to disk
-    shared_lock slock(data->mutx);
+    shared_lock slock(rdata->mutx);
     return 0;
 }

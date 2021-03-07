@@ -1,4 +1,5 @@
 #include "sock.h"
+#include <sstream>  // stringstream
 #include <iostream> // cerr
 #include <cstring>  // memset()
 using namespace std;
@@ -136,7 +137,6 @@ int Sock::listen(uint16_t port){
 		return INVALID_SOCKET;
 	}
 
-	//cout << "listening on port " << ntohs(ip.sin_port) << endl;
 	return 0;
 }
 
@@ -259,4 +259,21 @@ int Sock::readString(void* buff, const size_t buffSize){ // make sure buff is at
         if( rdsize!=size ){ return -3; } // ERROR
 	}
     return original; // return the number of bytes read from socket
+}
+
+
+bool Sock::isRoutable(uint32_t ip){ // is it routable or non-routable IP ?
+    unsigned char* ipc = (unsigned char*) &ip;
+    if( 10 == ipc[0] ){ return false; }
+    if( 192 == ipc[0] && 168 == ipc[1] ){ return false; }
+    if( 172 == ipc[0] && ipc[1] >= 16 && ipc[1] <=31 ){ return false; }
+    return true;
+}
+
+
+string Sock::ipToString(uint32_t ip){
+	unsigned char* ipc = (unsigned char*) &ip;
+	stringstream ss;
+	ss << ipc[0] << "." << ipc[1] << "." << ipc[2] << "." << ipc[3];
+	return ss.str();
 }

@@ -69,11 +69,11 @@ int main(int argc, char* argv[]){
         Sock conn;
         if(INVALID_SOCKET == server.accept(conn) ){ continue; }
 
-        auto& time = connTime[conn.getIP()];            // not taking port into account
-        if( time > system_clock::now() - minutes(10) ){ // if this host connects too often
-            Response::writeDenied(conn);                // preventing abuse
-            conn.close(); // TODO: if host has a non-routable IP, it is local. Do NOT deny.
-            continue;
+        auto& time = connTime[conn.getIP()]; // not taking port into account
+        if( time > system_clock::now() - minutes(10) && Sock::isRoutable(conn.getIP()) ){
+            Response::writeDenied(conn); // preventing abuse
+            conn.close();                // if this host connects too often
+            continue;                    // but allow local IPs repeated queries
         }
         time = system_clock::now();
 

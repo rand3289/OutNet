@@ -52,7 +52,7 @@ class Crawler {
     SignatureReader signatureReader;
     LocalData& ldata;
     BWLists& bwlists;
-    RemoteData* data=nullptr;
+    RemoteData* rdata=nullptr;
     int merge(vector<HostInfo>& newData);
     int queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, const uint32_t select, HostPort& self);
 public:

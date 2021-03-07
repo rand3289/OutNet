@@ -1,6 +1,7 @@
 #ifndef SOCK_H_INCLUDED
 #define SOCK_H_INCLUDED
 
+#include <string>
 #ifdef WIN32
     #include <winsock2.h>
     typedef SOCKADDR_IN sockaddr_in;
@@ -9,11 +10,9 @@
     #define INVALID_SOCKET (-1)
     typedef int SOCKET;
 #endif
-#include <string>
 
 // typedef uint32_t IPADDR; // but sockaddr_in::sin_addr.s_addr is defined as "unsigned long"
 // typedef uint16_t IPPORT;
-
 
 class Sock { // TCP socket
 	SOCKET s;
@@ -49,7 +48,10 @@ public:
 	// remote IP after connect() or after object was returned by accept()
 	uint32_t getIP() { return ip.sin_addr.s_addr; } 
 	SOCKET getRawSocket() { return s; }
+
 	static uint32_t strToIP(const char* addr);
+	static std::string ipToString(uint32_t ip);
+	static bool isRoutable(uint32_t ip);
 };
 
 #endif // SOCK_H_INCLUDED
