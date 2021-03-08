@@ -14,7 +14,9 @@ int Config::loadServiceFiles(){
     static const string extension = ".service"; // TODO: use .start .stop extensions?
     vector<string> lines;
 
-    for(auto& p: directory_iterator(".") ){
+    // this is a work around.  directory_iterator(".") crashes because path(".") crashes
+    path cwd = current_path();
+    for(auto& p: directory_iterator(cwd) ){
         if(p.path().extension() == extension){
             cout << "found file " << p.path() << endl;
             ifstream listf (p.path());
@@ -55,7 +57,6 @@ int Config::loadBlackListFiles(){ return 0; }
 // a member of type "const std::string" cannot have an in-class initializerC/C++(1591)
 static const string configName = "settings.cfg";
 
-// TODO: add ServiceFileDir and BlackListFileDir to config
 // load port and refresh rate from config file
 int Config::loadFromDisk(LocalData& lData, BWLists& bwLists){
     ldata = &lData;

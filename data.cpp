@@ -74,7 +74,7 @@ void RemoteData::addContact(IPADDR ip, uint16_t port){
     hi.called = system_clock::now();
     hi.referrer.host = ip; // set referrer to self since that service contacted us
     hi.referrer.port = port;
-    hosts.insert ( make_pair(ip, hi) );
+    hosts.insert ( make_pair(ip, move(hi) ) );
 }
 
 
