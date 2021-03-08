@@ -54,7 +54,7 @@ struct HostPort {
 
 // TODO: replace host/port with HostPort ???
 // TODO: replace seen, missed with lastContact time.  offlineCount tells us if connect succeeded
-// TODO: delete called
+// TODO: delete "called" field
 struct HostInfo {                    // host/port fields are in the network byte order
     constexpr static const int DEFAULT_RATING = 100;
     uint32_t host;                   // IPv4 address

@@ -1,31 +1,33 @@
 #ifndef SIGN_H_INCLUDED
 #define SIGN_H_INCLUDED
-#include <algorithm>
+#include <cstring> // size_t, memset(), memcpy(), memcmp()
 
 struct PubSign    { char sign[256]; };
-struct PubKey     { char  key[256]; };
 struct PrivateKey { char  key[256]; };
+struct PubKey     {
+    char  key[256];
+    char* loadFromDisk();
+};
 
 
 class Signature {
     PubSign signature;
-    PubKey pubKey;
-    PrivateKey privateKey;
+    PrivateKey privateKey; // TODO: make this static. Load it from disk once.
 public:
-    Signature(){ std::fill(pubKey.key, pubKey.key+sizeof(pubKey), 0xFF); } // TODO: load public & private keys from disk
-    int init(){ return 0; }                      // clear "PubSign sign"
-    int write(const void* data, size_t size){ return 0; } // compute "PubSign sign" from data chunks
+    Signature(); // load private key from disk
+    int init();  // clear "PubSign signature"
+    int write(const void* data, size_t size); // compute signature from data chunks
     const PubSign& getSignature(){ return signature; }
-    const PubKey&  getPublicKey(){ return pubKey; }
 };
 
 
 class SignatureVerify {
+    PubSign signature;
+    PubKey pubKey;
 public:
-    int init(PubKey& pubKey){ return 0; }        // prepare to verify the signature
-    int write(void* data, size_t size){ return 0; } // compute "PubSign sign" from data chunks
-    bool verify(PubSign& signature){ return true;}
-    // { return 0==memcmp( &signature, &blah, sizeof(PubSign) ); } // #include <cstring> // memcmp()
+    int init(PubKey& pubKey);           // prepare to verify the signature
+    int write(void* data, size_t size); // compute "PubSign sign" from data chunks
+    bool verify(PubSign& signature);    // did computed signature match given signature?
 };
 
 #endif //SIGN_H_INCLUDED

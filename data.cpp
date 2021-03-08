@@ -19,12 +19,16 @@ HostInfo::HostInfo(): host(0), port(0), signatureVerified(false), offlineCount(0
 
 
 Service* HostInfo::addService(const string& service){
-    return services.emplace( services.end() )->parse(service); // TODO: if it was not parsed, delete it
+    auto s = services.emplace( services.end() )->parse(service);
+    if(!s){ services.pop_back(); } // if it was not parsed, delete it
+    return s;
 }
 
 
 Service* LocalData::addService(const string& service){
-    return services.emplace( services.end() )->parse(service); // TODO: if it was not parsed, delete it
+    auto s = services.emplace( services.end() )->parse(service);
+    if(!s){ services.pop_back(); } // if it was not parsed, delete it
+    return s;
 }
 
 
@@ -32,6 +36,7 @@ Service* Service::parse(const string& service){
     originalDescription = service;
 // TODO: translate local to NAT IP
     fullDescription = service;
+// if(notParsed){ return nullptr; }
     return this;
 }
 

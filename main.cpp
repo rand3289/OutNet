@@ -1,6 +1,6 @@
 // main service entry. Three threads:
 // main one serves requests, second (crawler) collects info, 
-// third subscribes services & updates config
+// third subscribes services & loads black lists
 #include "data.h"
 #include "config.h"
 #include "crawler.h"
@@ -15,7 +15,7 @@ using namespace std;
 
 
 void parseCmd(RemoteData& rdata, int argc, char* exe, char* host, char* port){
-    if(1 == argc) { return; } // no parameters
+    if(1 == argc) { return; } // no cmd line parameters
     if(3 == argc){
         uint32_t ip = Sock::strToIP(host);
         uint16_t portInt = atoi(port);
@@ -36,11 +36,14 @@ int main(int argc, char* argv[]){
 
     parseCmd(rdata, argc, argv[0], argv[1], argv[2]);
 
-    Signature sign; // load public signature from disk and copy it to ldata
-    memcpy(&ldata.localPubKey, &sign.getPublicKey(), sizeof(PubKey));
+    char* pkey = ldata.localPubKey.loadFromDisk(); // load public key from disk into ldata
+    if(!pkey){
+        cerr << "ERROR loading public key!  Exiting." << endl;
+        return -1;
+    }
 
     Config config; // config is aware of service port, LocalData and BWLists
-    config.loadFromDisk(ldata, bwlists); // load ldata,bwlists // TODO: check failure, notify or exit?
+    config.loadFromDisk(ldata, bwlists); // load ldata,bwlists
     // create a thread that watches files for service and BWList updates
     std::thread watch( &Config::watch, &config);
 

@@ -198,7 +198,7 @@ int Sock::read(void* buff, size_t size){
 
 int Sock::readLine(void* buff, const size_t maxSize){
     char* curr = (char*)buff;
-	while( (size_t)(curr-(char*)buff) < maxSize-1 ){ // skip empty lines (or \r \n left from previous reads)
+	while( (size_t)(curr-(char*)buff) < maxSize-1 ){
 		if( read(curr,1) <= 0 ){ break; }
 		if( *curr==0 ) { break; }
 		if( *curr=='\n'){ break; }
@@ -264,6 +264,7 @@ int Sock::readString(void* buff, const size_t buffSize){ // make sure buff is at
     return original; // return the number of bytes read from socket
 }
 
+
 // https://en.wikipedia.org/wiki/Private_network
 bool Sock::isRoutable(uint32_t ip){ // is it routable or non-routable IP ?
     unsigned char* ipc = (unsigned char*) &ip;
@@ -273,13 +274,14 @@ bool Sock::isRoutable(uint32_t ip){ // is it routable or non-routable IP ?
     return true; // TODO: make this portable
 }
 
+
 #include <arpa/inet.h> // inet_ntop()
-string Sock::ipToString(uint32_t ip){ // or check "man inet_ntop"
+string Sock::ipToString(uint32_t ip){
     char buff[16];
     inet_ntop(AF_INET, &ip, buff, sizeof(buff));
 	return string(buff);
 //	unsigned char* ipc = (unsigned char*) &ip;
-//	stringstream ss; // TODO: is ip in network or host byte order ???
+//	stringstream ss; // TODO: is ip in network byte order?
 //	ss << ipc[0] << "." << ipc[1] << "." << ipc[2] << "." << ipc[3];
 //	return ss.str();
 }

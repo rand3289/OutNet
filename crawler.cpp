@@ -32,7 +32,6 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
     if( hi.signatureVerified ){ // hi.key ???
         turnBitsOff(select, SELECTION::LKEY);
     } // if signature remote sends fails to verify, next time we request the key again
-// TODO: track keys/ratings of services that change IP
 
     // add "filter by time" if remote was contacted some time ago
     stringstream filters; // what should we use to track of "first seen" for hosts ???
@@ -147,33 +146,35 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
 
     vector<HostInfo> unverifiedData;
     for(uint32_t i=0; i< count; ++i){
-        unverifiedData.emplace_back();
-        HostInfo& hi = unverifiedData.back();
+        HostInfo& hil = unverifiedData.emplace_back();
+        hil.referrer.host = hi.host;
+        hil.referrer.port = hi.port;
+        hil.met = system_clock::now();
 
         if( selectRet & SELECTION::IP ){ // do not use Sock::read32() - IP does not need ntohl()
-            rdsize = reader->read( &hi.host,sizeof(hi.host));
-            if(rdsize != sizeof(hi.host)){
+            rdsize = reader->read( &hil.host,sizeof(hil.host));
+            if(rdsize != sizeof(hil.host)){
                 cerr << "ERROR reading IP." << endl;
                 return 0; // discard ALL data from that server because we can not verify signature!
             }
         }
 
         if( selectRet & SELECTION::PORT ){
-            hi.port = reader->read16(error);
+            hil.port = reader->read16(error);
             if(error){
                 cerr << "ERROR reading port." << endl;
                 return 0;
             }
         }
 
-        if( selectRet&SELECTION::IP && selectRet&SELECTION::PORT && hi.host==self.host && hi.port==self.port ){
+        if( selectRet&SELECTION::IP && selectRet&SELECTION::PORT && hil.host==self.host && hil.port==self.port ){
             unverifiedData.pop_back(); // just found myself in the list of IPs
             continue;
         }
 
         if( selectRet & SELECTION::AGE ){
             uint16_t age = reader->read16(error);
-            hi.seen = system_clock::now() - minutes(age); // TODO: check some reserved values ???
+            hil.seen = system_clock::now() - minutes(age); // TODO: check some reserved values ???
             if(error){
                 cerr << "ERROR reading age." << endl;
                 return 0;
@@ -188,8 +189,8 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
                 return 0;
             }
             if(keyCount){
-                hi.key = make_shared<PubKey> ();
-                rdsize = reader->read( &*hi.key, sizeof(PubKey) );
+                hil.key = make_shared<PubKey> ();
+                rdsize = reader->read( &*hil.key, sizeof(PubKey) );
                 if(rdsize != sizeof(PubKey) ){
                     cerr << "ERROR reading public key." << endl;
                     return 0;
@@ -210,7 +211,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
                     cerr << "ERROR reading remote serivces." << endl;
                     return 0;
                 }
-                hi.addService(buff);
+                hil.addService(buff);
             }
         }
     } // for (adding HostInfo)
@@ -223,6 +224,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
 
     // verify signature. If signature can not be verified, discard the data and reduce hi.rating below 0
     if( !reader->verifySignature(signature) ){
+        slock.unlock(); // there is no upgrade mechanism to unique_lock.
         unique_lock ulock2(rdata->mutx); // release lock after each connection for other parts to work
         hi.signatureVerified = false;
         hi.rating = hi.rating < 0 ? hi.rating-1 : -1;
@@ -231,8 +233,10 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
         return 0;
     }
 
-    std::copy( begin(unverifiedData), end(unverifiedData), back_inserter(newData)); // TODO: use move_iterator?
+    std::copy( move_iterator(begin(unverifiedData)), move_iterator(end(unverifiedData)),
+            back_inserter(newData));
 
+    slock.unlock(); // there is no upgrade mechanism to unique_lock.
     unique_lock ulock2(rdata->mutx); // release the lock after each connection to allow other threads to work
     hi.signatureVerified = true;
     ++hi.rating;
@@ -243,7 +247,9 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
 }
 
 
-int Crawler::merge(vector<HostInfo>& newData){
+// merge new HostInfo from newData into rdata.hosts
+// keep track of services that change IP by key and merge them with new IP
+int Crawler::merge(vector<HostInfo>& newData){ // TODO:
     unique_lock ulock(rdata->mutx);
 //    copy(make_move_iterator(newData.begin()), make_move_iterator(newData.end()), back_inserter(data->hosts));
     return 0;
@@ -296,13 +302,13 @@ int Crawler::run(){
 
 // Data is periodically saved.  When service is restarted, it is loaded back up
 // RemoteData does not have to be locked here
-int Crawler::loadFromDisk(RemoteData& remoteData){
+int Crawler::loadFromDisk(RemoteData& remoteData){ // TODO:
     rdata = &remoteData;
     return 0;
 }
 
 
-int Crawler::saveToDisk(){ // save data to disk
+int Crawler::saveToDisk(){ // save data to disk // TODO:
     shared_lock slock(rdata->mutx);
     return 0;
 }
