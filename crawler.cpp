@@ -14,14 +14,14 @@ using namespace std;
 
 
 int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_t select, HostPort& self){
-    shared_lock slock(rdata->mutx);
+    shared_lock slock(rdata.mutx);
 
     cout << "Connecting to " << Sock::ipToString(hi.host) << ":" << hi.port << endl;
     Sock sock;
     if( sock.connect(hi.host, hi.port) ){
-        cerr  << "Error connecting to " << hi.host << ":" << hi.port << endl;
+        cerr  << "Error connecting to " << Sock::ipToString(hi.host) << ":" << hi.port << endl;
         slock.unlock(); // there is no upgrade mechanism to unique_lock.
-        unique_lock ulock(rdata->mutx); // release lock after each connection for other parts to work
+        unique_lock ulock(rdata.mutx); // release lock after each connection for other parts to work
         hi.missed = system_clock::now();
         ++hi.offlineCount;
         --hi.rating;
@@ -95,7 +95,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
         }
     }
 
-    bool sign = selectRet & SELECTION::SIGN; // if signature is requested, use signatureReader to read
+    const bool sign = selectRet & SELECTION::SIGN; // if signature is requested, use signatureReader to read
     Reader* reader = sign ? &signatureReader : &dumbReader;
     reader->init(sock, ld.localPubKey);
 
@@ -216,30 +216,34 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
         }
     } // for (adding HostInfo)
 
-    PubSign signature; // we checked the SIGN bit above
-    if( sizeof(signature) != sock.read( &signature, sizeof(signature) ) ) {
-        cerr << "Crawler: ERROR reading signature from remote host" << endl;
-        return 0;
-    }
+    if(sign){
+        PubSign signature;
+        if( sizeof(signature) != sock.read( &signature, sizeof(signature) ) ) {
+            cerr << "Crawler: ERROR reading signature from remote host" << endl;
+            return 0;
+        }
 
-    // verify signature. If signature can not be verified, discard the data and reduce hi.rating below 0
-    if( !reader->verifySignature(signature) ){
-        slock.unlock(); // there is no upgrade mechanism to unique_lock.
-        unique_lock ulock2(rdata->mutx); // release lock after each connection for other parts to work
-        hi.signatureVerified = false;
-        hi.rating = hi.rating < 0 ? hi.rating-1 : -1;
-        hi.offlineCount = 0;
-        hi.seen = system_clock::now();
-        return 0;
+        // verify signature. If signature can not be verified, discard the data and reduce hi.rating below 0
+        if( !reader->verifySignature(signature) ){
+            slock.unlock(); // there is no upgrade mechanism to unique_lock.
+            unique_lock ulock2(rdata.mutx); // release lock after each connection for other parts to work
+            hi.signatureVerified = false;
+            hi.rating = hi.rating < 0 ? hi.rating-1 : -1;
+            hi.offlineCount = 0;
+            hi.seen = system_clock::now();
+            return 0;
+        }
     }
 
     std::copy( move_iterator(begin(unverifiedData)), move_iterator(end(unverifiedData)),
             back_inserter(newData));
 
     slock.unlock(); // there is no upgrade mechanism to unique_lock.
-    unique_lock ulock2(rdata->mutx); // release the lock after each connection to allow other threads to work
-    hi.signatureVerified = true;
-    ++hi.rating;
+    unique_lock ulock2(rdata.mutx); // release the lock after each connection to allow other threads to work
+    if(sign) { // if we requested signature verification
+        hi.signatureVerified = true; // mark signature verified
+        ++hi.rating;                 // increase remote's rating for verifying signature
+    }
     hi.offlineCount = 0;
     hi.seen = system_clock::now();
 
@@ -250,7 +254,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
 // merge new HostInfo from newData into rdata.hosts
 // keep track of services that change IP by key and merge them with new IP
 int Crawler::merge(vector<HostInfo>& newData){ // TODO:
-    unique_lock ulock(rdata->mutx);
+    unique_lock ulock(rdata.mutx);
 //    copy(make_move_iterator(newData.begin()), make_move_iterator(newData.end()), back_inserter(data->hosts));
     return 0;
 }
@@ -258,8 +262,6 @@ int Crawler::merge(vector<HostInfo>& newData){ // TODO:
 
 // go through RemoteData/HostInfo entries and retrieve more data from those services.
 int Crawler::run(){
-    if(nullptr == rdata){ throw "ERROR: call Crawler::loadFromDisk() before calling Crawler::run()!"; }
-
     HostPort self;
     shared_lock slock(ldata.mutx);
     self.host = ldata.myIP;
@@ -270,9 +272,9 @@ int Crawler::run(){
         vector<HostInfo> newData;
         vector<HostInfo*> callList;
 
-        shared_lock slock(rdata->mutx); // remote data
+        shared_lock slock(rdata.mutx); // remote data
 
-        for(pair<const IPADDR,HostInfo>& ip_hi: rdata->hosts){
+        for(pair<const IPADDR,HostInfo>& ip_hi: rdata.hosts){
             HostInfo& hi = ip_hi.second;
             if( hi.rating < 0){ continue; }
             if( system_clock::now() - hi.seen < minutes(60) ){ continue; } // do not contact often
@@ -302,13 +304,12 @@ int Crawler::run(){
 
 // Data is periodically saved.  When service is restarted, it is loaded back up
 // RemoteData does not have to be locked here
-int Crawler::loadFromDisk(RemoteData& remoteData){ // TODO:
-    rdata = &remoteData;
-    return 0;
+int Crawler::loadRemoteDataFromDisk(){
+    return 0; // TODO:
 }
 
 
-int Crawler::saveToDisk(){ // save data to disk // TODO:
-    shared_lock slock(rdata->mutx);
-    return 0;
+int Crawler::saveToDisk(){ // save data to disk
+    shared_lock slock(rdata.mutx);
+    return 0; // TODO:
 }

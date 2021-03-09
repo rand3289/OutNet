@@ -1,19 +1,17 @@
-// main service entry. Three threads:
-// main one serves requests, second (crawler) collects info, 
-// third subscribes services & loads black lists
 #include "data.h"
 #include "config.h"
 #include "crawler.h"
 #include "sock.h"
 #include "http.h"
 #include <vector>
+#include <map> // #include <unordered_map>
 #include <string>
 #include <thread>
 #include <iostream>
-#include <cstring> // strstr()
 using namespace std;
 
 
+// parse command line parameters IP and port
 void parseCmd(RemoteData& rdata, int argc, char* exe, char* host, char* port){
     if(1 == argc) { return; } // no cmd line parameters
     if(3 == argc){
@@ -28,6 +26,8 @@ void parseCmd(RemoteData& rdata, int argc, char* exe, char* host, char* port){
 }
 
 
+// Three threads: main one serves requests, second (crawler) collects info, 
+// third thread subscribes services & loads black lists.
 int main(int argc, char* argv[]){
     // LocalData, RemoteData  and BWLists are shared among threads.  They all have internal mutexes.
     LocalData ldata;  // info about local services and local public key
@@ -62,18 +62,21 @@ int main(int argc, char* argv[]){
 
     // create the information collector thread here (there could be many in the future)
     // it searches and fills rdata while honoring BWLists
-    Crawler crawler(ldata, bwlists);
-    crawler.loadFromDisk(rdata); // load rdata from disk
+    Crawler crawler(ldata, rdata, bwlists);
+    crawler.loadRemoteDataFromDisk(); // load rdata
     std::thread search( &Crawler::run, &crawler);
 
-    unordered_map<uint32_t, system_clock::time_point> connTime; // keep track of when someone connects to us
+    // unordered_map::operator[] crashes.  Switching to map for now.
+    // unordered_map<uint32_t, system_clock::time_point> connTime; // keep track of when someone connects to us
+    map<uint32_t, system_clock::time_point> connTime; // keep track of when someone connects to us
     Response response;
     while(true){
         Sock conn;
         if(INVALID_SOCKET == server.accept(conn) ){ continue; }
 
-        auto& time = connTime[conn.getIP()]; // not taking port into account
-        if( time > system_clock::now() - minutes(10) && Sock::isRoutable(conn.getIP()) ){
+        uint32_t ip = conn.getIP();
+        auto& time = connTime[ip]; // not taking port into account
+        if( time > system_clock::now() - minutes(10) && Sock::isRoutable(ip) ){
             Response::writeDenied(conn); // preventing abuse
             conn.close();                // if this host connects too often
             continue;                    // but allow local IPs repeated queries

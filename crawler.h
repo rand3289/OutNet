@@ -52,13 +52,13 @@ class Crawler {
     Reader dumbReader;
     SignatureReader signatureReader;
     LocalData& ldata;
+    RemoteData& rdata;
     BWLists& bwlists;
-    RemoteData* rdata=nullptr;
     int merge(vector<HostInfo>& newData);
 public:
     int queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_t select, HostPort& self);
-    Crawler(LocalData& locData, BWLists& bw_lists): ldata(locData), bwlists(bw_lists) {}
-    int loadFromDisk(RemoteData& rdata);
+    Crawler(LocalData& locData, RemoteData& remData, BWLists& bw_lists): ldata(locData), rdata(remData), bwlists(bw_lists) {}
+    int loadRemoteDataFromDisk();
     int saveToDisk();
     int run();
 };

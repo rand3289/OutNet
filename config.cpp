@@ -14,9 +14,8 @@ int Config::loadServiceFiles(){
     static const string extension = ".service"; // TODO: use .start .stop extensions?
     vector<string> lines;
 
-    // this is a work around.  directory_iterator(".") crashes because path(".") crashes
-    path cwd = current_path();
-    for(auto& p: directory_iterator(cwd) ){
+    // ~path() destructor crashes on some systems // path cwd = current_path();
+    for(auto& p: directory_iterator(".") ){
         if(p.path().extension() == extension){
             cout << "found file " << p.path() << endl;
             ifstream listf (p.path());
