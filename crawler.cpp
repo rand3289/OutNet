@@ -29,19 +29,23 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
     }
 
     // if we have remote's public key, do not request it (turn it off in select)
-    if( hi.signatureVerified ){ // hi.key ???
+    if( hi.signatureVerified ){
         turnBitsOff(select, SELECTION::LKEY);
     } // if signature remote sends fails to verify, next time we request the key again
 
-    // add "filter by time" if remote was contacted some time ago
-    stringstream filters; // what should we use to track of "first seen" for hosts ???
+    stringstream ss;
+    ss << "GET /?QUERY=" << select;
+    if(self.port>0){ // ad own server port for remote to connect back to
+        ss << "&SPORT=" << self.port;
+    }
+    // add "filter by time" if remote was contacted before. get new data only
     if( 0 == hi.offlineCount && hi.seen > system_clock::from_time_t(0) ){
         int ageMinutes = duration_cast<seconds>(system_clock::now() - hi.seen).count();
-        filters << "&AGE_LT_" << ageMinutes;
+        ss << "&AGE_LT_" << ageMinutes;
     }
+    ss << " HTTP/1.1\n";
 
-    stringstream ss;
-    ss << "GET /?QUERY=" << select << "&SPORT=" << self.port << filters.str() <<" HTTP/1.1\n";
+
     int len = ss.str().length();
     if(len != sock.write(ss.str().c_str(), len ) ){
         cerr << "Error sending HTTP request." << endl;
