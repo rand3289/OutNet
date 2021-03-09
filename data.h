@@ -26,7 +26,9 @@ struct Service {
     Service* parse(const string& service);
     bool passLocalFilters(vector<string> filters);
     bool passRemoteFilters(vector<string> filters);
+    bool operator==(const Service& rhs){ return fullDescription == rhs.fullDescription; }
 };
+void mergeServices(vector<Service>& dest, vector<Service>& source); // helper free function
 
 
 struct LocalData {

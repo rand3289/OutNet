@@ -3,10 +3,11 @@
 #include "sign.h"
 #include "protocol.h"
 #include <memory> // shared_ptr
-#include <string>
+#include <algorithm>
 #include <vector>
-#include <mutex>
+#include <string>
 #include <iostream>
+#include <mutex>
 #include <shared_mutex> // since C++17
 using namespace std;
 #include <chrono>
@@ -29,6 +30,17 @@ Service* LocalData::addService(const string& service){
     auto s = services.emplace( services.end() )->parse(service);
     if(!s){ services.pop_back(); } // if it was not parsed, delete it
     return s;
+}
+
+
+// helper free function to merge vectors of services from destination to source
+// TODO: maybe these should be sets ???
+void mergeServices(vector<Service>& dest, vector<Service>& source){
+    for(auto& src: source){
+        auto it = find(begin(dest), end(dest), src);
+        if(it!= end(dest) ){ continue; } // exists
+        dest.push_back(move(src));
+    }
 }
 
 
@@ -72,8 +84,8 @@ void RemoteData::addContact(IPADDR ip, uint16_t port){
     hi.host = ip;
     hi.port = port;
     hi.called = system_clock::now();
-    hi.referrer.host = ip; // set referrer to self since that service contacted us
-    hi.referrer.port = port;
+    hi.referrer.host = ip;   // set referrer to self since that service contacted us
+    hi.referrer.port = port; // or it was added through command line
     hosts.insert ( make_pair(ip, move(hi) ) );
 }
 

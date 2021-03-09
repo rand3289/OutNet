@@ -7,6 +7,7 @@ struct PrivateKey { char  key[256]; };
 struct PubKey     {
     char  key[256];
     char* loadFromDisk();
+    bool operator==(const PubKey& rhs){ return 0==memcmp( &key, &rhs.key, sizeof(key) ); }
 };
 
 

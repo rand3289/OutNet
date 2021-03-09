@@ -59,7 +59,7 @@ public:
     int queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_t select, HostPort& self);
     Crawler(LocalData& locData, RemoteData& remData, BWLists& bw_lists): ldata(locData), rdata(remData), bwlists(bw_lists) {}
     int loadRemoteDataFromDisk();
-    int saveToDisk();
+    int saveRemoteDataToDisk();
     int run();
 };
 

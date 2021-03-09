@@ -4,6 +4,7 @@
 #include "utils.h"
 #include <memory>
 #include <algorithm>
+#include <unordered_map> // erase_if(unordered_multimap, predicate)
 #include <mutex>
 #include <shared_mutex> // since C++17
 #include <thread>
@@ -257,10 +258,57 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
 
 // merge new HostInfo from newData into rdata.hosts
 // keep track of services that change IP by key and merge them with new IP
-int Crawler::merge(vector<HostInfo>& newData){ // TODO:
+int Crawler::merge(vector<HostInfo>& newData){
+    int newCount = 0;
     unique_lock ulock(rdata.mutx);
-//    copy(make_move_iterator(newData.begin()), make_move_iterator(newData.end()), back_inserter(data->hosts));
-    return 0;
+
+    for(HostInfo& hiNew: newData){
+        bool found = false;
+
+        // iterate through mmap values with the same key(IP)
+        for(auto hi = rdata.hosts.find(hiNew.host); hi != end(rdata.hosts); ++hi){
+            if(hi->second.port == hiNew.port){      // existing service (ip/port match) - merge info
+                if( !hi->second.key && hiNew.key ){ // existing record does not have a key
+                    hi->second.key = hiNew.key;     // keys are shared_ptr
+                }
+                mergeServices(hi->second.services, hiNew.services);
+                found = true;
+                break;
+            }
+        }
+        if( found ){ continue; } // continue iterating over newData
+
+        auto it = rdata.hosts.emplace( hiNew.host, move(hiNew) ); // insert new HostInfo record
+        auto hinew = it->second; // hiNew is no longer valid after move
+
+        // try matching services by public key if IP or port changed
+        // since it has a new ip, use inserted entry (hinew) and delete old
+        for(auto& hi_pit: rdata.hosts){
+            auto hi = hi_pit.second;
+            if( hi.host != hinew.host && *hi.key == *hinew.key ){ // keys are shared_ptr
+                mergeServices(hinew.services, hi.services);
+                hinew.signatureVerified = hi.signatureVerified;
+                hinew.offlineCount = hi.offlineCount;
+                hinew.rating = hi.rating;
+                hinew.met = move(hi.met);
+                hinew.seen = move(hi.seen);
+                hinew.missed = move(hi.missed);
+                hinew.called = move(hi.called);
+                hinew.referrer = move(hi.referrer);
+                found = true;
+                hi.host = 0; // mark the old HostInfo entry for deletion
+                break;
+            }
+        }
+
+        if(found){ // if found, old HostInfo was found by KEY and it was marked for deletion
+            erase_if(rdata.hosts, [](auto& hi){ return 0==hi.second.host; } ); // delete old entries
+        } else {
+            ++newCount;
+        }
+    }
+
+    return newCount;
 }
 
 
@@ -289,7 +337,7 @@ int Crawler::run(){
         }
 
         std::sort( begin(callList), end(callList), [=](HostInfo* one, HostInfo* two){ return one->seen < two->seen; } );
-        slock.unlock();
+        slock.unlock(); // remote data
 
         // queryRemoteService(), main() and merge() modify individual HostInfo records
         // iterate over data, connect to each remote service, get the data and place into newData
@@ -300,7 +348,7 @@ int Crawler::run(){
 
         int count = merge(newData);
         if( count<=0 ){ this_thread::sleep_for( seconds( (rand()%10) +60 ) ); }
-        else { saveToDisk(); } // found new services
+        else { saveRemoteDataToDisk(); } // found new services
     } // while(true)
     return 0;
 }
@@ -313,7 +361,7 @@ int Crawler::loadRemoteDataFromDisk(){
 }
 
 
-int Crawler::saveToDisk(){ // save data to disk
+int Crawler::saveRemoteDataToDisk(){ // save data to disk
     shared_lock slock(rdata.mutx);
     return 0; // TODO:
 }
