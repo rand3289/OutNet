@@ -11,21 +11,6 @@
 using namespace std;
 
 
-// parse command line parameters IP and port
-void parseCmd(RemoteData& rdata, int argc, char* exe, char* host, char* port){
-    if(1 == argc) { return; } // no cmd line parameters
-    if(3 == argc){
-        uint32_t ip = Sock::strToIP(host);
-        uint16_t portInt = atoi(port);
-        if( 0!=ip && 0!=portInt ){
-            return rdata.addContact(ip, portInt);
-        }
-    }
-    cerr << "ERROR parsing command line parameters.  ";
-    cerr << "usage: " << exe << " host port" << endl;
-}
-
-
 // Three threads: main one serves requests, second (crawler) collects info, 
 // third thread subscribes services & loads black lists.
 int main(int argc, char* argv[]){
@@ -34,18 +19,27 @@ int main(int argc, char* argv[]){
     RemoteData rdata; // information gathered about remote services
     BWLists bwlists;  // Black and White lists
 
-    parseCmd(rdata, argc, argv[0], argv[1], argv[2]);
+    if(3 == argc){ // parse command line parameters IP and port
+        uint32_t ip = Sock::strToIP(argv[1]);
+        uint16_t portInt = atoi(argv[2]);
+        if( 0!=ip && 0!=portInt ){
+            rdata.addContact(ip, portInt);
+        }
+    } else if(1 != argc){
+        cerr << "ERROR parsing command line parameters.  ";
+        cerr << "usage: " << argv[0] << " host port" << endl;
+        return -1;
+    }
+
+
+    Config config; // config is aware of service port, LocalData and BWLists
+    config.loadFromDisk(ldata, bwlists); // load ldata,bwlists
 
     char* pkey = ldata.localPubKey.loadFromDisk(); // load public key from disk into ldata
     if(!pkey){
         cerr << "ERROR loading public key!  Exiting." << endl;
         return -1;
     }
-
-    Config config; // config is aware of service port, LocalData and BWLists
-    config.loadFromDisk(ldata, bwlists); // load ldata,bwlists
-    // create a thread that watches files for service and BWList updates
-    std::thread watch( &Config::watch, &config);
 
     // create the server returning all queries
     // first time start running on a random port (ANY_PORT)
@@ -59,6 +53,9 @@ int main(int argc, char* argv[]){
     ldata.myPort = server.getPort(); // get bound server port number from socket
     config.saveToDisk();
     cout << "Running on port " << ldata.myPort << endl;
+
+    // create a thread that watches files for service and BWList updates
+    std::thread watch( &Config::watch, &config);
 
     // create the information collector thread here (there could be many in the future)
     // it searches and fills rdata while honoring BWLists

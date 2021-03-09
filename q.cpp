@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
     vector<HostInfo> newData;
     uint32_t select = SELECTION::IP | SELECTION::PORT | SELECTION::RSVC;
     HostPort self;
-    crawl.queryRemoteService(service, newData, select, self);
+    crawl.queryRemoteService(service, newData, select, self); // TODO: add a way to pass filters
 
     for(HostInfo& hi: newData){
         cout << Sock::ipToString(hi.host) << ":" << hi.port << endl;

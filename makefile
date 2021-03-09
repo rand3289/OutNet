@@ -1,5 +1,5 @@
+# Need C++20 for erase_if(unordered_multimap&, predicate).  Otherwise C++17 would do.
 # -ansi -pedantic -Wall -Wextra -Werror -Wno-unused-parameter
-# need C++20 for erase_if(unordered_multimap&, predicate).  Otherwise C++17 will do.
 CC = g++
 CFLAGS = -g --std=c++20 -Wall -Wextra -Wno-unused-parameter
 DEPS = config.h crawler.h data.h http.h protocol.h sign.h sock.h upnp.h utils.h

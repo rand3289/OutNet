@@ -56,7 +56,6 @@ struct HostPort {
 
 // TODO: replace host/port with HostPort ???
 // TODO: replace seen, missed with lastContact time.  offlineCount tells us if connect succeeded
-// TODO: delete "called" field
 struct HostInfo {                    // host/port fields are in the network byte order
     constexpr static const int DEFAULT_RATING = 100;
     uint32_t host;                   // IPv4 address
@@ -70,7 +69,6 @@ struct HostInfo {                    // host/port fields are in the network byte
     time_point<system_clock> met;    // first time I learned about this host
     time_point<system_clock> seen;   // last time I successfully connected to it
     time_point<system_clock> missed; // last time of unsuccessful connect attempt
-    time_point<system_clock> called; // last time this service connected to us
     HostPort referrer;               // preserve where this information came from (for rating that service)
 
     HostInfo();

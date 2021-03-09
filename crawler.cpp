@@ -54,7 +54,6 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
     }
 
     // parse the response into unverifiedData
-    // verify signature if server sent
     // if we requested signature, and the server did not send it, rating -100, dispose of data
     // read PubKey, services and wait till end of parsing / signature verification to lock and copy to "hi"
 
@@ -293,7 +292,6 @@ int Crawler::merge(vector<HostInfo>& newData){
                 hinew.met = move(hi.met);
                 hinew.seen = move(hi.seen);
                 hinew.missed = move(hi.missed);
-                hinew.called = move(hi.called);
                 hinew.referrer = move(hi.referrer);
                 found = true;
                 hi.host = 0; // mark the old HostInfo entry for deletion

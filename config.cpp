@@ -11,7 +11,7 @@ using namespace std::filesystem; // namespace fs = std::filesystem;
 
 
 int Config::loadServiceFiles(){
-    static const string extension = ".service"; // TODO: use .start .stop extensions?
+    static const string extension = ".service";
     vector<string> lines;
 
     // ~path() destructor crashes on some systems // path cwd = current_path();
@@ -26,6 +26,7 @@ int Config::loadServiceFiles(){
 
     vector<Service*> portsToOpen;
     unique_lock ulock(ldata->mutx); // lock LocalData before modifying it
+// TODO: completely replace all services with new ones loaded from files
     for(auto& s: lines){
         bool newService = true;
         for(Service& ls: ldata->services){

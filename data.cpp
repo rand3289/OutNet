@@ -15,7 +15,7 @@ using namespace std::chrono;
 
 
 HostInfo::HostInfo(): host(0), port(0), signatureVerified(false), offlineCount(0), rating(DEFAULT_RATING) {
-    seen = missed = called = system_clock::from_time_t(0); // time_point::min() is broken (overflows) !!!
+    met = seen = missed = system_clock::from_time_t(0); // time_point::min() is broken (overflows) !!!
 }
 
 
@@ -72,21 +72,17 @@ void RemoteData::addContact(IPADDR ip, uint16_t port){
     unique_lock ulock(mutx);
 
     for( auto range = hosts.equal_range(ip); range.first != range.second; ++range.first){
-        HostInfo& hi = range.first->second;
-        if( port == hi.port ) { // existing host
-            hi.called = system_clock::now();
+        if( port == range.first->second.port ) { // existing host
             return;
         }
     }
 
-//    HostInfo& hi = hosts.emplace( ip )->second;
     HostInfo hi;
     hi.host = ip;
     hi.port = port;
-    hi.called = system_clock::now();
     hi.referrer.host = ip;   // set referrer to self since that service contacted us
     hi.referrer.port = port; // or it was added through command line
-    hosts.insert ( make_pair(ip, move(hi) ) );
+    hosts.emplace( ip, move(hi) );
 }
 
 
