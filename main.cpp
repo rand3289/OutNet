@@ -17,7 +17,7 @@ int main(int argc, char* argv[]){
     // LocalData, RemoteData  and BWLists are shared among threads.  They all have internal mutexes.
     LocalData ldata;  // info about local services and local public key
     RemoteData rdata; // information gathered about remote services
-    BWLists bwlists;  // Black and White lists
+    BlackList blist;  // Black and White lists
 
     if(3 == argc){ // parse command line parameters IP and port
         uint32_t ip = Sock::strToIP(argv[1]);
@@ -33,7 +33,7 @@ int main(int argc, char* argv[]){
 
 
     Config config; // config is aware of service port, LocalData and BWLists
-    config.loadFromDisk(ldata, bwlists); // load ldata,bwlists
+    config.loadFromDisk(ldata, blist); // load ldata,bwlists
 
     char* pkey = ldata.localPubKey.loadFromDisk(); // load public key from disk into ldata
     if(!pkey){
@@ -59,7 +59,7 @@ int main(int argc, char* argv[]){
 
     // create the information collector thread here (there could be many in the future)
     // it searches and fills rdata while honoring BWLists
-    Crawler crawler(ldata, rdata, bwlists);
+    Crawler crawler(ldata, rdata, blist);
     crawler.loadRemoteDataFromDisk(); // load rdata
     std::thread search( &Crawler::run, &crawler);
 
@@ -72,11 +72,16 @@ int main(int argc, char* argv[]){
         if(INVALID_SOCKET == server.accept(conn) ){ continue; }
 
         uint32_t ip = conn.getIP();
-        auto& time = connTime[ip]; // not taking port into account
+        if( blist.isBanned(ip) ){
+            Response::writeDenied(conn, "BANNED");
+            continue;
+        }
+
+        // prevent abuse if host connects too often but allow local IPs repeated queries
+        auto& time = connTime[ip];
         if( time > system_clock::now() - minutes(10) && Sock::isRoutable(ip) ){
-            Response::writeDenied(conn); // preventing abuse
-            conn.close();                // if this host connects too often
-            continue;                    // but allow local IPs repeated queries
+            Response::writeDenied(conn, "DENIED");
+            continue;
         }
         time = system_clock::now();
 
@@ -90,7 +95,7 @@ int main(int argc, char* argv[]){
         }
 
         if(select > 0){ // request parsed correctly and we have a "data selection bitmap"
-            response.write(conn, select, filters, ldata, rdata, bwlists);
+            response.write(conn, select, filters, ldata, rdata);
         } else {
             Response::writeDebug(conn, select, filters);
         }

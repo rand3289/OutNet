@@ -40,13 +40,9 @@ int Request::parse(Sock& conn, vector<string>& filters, uint16_t& port){
 }
 
 
-int Response::write(Sock& conn, uint32_t select, vector<string>& filters, LocalData& ldata, RemoteData& rdata, BWLists& bwlists ){
+int Response::write(Sock& conn, uint32_t select, vector<string>& filters, LocalData& ldata, RemoteData& rdata){
     static const string header =  "HTTP/1.1 200 OK\n\n";
     int bytes = conn.write(header.c_str(), header.size() ); // no need to sign the header
-
-    // If you don't want to share some requested fieds, turn off the bits.
-    turnBitsOff(select, SELECTION::WLKEY);  // do not share your pub key white list (friends)
-    turnBitsOff(select, SELECTION::WLIP | SELECTION::BLKEY | SELECTION::BLIP ); // not implemented
 
     bool sign = select & SELECTION::SIGN;
     Writer* writer = sign ? &signatureWriter : &dumbWriter;
@@ -62,7 +58,6 @@ int Response::write(Sock& conn, uint32_t select, vector<string>& filters, LocalD
 
     bytes+= ldata.send(  *writer, select, filters);
     bytes+= rdata.send(  *writer, select, filters);
-    bytes+= bwlists.send(*writer, select, filters);
 
     if(sign){
         const PubSign* psign = writer->getSignature();
@@ -89,7 +84,7 @@ void Response::writeDebug(Sock& conn, uint32_t select, std::vector<std::string>&
 }
 
 
-void Response::writeDenied(Sock& conn){
-    const char* msg = "HTTP/1.1 403 DENIED\n\n";
-    conn.write(msg, strlen(msg));
+void Response::writeDenied(Sock& conn, const string& reason){
+    string msg = string("HTTP/1.1 403 ").append(reason).append("\n\n");
+    conn.write(msg.c_str(), msg.length() );
 }

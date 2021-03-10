@@ -34,7 +34,6 @@ Service* LocalData::addService(const string& service){
 
 
 // helper free function to merge vectors of services from destination to source
-// TODO: maybe these should be sets ???
 void mergeServices(vector<Service>& dest, vector<Service>& source){
     for(auto& src: source){
         auto it = find(begin(dest), end(dest), src);
@@ -46,7 +45,7 @@ void mergeServices(vector<Service>& dest, vector<Service>& source){
 
 Service* Service::parse(const string& service){
     originalDescription = service;
-// TODO: translate local to NAT IP
+// TODO: in fullDescription, translate local to NAT IP
     fullDescription = service;
 // if(notParsed){ return nullptr; }
     return this;
@@ -80,7 +79,7 @@ void RemoteData::addContact(IPADDR ip, uint16_t port){
     HostInfo hi;
     hi.host = ip;
     hi.port = port;
-    hi.referrer.host = ip;   // set referrer to self since that service contacted us
+    hi.referrer.host = ip;   // set referrer to itself since that service contacted us
     hi.referrer.port = port; // or it was added through command line
     hosts.emplace( ip, move(hi) );
 }
@@ -180,11 +179,9 @@ int RemoteData::send(Writer& writer, uint32_t select, vector<string>& filters){
 }
 
 
-// relevant "select" flags: BLIP, BLKEY, WLIP, WLKEY
-int BWLists::send(Writer& writer, uint32_t select, vector<string>& filters){
-    return 0; // TODO:
-}
+// is this ip in our black list
+bool BlackList::isBanned(IPADDR host){ return false; }
 
-bool BWLists::blackListedIP(uint32_t host, uint16_t port){
-    return false; // TODO:
-}
+
+// is this public key in our black list
+bool BlackList::isBanned(PubKey& key){ return false; }

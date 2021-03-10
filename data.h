@@ -32,12 +32,12 @@ void mergeServices(vector<Service>& dest, vector<Service>& source); // helper fr
 
 
 struct LocalData {
-    shared_mutex mutx;
-//    HostPort self; // public ip of the local service and port it is running on // TODO:
-    uint32_t myIP;    // public ip of the local service
-    uint32_t myPort; // local service is running on this port
-    PubKey localPubKey;
-    vector<Service> services;
+    shared_mutex mutx;  // This datastructure is accessed by several threads.  Lock mutex before access.
+//    HostPort self;    // public ip of the local service and port it is running on // TODO:
+    uint32_t myIP;      // public ip of the local service
+    uint32_t myPort;    // local service is running on this port
+    PubKey localPubKey; // local service public key
+    vector<Service> services; // a list of local services we are "advertising" // TODO: should it be a set?
 
     int send(Writer& writer, uint32_t select, vector<string>& filters);
     Service* addService(const string& service);
@@ -92,15 +92,13 @@ struct RemoteData {
 };
 
 
-// Black list and White list structures
-struct BWLists {
+// A way to ban some IPs and Public keys
+struct BlackList {
     shared_mutex mutx;
-    vector<HostPort> hostBlackList;
-    vector<HostPort> hostWhiteList;
-    vector<PubKey>   keyBlackList;
-    vector<PubKey>   keyWhiteList;
-    int send(Writer& writer, uint32_t select, vector<string>& filters);
-    bool blackListedIP(uint32_t host, uint16_t port);
+    vector<IPADDR> badHosts;
+    vector<PubKey> badKeys;
+    bool isBanned(IPADDR host);
+    bool isBanned(PubKey& key);
 };
 
 

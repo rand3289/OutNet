@@ -18,13 +18,9 @@ enum SELECTION {
     AGE    = (1<<7),  // age - how long ago (minutes) was remote service successfuly contacted 
     RKEY   = (1<<8),  // remote public key
     RSVC   = (1<<9),  // remote service list
-    RSVCF  = (1<<10), // remote service list FILTERED by service type/protocol or send all
 
-    BLIP   = (1<<11), // black list for IP/Port
-    BLKEY  = (1<<12), // black list for Public Keys
-    WLIP   = (1<<13), // white list for IP/Port
-    WLKEY  = (1<<14), // white list for Public Keys
-    MYIP   = (1<<15)  // return IP where crawler is connecting from
+    RSVCF  = (1<<10), // remote service list FILTERED by service type/protocol or send all
+    MYIP   = (1<<11)  // return IP where crawler is connecting from
 };
 
 

@@ -85,7 +85,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
             return 0;
         }
         if( 0 == self.host ){ // TODO: ask multiple servers before trusting it
-            self.host = myip;
+            self.host = myip; // TODO: propagate this ip to LocalData::myIP
         }
     }
 
@@ -330,7 +330,7 @@ int Crawler::run(){
             if( system_clock::now() - hi.seen < minutes(60) ){ continue; } // do not contact often
             // contact hosts that have been seen offline in the past less often
             if( hi.offlineCount && (system_clock::now() - hi.missed < hi.offlineCount*minutes(60) ) ){ continue; }
-            if( bwlists.blackListedIP(hi.host, hi.port) ){ continue; }
+            if( blist.isBanned(hi.host) ){ continue; }
             callList.push_back(&hi); // prepare to call that service up
         }
 

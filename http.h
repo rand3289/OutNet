@@ -45,9 +45,9 @@ class Response{
     Writer dumbWriter;
     SignatureWriter signatureWriter;
 public:
-    int write(Sock& conn, uint32_t select, std::vector<std::string>& filters, LocalData& ldata, RemoteData& rdata, BWLists& lists);
+    int write(Sock& conn, uint32_t select, std::vector<std::string>& filters, LocalData& ldata, RemoteData& rdata);
     static void writeDebug(Sock& conn, uint32_t select, std::vector<std::string>& filters);
-    static void writeDenied(Sock& conn);
+    static void writeDenied(Sock& conn, const string& reason);
 };
 
 

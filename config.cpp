@@ -1,15 +1,17 @@
 #include "config.h"
 #include "sock.h" // Sock::ANY_PORT
 #include "utils.h"
+#include <vector>
 #include <thread>
-#include <fstream>
 #include <string>
 #include <iostream>
+#include <fstream>
 #include <filesystem>
 using namespace std;
-using namespace std::filesystem; // namespace fs = std::filesystem;
+using namespace std::filesystem;
 
 
+// look for *.service in current directory and load their contents into LocalData::services
 int Config::loadServiceFiles(){
     static const string extension = ".service";
     vector<string> lines;
@@ -45,11 +47,12 @@ int Config::loadServiceFiles(){
     ulock.unlock();
 
     for(Service* s: portsToOpen){ // open ports for those services after unlocking ldata
-        openPort(s->ip, s->port);
+        openPort(s->ip, s->port); // TODO: close ports for services that no longer exist???
     }
 
     return 0;
 }
+
 
 int Config::loadBlackListFiles(){ return 0; }
 
@@ -58,9 +61,9 @@ int Config::loadBlackListFiles(){ return 0; }
 static const string configName = "settings.cfg";
 
 // load port and refresh rate from config file
-int Config::loadFromDisk(LocalData& lData, BWLists& bwLists){
+int Config::loadFromDisk(LocalData& lData, BlackList& bList){
     ldata = &lData;
-    bwlists = &bwLists;
+    blist = &bList;
 
     loadServiceFiles();
     loadBlackListFiles();
@@ -106,8 +109,6 @@ int Config::saveToDisk(){
 // *.blacklist - is a black list of IP:port pairs, public keys or protocols
 // *.whitelist - overrides blacklist entries and stores keys of interest
 // *.service - is a single or multiple service description (one per line)
-// *.service file can contain remote service urls which can be used to bootstrap the network.
-
 int Config::watch() {
     while(true){
         this_thread::sleep_for( seconds(refreshRate) );
