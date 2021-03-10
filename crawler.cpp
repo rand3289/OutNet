@@ -14,7 +14,7 @@
 using namespace std;
 
 
-int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_t select, HostPort& self){
+int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_t select){
     shared_lock slock(rdata.mutx);
 
     cout << "Connecting to " << Sock::ipToString(hi.host) << ":" << hi.port << endl;
@@ -36,8 +36,8 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
 
     stringstream ss;
     ss << "GET /?QUERY=" << select;
-    if(self.port>0){ // ad own server port for remote to connect back to
-        ss << "&SPORT=" << self.port;
+    if(portCopy>0){ // ad own server port for remote to connect back to
+        ss << "&SPORT=" << portCopy;
     }
     // add "filter by time" if remote was contacted before. get new data only
     if( 0 == hi.offlineCount && hi.seen > system_clock::from_time_t(0) ){
@@ -84,9 +84,9 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
             cerr << "ERROR reading 'my ip'" << endl;
             return 0;
         }
-        if( 0 == self.host ){ // TODO: ask multiple servers before trusting it
-            self.host = myip; // TODO: propagate this ip to LocalData::myIP
-        }
+        if( 0 == hostCopy ){ // TODO: ask multiple servers before trusting it
+            hostCopy = myip; // TODO: propagate this ip to LocalData::myIP
+        } // TODO: if you know your external ip and remote gives you a wrong one, ban it?
     }
 
     // local data
@@ -151,8 +151,8 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
     vector<HostInfo> unverifiedData;
     for(uint32_t i=0; i< count; ++i){
         HostInfo& hil = unverifiedData.emplace_back();
-        hil.referrer.host = hi.host;
-        hil.referrer.port = hi.port;
+        hil.referIP = hi.host;
+        hil.referPort = hi.port;
         hil.met = system_clock::now();
 
         if( selectRet & SELECTION::IP ){ // do not use Sock::read32() - IP does not need ntohl()
@@ -171,7 +171,12 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
             }
         }
 
-        if( selectRet&SELECTION::IP && selectRet&SELECTION::PORT && hil.host==self.host && hil.port==self.port ){
+        if( hil.host==0 || hil.port==0 ){ // throw away services with invalid host or port
+            unverifiedData.pop_back();
+            continue;
+        }
+
+        if( hil.host==hostCopy && hil.port==portCopy && selectRet&SELECTION::IP && selectRet&SELECTION::PORT ){
             unverifiedData.pop_back(); // just found myself in the list of IPs
             continue;
         }
@@ -292,7 +297,8 @@ int Crawler::merge(vector<HostInfo>& newData){
                 hinew.met = move(hi.met);
                 hinew.seen = move(hi.seen);
                 hinew.missed = move(hi.missed);
-                hinew.referrer = move(hi.referrer);
+                hinew.referIP = hi.referIP;
+                hinew.referPort = hi.referPort;
                 found = true;
                 hi.host = 0; // mark the old HostInfo entry for deletion
                 break;
@@ -312,10 +318,9 @@ int Crawler::merge(vector<HostInfo>& newData){
 
 // go through RemoteData/HostInfo entries and retrieve more data from those services.
 int Crawler::run(){
-    HostPort self;
     shared_lock slock(ldata.mutx);
-    self.host = ldata.myIP;
-    self.port = ldata.myPort;
+    hostCopy = ldata.myIP;
+    portCopy = ldata.myPort;
     slock.unlock();
 
     while(true){
@@ -341,7 +346,7 @@ int Crawler::run(){
         // iterate over data, connect to each remote service, get the data and place into newData
         const uint32_t select = 0b11111111111111111; // see SELECTION in protocol.h
         for(HostInfo* hi: callList){
-            queryRemoteService(*hi, newData, select, self);
+            queryRemoteService(*hi, newData, select);
         }
 
         int count = merge(newData);

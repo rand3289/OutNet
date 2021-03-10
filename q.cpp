@@ -1,5 +1,6 @@
 // this is a stand alone utility. it queries the service.  to compile:
 // g++ --std=c++20 -g -Wall -oq q.cpp sock.cpp crawler.cpp data.cpp sign.cpp utils.cpp -lpthread
+#include "data.h"
 #include "crawler.h"
 #include "sock.h"
 #include "protocol.h"
@@ -14,16 +15,15 @@ int main(int argc, char* argv[]) {
 
     LocalData ldata;
     RemoteData rdata;
-    BWLists bwlists;
-    Crawler crawl(ldata, rdata, bwlists);
+    BlackList blist;
+    Crawler crawl(ldata, rdata, blist);
 
     HostInfo service;
     service.host = Sock::strToIP(argv[1]);
     service.port = atoi(argv[2] );
     vector<HostInfo> newData;
     uint32_t select = SELECTION::IP | SELECTION::PORT | SELECTION::RSVC;
-    HostPort self;
-    crawl.queryRemoteService(service, newData, select, self); // TODO: add a way to pass filters
+    crawl.queryRemoteService(service, newData, select); // TODO: add a way to pass filters
 
     for(HostInfo& hi: newData){
         cout << Sock::ipToString(hi.host) << ":" << hi.port << endl;

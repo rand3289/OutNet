@@ -15,15 +15,14 @@ class Writer; // from http.h (http.h is not included)
 
 
 struct Service {
-    string fullDescription; // should have external routable IP
-    string originalDescription; // original - copied here in parse
-    string service;
-    string protocol;
-    uint32_t ip; // real IP (local/non-routable IP)
-    uint16_t port;
-//    string userDefinedField; // Do not parse ???
-//    Service(const string& service);
-    Service* parse(const string& service);
+    string fullDescription;     // should have external routable IP (this is what we send)
+    string originalDescription; // original (this is what we get from files)
+    string service;             // general type of service
+    string protocol;            // service protocol such as http, ftp etc...
+    uint32_t ip;                // real IP (local/non-routable IP) from originalDescription
+    uint16_t port;              // port number for this service
+
+    Service* parse(const string& service); // Do not parse userDefinedFiled ???
     bool passLocalFilters(vector<string> filters);
     bool passRemoteFilters(vector<string> filters);
     bool operator==(const Service& rhs){ return fullDescription == rhs.fullDescription; }
@@ -33,7 +32,6 @@ void mergeServices(vector<Service>& dest, vector<Service>& source); // helper fr
 
 struct LocalData {
     shared_mutex mutx;  // This datastructure is accessed by several threads.  Lock mutex before access.
-//    HostPort self;    // public ip of the local service and port it is running on // TODO:
     uint32_t myIP;      // public ip of the local service
     uint32_t myPort;    // local service is running on this port
     PubKey localPubKey; // local service public key
@@ -44,19 +42,7 @@ struct LocalData {
 };
 
 
-struct HostPort {
-    uint32_t host;
-    uint16_t port;
-    HostPort(): host(0), port(0) {}
-    HostPort(const HostPort& rhs): host(rhs.host), port(rhs.port) {}
-    HostPort& operator=(const HostPort& rhs){ host=rhs.host; port=rhs.port; return *this; }
-    bool operator==(const HostPort& rhs){ return host==rhs.host && port == rhs.port; }
-};
-
-
-// TODO: replace host/port with HostPort ???
-// TODO: replace seen, missed with lastContact time.  offlineCount tells us if connect succeeded
-struct HostInfo {                    // host/port fields are in the network byte order
+struct HostInfo {                    // Information about remote services from one host
     constexpr static const int DEFAULT_RATING = 100;
     uint32_t host;                   // IPv4 address
     uint16_t port;                   // IPv4 port number (1-65535, 0=reserved)
@@ -64,12 +50,13 @@ struct HostInfo {                    // host/port fields are in the network byte
     vector<Service> services;        // remote services list
 // these are remote service properties related to interaction with that service
     bool signatureVerified = false;  // was service queried directly or key found by a relay service?
-    int offlineCount = 0;            // server has been found offline this many times IN A ROW
-    int rating = 100;                // our interaction rating for this service
+    int offlineCount;                // server has been found offline this many times IN A ROW
+    int rating;                      // our interaction rating for this service
     time_point<system_clock> met;    // first time I learned about this host
     time_point<system_clock> seen;   // last time I successfully connected to it
     time_point<system_clock> missed; // last time of unsuccessful connect attempt
-    HostPort referrer;               // preserve where this information came from (for rating that service)
+    uint32_t referIP;                // preserve where this information came from 
+    uint16_t referPort;              // port of the service where we got this HostInfo record
 
     HostInfo();
     bool passFilters(vector<string> filters);
@@ -83,7 +70,7 @@ struct HostInfo {                    // host/port fields are in the network byte
 
 struct RemoteData {
     shared_mutex mutx;
-    unordered_multimap<IPADDR, HostInfo> hosts;
+    unordered_multimap<IPADDR, HostInfo> hosts; // IP to HostInfo map
 
     // send HostInfo records through the writer to a remote host
     int send(Writer& writer, uint32_t select, vector<string>& filters);

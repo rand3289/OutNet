@@ -12,7 +12,7 @@ void turnBitsOff(uint32_t& mask, uint32_t bits){
 
 
 // TODO: accept buffer and token by reference ???
-// TODO: add separators as parameters
+// TODO: add separators as a parameter
 // parse a string into tokens
 bool tokenize( char** buffer, const char* bufferEnd, char** token ){
     while(*buffer != bufferEnd){ // skip leading separators

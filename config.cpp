@@ -11,6 +11,18 @@ using namespace std;
 using namespace std::filesystem;
 
 
+// watch() looks in the current dir for files of the following types:
+// *.badip *.badkey - blacklists of IPs or public keys
+// *.service - service description file (one service description per line)
+int Config::watch() {
+    while(true){
+        this_thread::sleep_for( seconds(refreshRate) );
+        loadServiceFiles();
+        loadBlackListFiles();
+    }
+}
+
+
 // look for *.service in current directory and load their contents into LocalData::services
 int Config::loadServiceFiles(){
     static const string extension = ".service";
@@ -28,7 +40,8 @@ int Config::loadServiceFiles(){
 
     vector<Service*> portsToOpen;
     unique_lock ulock(ldata->mutx); // lock LocalData before modifying it
-// TODO: completely replace all services with new ones loaded from files
+// TODO: completely replace all services with new ones loaded from files.
+// TODO: use set_difference() to find which ports to open or close
     for(auto& s: lines){
         bool newService = true;
         for(Service& ls: ldata->services){
@@ -102,17 +115,4 @@ int Config::saveToDisk(){
     shared_lock slock(ldata->mutx);
     config << "ServerPort=" << ldata->myPort << " # server will accept connections on this port" << endl;
     return 0;
-}
-
-
-// ServiceWatch looks for files in the data directory (specified by config)  of the following types:
-// *.blacklist - is a black list of IP:port pairs, public keys or protocols
-// *.whitelist - overrides blacklist entries and stores keys of interest
-// *.service - is a single or multiple service description (one per line)
-int Config::watch() {
-    while(true){
-        this_thread::sleep_for( seconds(refreshRate) );
-        loadServiceFiles();
-        loadBlackListFiles();
-    }
 }

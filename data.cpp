@@ -14,7 +14,8 @@ using namespace std;
 using namespace std::chrono;
 
 
-HostInfo::HostInfo(): host(0), port(0), signatureVerified(false), offlineCount(0), rating(DEFAULT_RATING) {
+HostInfo::HostInfo(): host(0), port(0), signatureVerified(false), offlineCount(0),
+        rating(DEFAULT_RATING), referIP(0), referPort(0) {
     met = seen = missed = system_clock::from_time_t(0); // time_point::min() is broken (overflows) !!!
 }
 
@@ -62,6 +63,7 @@ bool Service::passRemoteFilters(vector<string> filters){
 }
 
 
+// when evaluating filters ex: PORT_EQ_3214  "PORT_EQ" part can be switch() on as if it was uint64_t
 bool HostInfo::passFilters(vector<string> filters){
     return true; // TODO:
 }
@@ -79,8 +81,8 @@ void RemoteData::addContact(IPADDR ip, uint16_t port){
     HostInfo hi;
     hi.host = ip;
     hi.port = port;
-    hi.referrer.host = ip;   // set referrer to itself since that service contacted us
-    hi.referrer.port = port; // or it was added through command line
+    hi.referIP = ip;     // set referrer to itself since that service contacted us
+    hi.referPort = port; // or it was added through command line
     hosts.emplace( ip, move(hi) );
 }
 
