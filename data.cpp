@@ -3,10 +3,12 @@
 #include "sign.h"
 #include "sock.h"
 #include "protocol.h"
+#include "utils.h"
 #include <memory> // shared_ptr
 #include <algorithm>
 #include <vector>
 #include <string>
+#include <sstream>
 #include <iostream>
 #include <mutex>
 #include <shared_mutex> // since C++17
@@ -22,14 +24,14 @@ HostInfo::HostInfo(): host(0), port(0), signatureVerified(false), offlineCount(0
 
 
 Service* HostInfo::addService(const string& service){
-    auto s = services.emplace( services.end() )->parse(service);
+    auto s = services.emplace( services.end() )->parse(service, host); // parsing remote service
     if(!s){ services.pop_back(); } // if it was not parsed, delete it
     return s;
 }
 
 
 Service* LocalData::addService(const string& service){
-    auto s = services.emplace( services.end() )->parse(service);
+    auto s = services.emplace( services.end() )->parse(service, myIP); // parsing local service
     if(!s){ services.pop_back(); } // if it was not parsed, delete it
     return s;
 }
@@ -44,12 +46,44 @@ void mergeServices(vector<Service>& dest, vector<Service>& source){
     }
 }
 
+// parse service description into fields separated by ":"
+// example - "printer:ipp:8.8.8.8:54321:2nd floor printer"
+Service* Service::parse(const string& servStr, uint32_t myIP){
+    originalDescription = servStr;
 
-Service* Service::parse(const string& service){
-    originalDescription = service;
-// TODO: in fullDescription, translate local to NAT IP // TODO: need access to LocalData::host?
-    fullDescription = service;
-// if(notParsed){ return nullptr; }
+    char* start = const_cast<char*>( servStr.c_str() ); // living dangerous :)
+    const char* end = start+service.length();
+    char* token;
+
+    if( tokenize(start, end, token, ":") ){
+        service = token; // TODO: enforce max len ???
+        if(service.length() < 1){ return nullptr; }
+    } else { return nullptr; }
+
+    if( tokenize(start, end, token, ":") ){
+        protocol = token; // TODO: enforce max len ???
+        if(protocol.length() < 1){ return nullptr; }
+    } else { return nullptr; }
+
+    if( tokenize(start, end, token, ":") ){
+        ip = Sock::strToIP(token);
+        if(0==ip){ return nullptr; }
+    } else { return nullptr; }
+
+    if( tokenize(start, end, token, ":") ){
+        port = atoi(token);
+        if(0==port){ return nullptr; }
+    } else { return nullptr; }
+
+    if( tokenize(start, end, token, ":") ){
+        other = token;
+    } else { return nullptr; }
+
+    // Translate local to NAT (router) IP
+    uint32_t routableIP = Sock::isRoutable(ip) ? ip : myIP;
+    stringstream ss;
+    ss << service << ":" << protocol << ":" << Sock::ipToString(routableIP) << ":" << port << ":" << other;
+    fullDescription = ss.str();
     return this;
 }
 

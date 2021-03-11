@@ -2,17 +2,20 @@
 #define UTILS_H_INCLUDED
 #include <string>
 #include <vector>
-// utility functions
+// collection of utility functions
+// It is sad that there are no standard versions of these functions in std::
+// Probably why python is more popular :(
 
 void turnBitsOff(uint32_t& mask, uint32_t bits); // turn bits off in a mask
 
-bool tokenize( char** buffer, const char* bufferEnd, char** token ); // break string into tokens
+// break string into tokens
+bool tokenize( char*& buffer, const char* bufferEnd, char*& token, const std::string& separators );
 
 std::string& toLower(std::string& s); // convert string to lower case in place
 
-std::string& ltrim(std::string& s); // trim white spaces on the left
+std::string& ltrim(std::string& s); // trim white spaces on the left in place
 
-std::string& rtrim(std::string& s); // trim white spaces on the right
+std::string& rtrim(std::string& s); // trim white spaces on the right in place
 
 // read lines from a stream and put them in a vector
 void parseLines(std::istream& stream, std::vector<std::string>& lines);

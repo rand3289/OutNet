@@ -21,8 +21,9 @@ struct Service {
     string protocol;            // service protocol such as http, ftp etc...
     uint32_t ip;                // real IP (local/non-routable IP) from originalDescription
     uint16_t port;              // port number for this service
+    string other;               // user defined filed can be path or description or id or resourse defintion
 
-    Service* parse(const string& service); // Do not parse userDefinedFiled ???
+    Service* parse(const string& service, uint32_t myIP);
     bool passLocalFilters(vector<string> filters);
     bool passRemoteFilters(vector<string> filters);
     bool operator==(const Service& rhs){ return fullDescription == rhs.fullDescription; }

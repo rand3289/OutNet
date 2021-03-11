@@ -28,7 +28,7 @@ int Request::parse(Sock& conn, vector<string>& filters, uint16_t& port){
         char* start = buff + 3; // skip "GET"
         const char * end = start+strlen(start);
         char* token;
-        while( tokenize( &start, end, &token) ){
+        while( tokenize( start, end, token, " &?/") ){
             if( strncmp(token, "QUERY=", 6) == 0 ){ // parse QUERY
                 query = atol(token+6);
             } else if( strncmp(token, "SPORT=", 6) == 0){ // parse remote server port

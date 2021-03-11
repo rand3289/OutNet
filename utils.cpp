@@ -1,5 +1,3 @@
-// It is sad that there are no standard versions of these functions in std::
-// Probably why python is more popular :(
 #include "utils.h"
 #include <algorithm>
 #include <iostream>
@@ -11,32 +9,30 @@ void turnBitsOff(uint32_t& mask, uint32_t bits){
 }
 
 
-// TODO: accept buffer and token by reference ???
-// TODO: add separators as a parameter
 // parse a string into tokens
-bool tokenize( char** buffer, const char* bufferEnd, char** token ){
-    while(*buffer != bufferEnd){ // skip leading separators
-        char c = **buffer;
+bool tokenize( char*& buffer, const char* bufferEnd, char*& token, const string& separators ){
+    while(buffer != bufferEnd){ // skip leading separators
+        char c = *buffer;
         if( 0==c || '\r'==c || '\n'==c ) { // end of line - no more tokens
             return false;
         }
-        if( ' '==c || '&'==c || '?'==c || '/'==c ) { // skip separators
-            ++*buffer;
+        if( string::npos != separators.find(c) ) { // skip separators
+            ++buffer;
         } else {
             break;
         }
     }
 
-    *token = *buffer;
+    token = buffer;
 
-    while(*buffer != bufferEnd){
-        char c = **buffer;
-        if( ' '==c || '&'==c || '?'==c || '/'==c || '\r'==c || '\n'==c ) { // end of token
-            **buffer=0; // separate strings
-            ++*buffer;
+    while(buffer != bufferEnd){
+        char c = *buffer;
+        if( string::npos != separators.find(c) || '\r'==c || '\n'==c ) { // end of token
+            *buffer=0; // separate strings
+            ++buffer;
             return true;
         }
-        ++*buffer; // skip to the end of token
+        ++buffer; // skip to the end of token
     }
 
     return false;
