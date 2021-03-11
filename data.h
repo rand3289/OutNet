@@ -11,7 +11,7 @@ using namespace std;
 #include <chrono>
 using namespace std::chrono;
 
-class Writer; // from http.h (http.h is not included)
+class Sock;
 
 
 struct Service {
@@ -37,7 +37,7 @@ struct LocalData {
     PubKey localPubKey; // local service public key
     vector<Service> services; // a list of local services we are "advertising" // TODO: should it be a set?
 
-    int send(Writer& writer, uint32_t select, vector<string>& filters);
+    int send(Sock& sock, uint32_t select, vector<string>& filters, Signature& signer);
     Service* addService(const string& service);
 };
 
@@ -73,7 +73,7 @@ struct RemoteData {
     unordered_multimap<IPADDR, HostInfo> hosts; // IP to HostInfo map
 
     // send HostInfo records through the writer to a remote host
-    int send(Writer& writer, uint32_t select, vector<string>& filters);
+    int send(Sock& sock, uint32_t select, vector<string>& filters, Signature& signer);
     // Remember this host/port for crawler to contact
     void addContact(IPADDR ip, uint16_t port);
 };

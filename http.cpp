@@ -1,5 +1,7 @@
+#include "data.h"
 #include "http.h"
 #include "sign.h"
+#include "sock.h"
 #include "protocol.h"
 #include "utils.h"
 #include <sstream>
@@ -7,6 +9,8 @@
 #include <thread>
 #include <cstring>
 using namespace std;
+#include <chrono>
+using namespace std::chrono;
 
 
 // look for a line like: GET /?QUERY=2036&SPORT=33344&PORT_EQ_2132 HTTP/1.1
@@ -43,25 +47,24 @@ int Request::parse(Sock& conn, vector<string>& filters, uint16_t& port){
 int Response::write(Sock& conn, uint32_t select, vector<string>& filters, LocalData& ldata, RemoteData& rdata){
     static const string header =  "HTTP/1.1 200 OK\n\n";
     int bytes = conn.write(header.c_str(), header.size() ); // no need to sign the header
-
     bool sign = select & SELECTION::SIGN;
-    Writer* writer = sign ? &signatureWriter : &dumbWriter;
-    writer->init(conn);
 
     uint32_t netSelect = htonl(select);
-    bytes+= writer->write( &netSelect, sizeof(netSelect));
+    bytes+= conn.write( &netSelect, sizeof(netSelect));
+    if(sign) { signer.write(&netSelect, sizeof(netSelect) ); }
 
     if( select & SELECTION::MYIP ){
         uint32_t remoteIP = conn.getIP();                    // remote IP the way I see it
-        bytes+=writer->write( &remoteIP, sizeof(remoteIP)); // helps other server find it's NATed IPs
+        bytes+=conn.write( &remoteIP, sizeof(remoteIP)); // helps other server find it's NATed IPs
+        if(sign){ signer.write(&remoteIP, sizeof(remoteIP)); }
     }
 
-    bytes+= ldata.send(  *writer, select, filters);
-    bytes+= rdata.send(  *writer, select, filters);
+    bytes+= ldata.send(conn, select, filters, signer);
+    bytes+= rdata.send(conn, select, filters, signer);
 
     if(sign){
-        const PubSign* psign = writer->getSignature();
-        bytes+= conn.write( psign, sizeof(PubSign));
+        const PubSign& psign = signer.getSignature();
+        bytes+= conn.write( &psign, sizeof(PubSign) );
     }
     return bytes;
 }

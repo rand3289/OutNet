@@ -34,16 +34,34 @@ int Signature::write(const void* data, size_t size){ // compute "PubSign sign" f
 }
 
 
-int SignatureVerify::init(PubKey& publicKey){ // prepare to verify the signature
+int Signature::writeString(const string& str){
+    unsigned char size = str.length();
+    write(&size, sizeof(size));
+    write(str.c_str(), size);
+    return size;
+}
+
+
+int SignatureVerify::writeString(const string& str){
+    unsigned char size = str.length();
+    write(&size, sizeof(size));
+    write(str.c_str(), size);
+    return size;
+}
+
+
+int SignatureVerify::init(const PubKey& publicKey){ // prepare to verify the signature
     memcpy(&pubKey, &publicKey, sizeof(pubKey) );
     memset(&signature, 0, sizeof(signature) );
     return 0;
 }
 
-bool SignatureVerify::verify(PubSign& sign){
+
+bool SignatureVerify::verify(const PubSign& sign) const {
     return 0 == memcmp(&signature, &sign, sizeof(PubSign) );
 }
 
-int SignatureVerify::write(void* data, size_t size){ // compute "PubSign sign" from data chunks
+
+int SignatureVerify::write(const void* data, size_t size){ // compute "PubSign sign" from data chunks
     return 0; // TODO:
 }

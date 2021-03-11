@@ -47,6 +47,8 @@ public:
     }
 };
 
+// TODO: Get rid of Reader, SignatureReader, Writer and SignatureWriter
+// TODO: in favor of calling Signature::write() after every Sock::write() etc...
 
 class Crawler {
     Reader dumbReader;

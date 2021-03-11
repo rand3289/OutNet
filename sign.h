@@ -1,6 +1,7 @@
 #ifndef SIGN_H_INCLUDED
 #define SIGN_H_INCLUDED
 #include <cstring> // size_t, memset(), memcpy(), memcmp()
+#include <string>
 
 struct PubSign    { char sign[256]; };
 struct PrivateKey { char  key[256]; };
@@ -18,7 +19,8 @@ public:
     Signature(); // load private key from disk
     int init();  // clear "PubSign signature"
     int write(const void* data, size_t size); // compute signature from data chunks
-    const PubSign& getSignature(){ return signature; }
+    int writeString(const std::string& str);
+    const PubSign& getSignature() const { return signature; }
 };
 
 
@@ -26,9 +28,10 @@ class SignatureVerify {
     PubSign signature;
     PubKey pubKey;
 public:
-    int init(PubKey& pubKey);           // prepare to verify the signature
-    int write(void* data, size_t size); // compute "PubSign sign" from data chunks
-    bool verify(PubSign& signature);    // did computed signature match given signature?
+    int init(const PubKey& pubKey);           // prepare to verify the signature
+    int write(const void* data, size_t size); // compute "PubSign sign" from data chunks
+    int writeString(const std::string& str);
+    bool verify(const PubSign& signature) const;    // did computed signature match given signature?
 };
 
 #endif //SIGN_H_INCLUDED

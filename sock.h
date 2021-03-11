@@ -44,10 +44,10 @@ public:
 	SOCKET accept();
 	int accept(Sock& connection); // recommended way of accepting connection
 	// bound server port even if ANY_PORT was used in listen() or remote port after accept() or connect()
-	uint16_t getPort(){ return ntohs(ip.sin_port); }
+	uint16_t getPort() const { return ntohs(ip.sin_port); }
 	// remote IP after connect() or after object was returned by accept()
-	uint32_t getIP() { return ip.sin_addr.s_addr; } 
-	SOCKET getRawSocket() { return s; }
+	uint32_t getIP() const { return ip.sin_addr.s_addr; } 
+	SOCKET getRawSocket() const { return s; }
 
 	static uint32_t strToIP(const char* addr);
 	static std::string ipToString(uint32_t ip);

@@ -1,6 +1,7 @@
 #include "data.h"
 #include "http.h"
 #include "sign.h"
+#include "sock.h"
 #include "protocol.h"
 #include <memory> // shared_ptr
 #include <algorithm>
@@ -46,7 +47,7 @@ void mergeServices(vector<Service>& dest, vector<Service>& source){
 
 Service* Service::parse(const string& service){
     originalDescription = service;
-// TODO: in fullDescription, translate local to NAT IP
+// TODO: in fullDescription, translate local to NAT IP // TODO: need access to LocalData::host?
     fullDescription = service;
 // if(notParsed){ return nullptr; }
     return this;
@@ -88,10 +89,13 @@ void RemoteData::addContact(IPADDR ip, uint16_t port){
 
 
 // relevant "select" flags: LKEY, TIME, LSVC, LSVCF, COUNTS???
-int LocalData::send(Writer& writer, uint32_t select, vector<string>& filters){
+int LocalData::send(Sock& sock, uint32_t select, vector<string>& filters, Signature& signer){
+    bool sign = select & SELECTION::SIGN;
+
     int bytes = 0;
     if(select & SELECTION::LKEY){ // send local public key. It does not change. Do not lock.
-        bytes += writer.write( &localPubKey, sizeof(localPubKey) );
+        bytes += sock.write( &localPubKey, sizeof(localPubKey) );
+        if(sign){ signer.write(&localPubKey, sizeof(localPubKey) ); }
     }
 
     // I wanted time to be a binary field and I want to use hton?() on it so uint32_t it is.
@@ -99,7 +103,8 @@ int LocalData::send(Writer& writer, uint32_t select, vector<string>& filters){
     // timestamp is important to avoid a replay attack
     if(select & SELECTION::TIME){
         uint32_t now = htonl(time(nullptr));
-        bytes += writer.write( &now, sizeof(now));
+        bytes += sock.write( &now, sizeof(now));
+        if(sign){ signer.write(&now, sizeof(now)); }
     }
 
     if( !(select & SELECTION::LSVC) ){ return bytes; } // service list not requiested
@@ -115,17 +120,20 @@ int LocalData::send(Writer& writer, uint32_t select, vector<string>& filters){
     }
 
     uint16_t count = htons( toSend.size() );
-    bytes += writer.write( &count, sizeof(count) );
+    bytes += sock.write( &count, sizeof(count) );
+    if(sign){ signer.write(&count, sizeof(count)); }
 
     for(Service* s: toSend){
-        bytes += writer.writeString(s->fullDescription);
+        bytes += sock.writeString(s->fullDescription);
+        if(sign){ signer.writeString(s->fullDescription);}
     }
     return bytes;
 }
 
 
 // relevant "select" flags: IP, PORT, AGE, RKEY, RSVC, RSVCF
-int RemoteData::send(Writer& writer, uint32_t select, vector<string>& filters){
+int RemoteData::send(Sock& sock, uint32_t select, vector<string>& filters, Signature& signer){
+    bool sign = select & SELECTION::SIGN;
     shared_lock lock(mutx);
 
     vector<HostInfo*> data;
@@ -137,28 +145,36 @@ int RemoteData::send(Writer& writer, uint32_t select, vector<string>& filters){
 
     int bytes = 0; // write record count first
     uint32_t count = htonl(data.size());
-    bytes+= writer.write( &count, sizeof(count));
+    bytes+= sock.write( &count, sizeof(count));
+    if(sign){ signer.write(&count, sizeof(count)); }
 
     for(HostInfo* hi: data){
         if( select & SELECTION::IP ){
-            bytes+= writer.write( &hi->host, sizeof(hi->host) ); // writing without htonl()
+            bytes+= sock.write( &hi->host, sizeof(hi->host) ); // writing without htonl()
+            if(sign){ signer.write(&hi->host, sizeof(hi->host)); }
         }
         if( select & SELECTION::PORT ){
             uint16_t p = htons(hi->port);
-            bytes+= writer.write( &p, sizeof(p) );
+            bytes+= sock.write( &p, sizeof(p) );
+            if(sign){ signer.write(&p, sizeof(p)); }
         }
         if( select & SELECTION::AGE ){
             auto deltaT = system_clock::now() - hi->seen;
             auto count = deltaT.count()/60000000; // ms to minutes
             uint16_t age = count > 65500 ? 65500 : count; // reserve all above 65500
             age = htons(age);
-            bytes+= writer.write( &age, sizeof(age) );
+            bytes+= sock.write( &age, sizeof(age) );
+            if(sign){ signer.write(&age, sizeof(age) ); }
+
         }
         if( select & SELECTION::RKEY ){
             unsigned char keyCount = hi->key ? 1 : 0;
-            bytes+= writer.write( &keyCount, sizeof(keyCount));
+            bytes+= sock.write( &keyCount, sizeof(keyCount));
+            if(sign){ signer.write(&keyCount, sizeof(keyCount)); }
+
             if(hi->key){
-                bytes+= writer.write( &*hi->key, sizeof(PubKey) );
+                bytes+= sock.write( &*hi->key, sizeof(PubKey) );
+                if(sign){ signer.write(&hi->key, sizeof(PubKey)); }
             }
         }
         if( select & SELECTION::RSVC ){
@@ -170,10 +186,12 @@ int RemoteData::send(Writer& writer, uint32_t select, vector<string>& filters){
                 }
             }
             uint16_t count = htons(svc.size());
-            bytes+= writer.write( &count, sizeof(count));
+            bytes+= sock.write( &count, sizeof(count));
+            if(sign){ signer.write(&count, sizeof(count)); }
 
             for( Service* s: svc){
-                bytes+= writer.writeString(s->fullDescription);
+                bytes+= sock.writeString(s->fullDescription);
+                signer.writeString(s->fullDescription);
             }
         } // if RSVC
     } // for(HostInfo
