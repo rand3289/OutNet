@@ -72,14 +72,17 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
         cerr << "ERROR reading 'select'" << endl;
         return 0;
     }
-    if( (select & SELECTION::SIGN) && !(selectRet & SELECTION::SIGN) ){ // we requested a signature but it was not returned
+    const bool sign = selectRet & SELECTION::SIGN; // is signature requested?
+    if( (select & SELECTION::SIGN) && !sign ){ // we requested a signature but it was not returned
         cerr << "ERROR: remote refused to sign response.  Disconnecting!" << endl; // this is a security problem
         return 0;
     }
+    if(sign){ signer.write(&selectRet, sizeof(selectRet)); }
 
     uint32_t myip = 0;
     if( selectRet & SELECTION::MYIP ){
         myip = sock.read32(error);
+        if(sign){ signer.write(&myip, sizeof(myip)); }
         if(error){
             cerr << "ERROR reading 'my ip'" << endl;
             return 0;
@@ -93,26 +96,16 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
     LocalData ld;
     if(selectRet & SELECTION::LKEY){
         rdsize = sock.read(&ld.localPubKey, sizeof(PubKey));
+        if(sign){ signer.write(&ld.localPubKey, sizeof(PubKey)); }
         if( rdsize != sizeof(PubKey) ){
             cerr << "ERROR: reading remote public key" << endl;
             return 0;
         }
     }
 
-    const bool sign = selectRet & SELECTION::SIGN; // if signature is requested, use signatureReader to read
-    Reader* reader = sign ? &signatureReader : &dumbReader;
-    reader->init(sock, ld.localPubKey);
-
-    reader->write(&selectRet, sizeof(selectRet)); // we read it using sock before
-    if( selectRet & SELECTION::MYIP ){
-        reader->write(&myip, sizeof(myip));
-    }
-    if(selectRet & SELECTION::LKEY){
-        reader->write(&ld.localPubKey, sizeof(ld.localPubKey));
-    }
-
     if(selectRet & SELECTION::TIME){
-        uint32_t timeRemote = reader->read32(error);
+        uint32_t timeRemote = sock.read32(error);
+        if(sign){ signer.write(&timeRemote, sizeof(timeRemote)); }
         if(error){
             cerr << "ERROR reading remote's time." << endl;
             return 0;
@@ -126,13 +119,15 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
     }
 
     if( selectRet & SELECTION::LSVC ){
-        uint16_t count = reader->read16(error);
+        uint16_t count = sock.read16(error);
+        if(sign){ signer.write(&count, sizeof(count)); }
         if(error){
             cerr << "ERROR reading remote service count." << endl;
             return 0;
         }
         for(int i=0; i < count; ++i){
-            rdsize = reader->readString(buff, sizeof(buff));
+            rdsize = sock.readString(buff, sizeof(buff));
+            if(sign){ signer.writeString(buff); }
             if(rdsize <=0){
                 cerr << "ERROR reading remote serices." << endl;
                 return 0;
@@ -142,7 +137,8 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
     }
 
     // remote data
-    uint32_t count = reader->read32(error); // count is always there even if data is not
+    uint32_t count = sock.read32(error); // count is always there even if data is not
+    if(sign){ signer.write(&count, sizeof(count)); }
     if(error){
         cerr << "ERROR reading HostInfo count." << endl;
         return 0;
@@ -156,7 +152,8 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
         hil.met = system_clock::now();
 
         if( selectRet & SELECTION::IP ){ // do not use Sock::read32() - IP does not need ntohl()
-            rdsize = reader->read( &hil.host,sizeof(hil.host));
+            rdsize = sock.read( &hil.host, sizeof(hil.host));
+            if(sign){ signer.write(&hil.host, sizeof(hil.host) ); }
             if(rdsize != sizeof(hil.host)){
                 cerr << "ERROR reading IP." << endl;
                 return 0; // discard ALL data from that server because we can not verify signature!
@@ -164,7 +161,8 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
         }
 
         if( selectRet & SELECTION::PORT ){
-            hil.port = reader->read16(error);
+            hil.port = sock.read16(error);
+            if(sign){ signer.write(&hil.port, sizeof(hil.port)); }
             if(error){
                 cerr << "ERROR reading port." << endl;
                 return 0;
@@ -182,7 +180,8 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
         }
 
         if( selectRet & SELECTION::AGE ){
-            uint16_t age = reader->read16(error);
+            uint16_t age = sock.read16(error);
+            if(sign){ signer.write(&age, sizeof(age)); }
             hil.seen = system_clock::now() - minutes(age); // TODO: check some reserved values ???
             if(error){
                 cerr << "ERROR reading age." << endl;
@@ -192,14 +191,16 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
 
         if( selectRet & SELECTION::RKEY ){
             char keyCount = 0;
-            rdsize = reader->read( &keyCount, sizeof(keyCount) );
+            rdsize = sock.read( &keyCount, sizeof(keyCount) );
+            if(sign){ signer.write(&keyCount, sizeof(keyCount)); }
             if( sizeof(keyCount) != rdsize ){
                 cerr << "ERROR reading key count." << endl;
                 return 0;
             }
             if(keyCount){
                 hil.key = make_shared<PubKey> ();
-                rdsize = reader->read( &*hil.key, sizeof(PubKey) );
+                rdsize = sock.read( &*hil.key, sizeof(PubKey) );
+                if(sign){ signer.write(&*hil.key, sizeof(PubKey)); }
                 if(rdsize != sizeof(PubKey) ){
                     cerr << "ERROR reading public key." << endl;
                     return 0;
@@ -208,14 +209,16 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
         }
 
         if( selectRet & SELECTION::RSVC ){
-            uint16_t cnt = reader->read16(error);
+            uint16_t cnt = sock.read16(error);
+            if(sign){ signer.write(&cnt, sizeof(cnt)); }
             if(error){
                 cerr << "ERROR reading remote service count." << endl;
                 return 0;
             }
             string s;
             for(int i=0; i< cnt; ++i){
-                rdsize = reader->readString(buff, sizeof(buff));
+                rdsize = sock.readString(buff, sizeof(buff));
+                if(sign){ signer.writeString(buff); }
                 if(rdsize <=0){
                     cerr << "ERROR reading remote serivces." << endl;
                     return 0;
@@ -233,7 +236,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
         }
 
         // verify signature. If signature can not be verified, discard the data and reduce hi.rating below 0
-        if( !reader->verifySignature(signature) ){
+        if( !signer.verify(signature) ){
             slock.unlock(); // there is no upgrade mechanism to unique_lock.
             unique_lock ulock2(rdata.mutx); // release lock after each connection for other parts to work
             hi.signatureVerified = false;
