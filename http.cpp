@@ -47,14 +47,15 @@ int Request::parse(Sock& conn, vector<string>& filters, uint16_t& port){
 int Response::write(Sock& conn, uint32_t select, vector<string>& filters, LocalData& ldata, RemoteData& rdata){
     static const string header =  "HTTP/1.1 200 OK\n\n";
     int bytes = conn.write(header.c_str(), header.size() ); // no need to sign the header
-    bool sign = select & SELECTION::SIGN;
 
-    uint32_t netSelect = htonl(select);
-    bytes+= conn.write( &netSelect, sizeof(netSelect));
-    if(sign) { signer.write(&netSelect, sizeof(netSelect) ); }
+    bool sign = select & SELECTION::SIGN;
+    if(sign){ signer.init(); }
+
+    bytes+= conn.write32(select);
+    if(sign) { signer.write(&select, sizeof(select) ); }
 
     if( select & SELECTION::MYIP ){
-        uint32_t remoteIP = conn.getIP();                    // remote IP the way I see it
+        uint32_t remoteIP = conn.getIP();                // remote IP the way I see it
         bytes+=conn.write( &remoteIP, sizeof(remoteIP)); // helps other server find it's NATed IPs
         if(sign){ signer.write(&remoteIP, sizeof(remoteIP)); }
     }

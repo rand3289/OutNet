@@ -30,7 +30,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
     }
 
     // if we have remote's public key, do not request it (turn it off in select)
-    if( hi.signatureVerified ){
+    if( hi.signatureVerified ){ // Do not go by pure existence of a key.  It has to be verified!
         turnBitsOff(select, SELECTION::LKEY);
     } // if signature remote sends fails to verify, next time we request the key again
 
@@ -99,6 +99,15 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
         if(sign){ signer.write(&ld.localPubKey, sizeof(PubKey)); }
         if( rdsize != sizeof(PubKey) ){
             cerr << "ERROR: reading remote public key" << endl;
+            return 0;
+        }
+    }
+    if(sign){
+        if(hi.signatureVerified) { signer.init(*hi.key); } // use old key
+        else if(selectRet & SELECTION::LKEY) { signer.init(ld.localPubKey); } // use new key
+        else if(hi.key) { signer.init(*hi.key); } // use old key if it exists
+        else {
+            cerr << "ERROR no key available for signature verification." << endl;
             return 0;
         }
     }
