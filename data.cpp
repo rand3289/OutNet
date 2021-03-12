@@ -91,26 +91,31 @@ Service* Service::parse(const string& servStr, uint32_t myIP){
 // Decides if a service passes a filter.
 // There can be two types of service related filters specified in the HTTP GET Query string:
 // local filters apply to local services (start with L) and remote (start with R)
-bool Service::passFilters(vector<string> filters, bool remote){
+// example: RPROT_EQ_HTTP&RPORT_LT_1025
+bool Service::passFilters(vector<string>& filters, bool remote){
     char buff[64];
     for(const string& filter: filters){
+        if(  remote && 'R' != filter[0] ){ continue; }
+        if( !remote && 'L' != filter[0] ){ continue; }
+
         strncpy(buff, filter.c_str(), sizeof(buff));
         char* function, *oper, *value, *b = buff;
-        if(tokenize(b, b+sizeof(buff), function, "_") ){
-            if(  remote && 'R' != *function){ continue; }
-            if( !remote && 'L' != *function){ continue; }
-            ++function; // we checked the first letter
-            string func(function);
-            if(tokenize(b, b+sizeof(buff), oper, "_") ){
-                if(tokenize(b, b+sizeof(buff), value, "_") ){
-                    if( 0 == func.compare("SVC") ){
-                        if(service != value) { return false; }
-                    } else if( 0 == func.compare("PROT") ){
-                        if(protocol != value){ return false; }
-                    } else if( 0 == func.compare("PORT") && string("EQ").compare(oper) == 0 ){ // TODO: implement LT, GT
-                        if(port != atoi(value)){ return false; }
-                    }
-                }
+        if( !tokenize(b, buff+sizeof(buff), function, "_") ){ continue; }
+        if( !tokenize(b, buff+sizeof(buff), oper,     "_") ){ continue; }
+        if( !tokenize(b, buff+sizeof(buff), value,    "_") ){ continue; }
+
+        ++function; // we checked the first letter
+        if( 0 == strncmp(function, "SVC", 3) ){
+            if(service != value) { return false; }
+        } else if( 0 == strncmp(function, "PROT", 4) ){
+            if(protocol != value){ return false; }
+        } else if( 0 == strncmp(function, "PORT", 4) ){
+            if( 0 == strncmp(oper, "EQ", 2) ){
+                if( port != atoi(value) ) { return false; }
+            } else if(0==strncmp(oper, "LT",2) ){
+                if( port >= atoi(value) ) { return false; }
+            } else if(0==strncmp(oper, "GT",2) ){
+                if( port <= atoi(value) ) { return false; }
             }
         }
     }
@@ -118,9 +123,42 @@ bool Service::passFilters(vector<string> filters, bool remote){
 }
 
 
-// filter by: host, port, key, 
-bool HostInfo::passFilters(vector<string> filters){
-    return true; // TODO:
+// filter by: host, port, key, age
+// example: AGE_LT_600&KEY&PORT_GT_1024
+bool HostInfo::passFilters(vector<string>& filters) {
+    char buff[64];
+    for(const string& filter: filters){
+        strncpy(buff, filter.c_str(), sizeof(buff));
+        char* function, *oper, *value, *b = buff;
+        if( !tokenize(b, buff+sizeof(buff), function, "_") ){ continue; }
+        if( !tokenize(b, buff+sizeof(buff), oper,     "_") ){ continue; }
+        if( !tokenize(b, buff+sizeof(buff), value,    "_") ){ continue; }
+
+        if(0==strncmp(function, "KEY",3) ){ // all HostInfo records with RKEY
+            if( !key ) { return false; }
+        } else if(0==strncmp(function, "AGE",3) ){
+            int tmin = duration_cast<minutes>(system_clock::now() - met).count();
+            if(0==strncmp(oper, "LT",2) ){
+                if( tmin >= atoi(value) ) { return false; }
+            } else if(0==strncmp(oper, "GT",2) ){
+                if( tmin <= atoi(value) ) { return false; }
+            }
+        } else if(0==strncmp(function, "IP",2) ){
+            uint32_t ip = atoi(value);
+            if(0==strncmp(oper, "LT",2) ){
+                if( host >= ip ) { return false; }
+            } else if(0==strncmp(oper, "GT",2) ){
+                if( host <= ip ) { return false; }
+            }
+        } else if(0==strncmp(function, "PORT",4) ){
+            if(0==strncmp(oper, "LT",2) ){
+                if( port >= atoi(value) ) { return false; }
+            } else if(0==strncmp(oper, "GT",2) ){
+                if( port <= atoi(value) ) { return false; }
+            }
+        }
+    } // for(filters)
+    return true;
 }
 
 

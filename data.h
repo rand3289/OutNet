@@ -24,7 +24,7 @@ struct Service {
     string other;               // user defined filed can be path or description or id or resourse defintion
 
     Service* parse(const string& service, uint32_t myIP);
-    bool passFilters(vector<string> filters, bool remote);
+    bool passFilters(vector<string>& filters, bool remote);
     bool operator==(const Service& rhs){ return fullDescription == rhs.fullDescription; }
 };
 void mergeServices(vector<Service>& dest, vector<Service>& source); // helper free function
@@ -59,7 +59,7 @@ struct HostInfo {                    // Information about remote services from o
     uint16_t referPort;              // port of the service where we got this HostInfo record
 
     HostInfo();
-    bool passFilters(vector<string> filters);
+    bool passFilters(vector<string>& filters);
     Service* addService(const string& service);
 };
 
