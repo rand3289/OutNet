@@ -2,6 +2,7 @@
 #define CRAWLER_H_INCLUDED
 #include "data.h"
 #include "sign.h"
+#include <vector>
 
 
 class Crawler {

@@ -4,6 +4,7 @@
 #include "sock.h"
 #include "http.h"
 #include <vector>
+#include <array>
 #include <map> // #include <unordered_map>
 #include <string>
 #include <thread>
@@ -86,7 +87,7 @@ int main(int argc, char* argv[]){
         time = system_clock::now();
 
         // parse remote server port, "SELECT field bitmap" and filters from remote's "HTTP get" query
-        vector<string> filters; // function + parameter pairs
+        vector<array<string,3>> filters; // function + parameter pairs
         uint16_t port = 0;
         uint32_t select = Request::parse(conn, filters, port);
 

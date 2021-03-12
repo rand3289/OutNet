@@ -1,6 +1,5 @@
 #include "data.h"
 #include "http.h"
-#include "sign.h"
 #include "sock.h"
 #include "protocol.h"
 #include "utils.h"
@@ -13,8 +12,26 @@ using namespace std;
 using namespace std::chrono;
 
 
+// take a query string filter ex: AGE_LT_600 and parse it in 3 strings separated by "_"
+bool Request::parseFilter(char* filter, array<string,3>& funcOperVal){ // reference to array of strings
+    char* end   = filter + strlen(filter);
+    char* token = nullptr;
+    if( !tokenize(filter, end, token, "_") ){ return false; }
+    funcOperVal[0] = token; // function
+
+    if( tokenize(filter, end, token, "_") ){ // operator or value might not be present ex: "KEY"
+        funcOperVal[1] = token; // operator (EQ/LT/GT)
+
+        if( tokenize(filter, end, token, "_") ){
+            funcOperVal[2] = token; // value
+        }
+    }
+    return true;
+}
+
+
 // look for a line like: GET /?QUERY=2036&SPORT=33344&PORT_EQ_2132 HTTP/1.1
-int Request::parse(Sock& conn, vector<string>& filters, uint16_t& port){
+int Request::parse(Sock& conn, vector<array<string,3>>& filters, uint16_t& port){
     uint32_t query = 0;
     char buff[2048];
     for(int i=0; i< 10; ++i) { // drop if the other side is slow to send request
@@ -27,14 +44,17 @@ int Request::parse(Sock& conn, vector<string>& filters, uint16_t& port){
 
         char* start = buff + 3; // skip "GET"
         const char * end = start+strlen(start);
-        char* token;
+        char* token = nullptr;
         while( tokenize( start, end, token, " &?/") ){
             if( strncmp(token, "QUERY=", 6) == 0 ){ // parse QUERY
                 query = atol(token+6);
             } else if( strncmp(token, "SPORT=", 6) == 0){ // parse remote server port
                 port = atoi(token+6);
             } else if( strcmp(token,"HTTP") && strcmp(token,"1.1") ){ // throw away these tokens
-                filters.push_back(token);
+                array<string,3> funcOperVal; // auto funcOperVal = filters.emplace_back();
+                if( parseFilter(token, funcOperVal) ){
+                    filters.push_back( move(funcOperVal) );
+                }
             }
         }
         if(query>0){ break; } // we got all we need
@@ -44,7 +64,7 @@ int Request::parse(Sock& conn, vector<string>& filters, uint16_t& port){
 }
 
 
-int Response::write(Sock& conn, uint32_t select, vector<string>& filters, LocalData& ldata, RemoteData& rdata){
+int Response::write(Sock& conn, uint32_t select, vector<array<string,3>>& filters, LocalData& ldata, RemoteData& rdata){
     static const string header =  "HTTP/1.1 200 OK\n\n";
     int bytes = conn.write(header.c_str(), header.size() ); // no need to sign the header
 
@@ -71,7 +91,7 @@ int Response::write(Sock& conn, uint32_t select, vector<string>& filters, LocalD
 }
 
 
-void Response::writeDebug(Sock& conn, uint32_t select, std::vector<std::string>& filters){
+void Response::writeDebug(Sock& conn, uint32_t select, std::vector<array<string,3>>& filters){
     stringstream ss;
     ss << "HTTP/1.1 200 OK\n";
     ss << "Server: n3+1\n\n"; // "\n" separates headers from html
@@ -79,7 +99,7 @@ void Response::writeDebug(Sock& conn, uint32_t select, std::vector<std::string>&
     ss << "<a href='https://github.com/rand3289/OutNet'>INFO</a><br>";
     ss << "QUERY=" <<  select << "<br>";
     for(auto f: filters){
-        ss << f << "<br>";
+        ss << f[0] << "_" << f[1] << "_" << f[2] << "<br>";
     }
     time_t now = time(NULL); 
     ss << ctime(&now) << "<br>";

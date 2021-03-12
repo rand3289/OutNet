@@ -1,20 +1,12 @@
 #include "data.h"
 #include "http.h"
-#include "sign.h"
 #include "sock.h"
 #include "protocol.h"
 #include "utils.h"
-#include <memory> // shared_ptr
 #include <algorithm>
-#include <vector>
-#include <string>
 #include <sstream>
 #include <iostream>
-#include <mutex>
-#include <shared_mutex> // since C++17
 using namespace std;
-#include <chrono>
-using namespace std::chrono;
 
 
 HostInfo::HostInfo(): host(0), port(0), signatureVerified(false), offlineCount(0),
@@ -92,30 +84,28 @@ Service* Service::parse(const string& servStr, uint32_t myIP){
 // There can be two types of service related filters specified in the HTTP GET Query string:
 // local filters apply to local services (start with L) and remote (start with R)
 // example: RPROT_EQ_HTTP&RPORT_LT_1025
-bool Service::passFilters(vector<string>& filters, bool remote){
-    char buff[64];
-    for(const string& filter: filters){
-        if(  remote && 'R' != filter[0] ){ continue; }
-        if( !remote && 'L' != filter[0] ){ continue; }
+bool Service::passFilters(vector<array<string,3>>& filters, bool remote){
+    string svc =    remote ? "RSVC"  : "LSVC";
+    string prot =   remote ? "RPROT" : "LPROT";
+    string lrport = remote ? "RPORT" : "LPORT";
 
-        strncpy(buff, filter.c_str(), sizeof(buff));
-        char* function, *oper, *value, *b = buff;
-        if( !tokenize(b, buff+sizeof(buff), function, "_") ){ continue; }
-        if( !tokenize(b, buff+sizeof(buff), oper,     "_") ){ continue; }
-        if( !tokenize(b, buff+sizeof(buff), value,    "_") ){ continue; }
+    for(auto& filter: filters){
+        string& func  = filter[0];
+        string& oper  = filter[1];
+        string& value = filter[2];
 
-        ++function; // we checked the first letter
-        if( 0 == strncmp(function, "SVC", 3) ){
-            if(service != value) { return false; }
-        } else if( 0 == strncmp(function, "PROT", 4) ){
-            if(protocol != value){ return false; }
-        } else if( 0 == strncmp(function, "PORT", 4) ){
-            if( 0 == strncmp(oper, "EQ", 2) ){
-                if( port != atoi(value) ) { return false; }
-            } else if(0==strncmp(oper, "LT",2) ){
-                if( port >= atoi(value) ) { return false; }
-            } else if(0==strncmp(oper, "GT",2) ){
-                if( port <= atoi(value) ) { return false; }
+        if( func == svc ){
+            if( service != value) { return false; }
+        } else if( func ==  prot ){
+            if( protocol != value){ return false; }
+        } else if( func == lrport ){
+            uint32_t intVal = atoi(value.c_str());
+            if( oper == "EQ" ){
+                if( port != intVal ) { return false; }
+            } else if( oper == "LT" ){
+                if( port >= intVal ) { return false; }
+            } else if( oper == "GT" ){
+                if( port <= intVal ) { return false; }
             }
         }
     }
@@ -125,37 +115,34 @@ bool Service::passFilters(vector<string>& filters, bool remote){
 
 // filter by: host, port, key, age
 // example: AGE_LT_600&KEY&PORT_GT_1024
-bool HostInfo::passFilters(vector<string>& filters) {
-    char buff[64];
-    for(const string& filter: filters){
-        strncpy(buff, filter.c_str(), sizeof(buff));
-        char* function, *oper, *value, *b = buff;
-        if( !tokenize(b, buff+sizeof(buff), function, "_") ){ continue; }
-        if( !tokenize(b, buff+sizeof(buff), oper,     "_") ){ continue; }
-        if( !tokenize(b, buff+sizeof(buff), value,    "_") ){ continue; }
+bool HostInfo::passFilters(vector<array<string,3>>& filters) {
+    for(auto& filter: filters){
+        string& func  = filter[0];
+        string& oper  = filter[1];
+        string& value = filter[2];
+        uint32_t intVal = atoi(value.c_str());
 
-        if(0==strncmp(function, "KEY",3) ){ // all HostInfo records with RKEY
+        if( func == "AGE" ){
+            uint32_t tmin = duration_cast<minutes>(system_clock::now() - met).count();
+            if( oper == "LT" ){
+                if( tmin >= intVal ) { return false; }
+            } else if( oper == "GT" ){
+                if( tmin <= intVal ) { return false; }
+            }
+        } else if( func == "IP" ){
+            if( oper == "LT" ){
+                if( host >= intVal ) { return false; }
+            } else if( oper == "GT" ){
+                if( host <= intVal ) { return false; }
+            }
+        } else if( func == "PORT" ){
+            if( oper == "LT" ){
+                if( port >= intVal ) { return false; }
+            } else if( oper == "GT" ){
+                if( port <= intVal ) { return false; }
+            }
+        } else if( func == "KEY" ){ // all HostInfo records with RKEY
             if( !key ) { return false; }
-        } else if(0==strncmp(function, "AGE",3) ){
-            int tmin = duration_cast<minutes>(system_clock::now() - met).count();
-            if(0==strncmp(oper, "LT",2) ){
-                if( tmin >= atoi(value) ) { return false; }
-            } else if(0==strncmp(oper, "GT",2) ){
-                if( tmin <= atoi(value) ) { return false; }
-            }
-        } else if(0==strncmp(function, "IP",2) ){
-            uint32_t ip = atoi(value);
-            if(0==strncmp(oper, "LT",2) ){
-                if( host >= ip ) { return false; }
-            } else if(0==strncmp(oper, "GT",2) ){
-                if( host <= ip ) { return false; }
-            }
-        } else if(0==strncmp(function, "PORT",4) ){
-            if(0==strncmp(oper, "LT",2) ){
-                if( port >= atoi(value) ) { return false; }
-            } else if(0==strncmp(oper, "GT",2) ){
-                if( port <= atoi(value) ) { return false; }
-            }
         }
     } // for(filters)
     return true;
@@ -181,7 +168,7 @@ void RemoteData::addContact(IPADDR ip, uint16_t port){
 
 
 // relevant "select" flags: LKEY, TIME, LSVC, LSVCF, COUNTS???
-int LocalData::send(Sock& sock, uint32_t select, vector<string>& filters, Signature& signer){
+int LocalData::send(Sock& sock, uint32_t select, vector<array<string,3>>& filters, Signature& signer){
     bool sign = select & SELECTION::SIGN;
 
     int bytes = 0;
@@ -224,7 +211,7 @@ int LocalData::send(Sock& sock, uint32_t select, vector<string>& filters, Signat
 
 
 // relevant "select" flags: IP, PORT, AGE, RKEY, RSVC, RSVCF
-int RemoteData::send(Sock& sock, uint32_t select, vector<string>& filters, Signature& signer){
+int RemoteData::send(Sock& sock, uint32_t select, vector<array<string,3>>& filters, Signature& signer){
     bool sign = select & SELECTION::SIGN;
     shared_lock lock(mutx);
 

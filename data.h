@@ -4,6 +4,7 @@
 #include <memory> // shared_ptr
 #include <string>
 #include <vector>
+#include <array>
 #include <unordered_map>
 #include <mutex>
 #include <shared_mutex> // since C++17
@@ -24,7 +25,7 @@ struct Service {
     string other;               // user defined filed can be path or description or id or resourse defintion
 
     Service* parse(const string& service, uint32_t myIP);
-    bool passFilters(vector<string>& filters, bool remote);
+    bool passFilters(vector<array<string,3>>& filters, bool remote);
     bool operator==(const Service& rhs){ return fullDescription == rhs.fullDescription; }
 };
 void mergeServices(vector<Service>& dest, vector<Service>& source); // helper free function
@@ -37,7 +38,7 @@ struct LocalData {
     PubKey localPubKey; // local service public key
     vector<Service> services; // a list of local services we are "advertising" // TODO: should it be a set?
 
-    int send(Sock& sock, uint32_t select, vector<string>& filters, Signature& signer);
+    int send(Sock& sock, uint32_t select, vector<array<string,3>>& filters, Signature& signer);
     Service* addService(const string& service);
 };
 
@@ -59,7 +60,7 @@ struct HostInfo {                    // Information about remote services from o
     uint16_t referPort;              // port of the service where we got this HostInfo record
 
     HostInfo();
-    bool passFilters(vector<string>& filters);
+    bool passFilters(vector<array<string,3>>& filters);
     Service* addService(const string& service);
 };
 
@@ -73,7 +74,7 @@ struct RemoteData {
     unordered_multimap<IPADDR, HostInfo> hosts; // IP to HostInfo map
 
     // send HostInfo records through the writer to a remote host
-    int send(Sock& sock, uint32_t select, vector<string>& filters, Signature& signer);
+    int send(Sock& sock, uint32_t select, vector<array<string,3>>& filters, Signature& signer);
     // Remember this host/port for crawler to contact
     void addContact(IPADDR ip, uint16_t port);
 };

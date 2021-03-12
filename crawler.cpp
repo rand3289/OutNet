@@ -295,7 +295,7 @@ int Crawler::merge(vector<HostInfo>& newData){
         if( found ){ continue; } // continue iterating over newData
 
         auto it = rdata.hosts.emplace( hiNew.host, move(hiNew) ); // insert new HostInfo record
-        auto hinew = it->second; // hiNew is no longer valid after move
+        auto hinew = it->second; // hiNew is no longer valid after move. use hinew
 
         // try matching services by public key if IP or port changed
         // since it has a new ip, use inserted entry (hinew) and delete old
