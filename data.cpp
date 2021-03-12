@@ -88,17 +88,37 @@ Service* Service::parse(const string& servStr, uint32_t myIP){
 }
 
 
-bool Service::passLocalFilters(vector<string> filters){
-    return true; // TODO:
+// Decides if a service passes a filter.
+// There can be two types of service related filters specified in the HTTP GET Query string:
+// local filters apply to local services (start with L) and remote (start with R)
+bool Service::passFilters(vector<string> filters, bool remote){
+    char buff[64];
+    for(const string& filter: filters){
+        strncpy(buff, filter.c_str(), sizeof(buff));
+        char* function, *oper, *value, *b = buff;
+        if(tokenize(b, b+sizeof(buff), function, "_") ){
+            if(  remote && 'R' != *function){ continue; }
+            if( !remote && 'L' != *function){ continue; }
+            ++function; // we checked the first letter
+            string func(function);
+            if(tokenize(b, b+sizeof(buff), oper, "_") ){
+                if(tokenize(b, b+sizeof(buff), value, "_") ){
+                    if( 0 == func.compare("SVC") ){
+                        if(service != value) { return false; }
+                    } else if( 0 == func.compare("PROT") ){
+                        if(protocol != value){ return false; }
+                    } else if( 0 == func.compare("PORT") && string("EQ").compare(oper) == 0 ){ // TODO: implement LT, GT
+                        if(port != atoi(value)){ return false; }
+                    }
+                }
+            }
+        }
+    }
+    return true;
 }
 
 
-bool Service::passRemoteFilters(vector<string> filters){
-    return true; // TODO:
-}
-
-
-// when evaluating filters ex: PORT_EQ_3214  "PORT_EQ" part can be switch() on as if it was uint64_t
+// filter by: host, port, key, 
 bool HostInfo::passFilters(vector<string> filters){
     return true; // TODO:
 }
@@ -148,7 +168,7 @@ int LocalData::send(Sock& sock, uint32_t select, vector<string>& filters, Signat
     shared_lock lock(mutx);
 
     for(Service& s: services){
-        if( s.passLocalFilters(filters) ){
+        if( s.passFilters(filters, false) ){
             toSend.push_back(&s);
         }
     }
@@ -215,7 +235,7 @@ int RemoteData::send(Sock& sock, uint32_t select, vector<string>& filters, Signa
             bool includeAllServices = !(select & SELECTION::RSVCF);
             vector<Service*> svc;
             for( Service& s: hi->services ){
-                if(includeAllServices || s.passRemoteFilters(filters)){
+                if(includeAllServices || s.passFilters(filters, true)){
                     svc.push_back(&s);
                 }
             }

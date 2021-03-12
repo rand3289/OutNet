@@ -94,7 +94,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
 
     // local data
     LocalData ld;
-    if(selectRet & SELECTION::LKEY){
+    if(selectRet & SELECTION::LKEY){ // TODO: check if key is blacklisted
         rdsize = sock.read(&ld.localPubKey, sizeof(PubKey));
         if(sign){ signer.write(&ld.localPubKey, sizeof(PubKey)); }
         if( rdsize != sizeof(PubKey) ){

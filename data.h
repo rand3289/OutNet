@@ -24,8 +24,7 @@ struct Service {
     string other;               // user defined filed can be path or description or id or resourse defintion
 
     Service* parse(const string& service, uint32_t myIP);
-    bool passLocalFilters(vector<string> filters);
-    bool passRemoteFilters(vector<string> filters);
+    bool passFilters(vector<string> filters, bool remote);
     bool operator==(const Service& rhs){ return fullDescription == rhs.fullDescription; }
 };
 void mergeServices(vector<Service>& dest, vector<Service>& source); // helper free function

@@ -38,24 +38,22 @@ N3+1 can be viewed as a Distributed hash table.  Keys can be network protocols, 
 ## Proposed implementation
  N3+1 is implemented by a service with the same name that runs on your machine.  It gathers and provides a list of IPv4 addresses, corresponding port numbers and ages of nodes participating in the N3+1.  In addition, N3+1 lists the types of remote services and local services you run such as your web sites, game servers and P2P services.
 
-When N3+1 starts, it tries to contact some of the known remote N3+1 severs. It collects their information such as public keys and list of services they advertise.  Local services can query N3+1 to find a list of peers.  Querying N3+1 will return a response described below in pseudocode:
+When N3+1 starts, it tries to contact some of the known remote N3+1 severs. It collects their information such as public keys and list of services they advertise.  Local services can query N3+1 to find a list of peers.  Querying N3+1 returns a response described below in pseudocode:
 
 ```cpp
 struct Response {
-    string publicKey;         // RSA public key - send this first so that remote can close connection if key is black listed
-    uint64 dateTime;          // seconds from epoch to this message creation time (UTC/GMT).  Prevents replay attacks with old data.
+    char publicKey[256];      // RSA public key for this service
     vector<string> services;  // local services we are trying to advertise
-    Statistics counts;        // counts of total IP:port:age records, non-null public keys, local services, remote services etc.
-    vector<HostInfo> list;    // list of remote N3+1 instances
-    string signature;         // RSA whole message digital signature - send this last so it can be computed while data is being sent
+    vector<HostInfo> list;    // list of remote (other) service instances this service is aware of. See HostInfo below.
+    char signature[256];      // RSA whole message digital signature
 };
 
 struct HostInfo {             // all fields are in the network byte order
     uint32 host;              // IPv4 address
     uint16 port;              // IPv4 port number (1-65535, 0=reserved)
     uint16 age;               // in minutes (up to 45.5 days old) since the server has been seen on line
-    string key;               // remote N3+1 service' public key
-    vector<string> rservices; // remote services
+    char key[256];            // remote service' public key
+    vector<string> rservices; // remote services being advertised
 };
 ```
 
@@ -108,35 +106,30 @@ Other possible fields: version, internet protocol (tcp / udp / multicast etc...)
 
 Proposed maximum field lengths: priority(char[1]), service class(char[16]), protocol(char[16]), ipproto(char[3]), IP(char[15]), port(char[5]), description or path(char[32]).  Maximum service description length in the range of 96 - 128 bytes.  DNS-SD limits service names to 15 characters.  Key-value pairs are described in rfc6763 section 6.
 
-Since no host names are used, service description encoding can be limited to printable ASCII characters.  User defined name/description/path can be UTF8.
+Service description encoding can be limited to printable ASCII characters.  User defined name/description/path can be UTF8.
 
 Examples: "printer:lpr:8.8.8.8:54321:2nd floor printer"  
-Same device, different protocol:  "printer:ipp:8.8.8.8:54321:2nd floor printer"  
+Same device, different protocol:  "printer:ipp:8.8.8.8:12345:2nd floor printer"  
 
 
 ## N3+1 service query parameters
- N3+1 can be queried to return local info and/or a filtered list of discovered remote N3+1 services.  For example a query can limit the results by service type, availability of "remote public keys" or what fields are included in response.  Requests to N3+1 can include a range of items to return ex: [0-900] inclusive.  Records in the response are always ordered by age.
+ N3+1 can be queried to return local info and/or a filtered list of discovered remote N3+1 services.  For example a query can limit the results by service type, availability of "remote public keys" or what fields are included in response.
 
-Returned fields are specified by passing a "bit field" called SELECT represented by a number:
-* local public key  (LKEY=1)
-* current datetime (TIME=2)
-* local service list (LSVC=4)
-* counts of filtered records, IP:port:age, non-null public keys, local services, remote services etc... (COUNTS=8)
-* IP   (IP=16)
-* port (PORT=32)
-* age  (AGE=64)
-* remote public key (RKEY=128)
-* remote service list (RSVC=256)
-* signature (sign the whole message) (SIGN=512)
-* remote service list filtered by service type/protocol (RSVCF=1024)
-* local service list filtered by service type/protocol (LSVCF=2048)
-* black list (BLIST=4096)
-* white list (WLIST=8192)
+Returned fields can be any of the following:
+* local public key  (LKEY)
+* current datetime (TIME)
+* local service list (LSVC)
+* IP   (IP)
+* port (PORT)
+* age  (AGE)
+* remote public key (RKEY)
+* remote service list (RSVC)
+* signature (sign the whole message) (SIGN)
+* remote service list filtered by service type/protocol or return all services
 
 
-Where as fields are controlled by SELECT parameter, returned records are limited by FILTER parameter:
+Where as fields are controlled by including them in the SELECT parameter, returned records are limited by FILTER parameters:
 * local service type/protocol exact string match
-* range of HostInfo records ex: [0-500] to be able to retrieve n records at a time (RANGE)
 * IP range or equal
 * port range or equal
 * age range of HostInfo records
@@ -150,19 +143,9 @@ Notes
 * For numeric operators greater/less/equal allowed operands are an immediate plus one of RANGE, AGE, RKEYC, IP, PORT, RSVCC
 * For operator "string equal" allowed operands are a constant string plust one of RKEY, RSVC, LSVC
 * REST call (http get) Example: SELECT=2036&FILTER=RANGE_GT_500,RANGE_LT_900,RSVC_EQ_HTTP,RKEYC_GT_0
-
-
-## Implementation hints
-
-* SELECT allows for protocol extension/versioning.
-* Internally handle SELECT bit field as a 64 bit unsigned int.
 * If any of the received bit fields or query parameters are not defined, they are ignored
-* host:port pair forms an ID for any record
-* Create actual methods to filter records named RKEYC_GT(uint32 count) etc... switch() on the name of the function as if it was a uint64
 
-* N3+1 response data is binary to save bandwidth and is encoded using application octet-stream mime type
-* Design N3+1 without protocol identifiers (packet/stream format signature) to be less detectable and less likely to be blocked.
-* Add the ability to query your server back over the same connection when contacted and send only a "delta" of the information.
+* Design N3+1 without protocol identifiers to be less detectable and less likely to be blocked.
 * Reserve age values over 65500  ex: 0xFFFE = "IO error", 0xFFFD = "duplicate signature", 0xFFFC="coming soon", 0xFFFB="broken signature", 0xFFFA="unresponsive", 0xFFF9="wrong protocol", 0xFFF8="untrusted", 0xFFF0="offline", etc...
 
 
