@@ -5,6 +5,7 @@
 
 struct PubSign    { char sign[256]; };
 struct PrivateKey { char  key[256]; };
+
 struct PubKey     {
     char  key[256];
     char* loadFromDisk();

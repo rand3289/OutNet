@@ -99,7 +99,7 @@ bool Service::passFilters(vector<array<string,3>>& filters, bool remote){
         } else if( func ==  prot ){
             if( protocol != value){ return false; }
         } else if( func == lrport ){
-            uint32_t intVal = atoi(value.c_str());
+            uint32_t intVal = stoi(value);
             if( oper == "EQ" ){
                 if( port != intVal ) { return false; }
             } else if( oper == "LT" ){
@@ -120,7 +120,7 @@ bool HostInfo::passFilters(vector<array<string,3>>& filters) {
         string& func  = filter[0];
         string& oper  = filter[1];
         string& value = filter[2];
-        uint32_t intVal = atoi(value.c_str());
+        uint32_t intVal = stoi(value);
 
         if( func == "AGE" ){
             uint32_t tmin = duration_cast<minutes>(system_clock::now() - met).count();

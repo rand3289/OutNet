@@ -29,13 +29,14 @@ public:
 	int read(void* buffer, size_t size);
 	int readLine(void* buffer, const size_t size);
 	int readString(void* buff, const size_t size);
+	int readString(std::string& str);
 	uint16_t read16(bool& error);
 	uint32_t read32(bool& error);
 
 	int write(const void* buffer, size_t size);
 	int write32(uint32_t data);
 	int write16(uint16_t data);
-	int writeString(const std::string& str); // TODO: should this be char* for symmetry with readString() ???
+	int writeString(const std::string& str);
 
     // server - start listening for a connection.  Use ANY_PORT if not binding to a specific port
     constexpr const static uint16_t ANY_PORT = 0;

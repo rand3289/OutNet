@@ -245,6 +245,17 @@ int Sock::writeString(const string& str){
 }
 
 
+int Sock::readString(string& str){
+    unsigned char size; // since size is an unsigned char it can not be illegal
+    int rdsize = read( &size, sizeof(size) );
+    if( 1!=rdsize ){ return -1; } // ERROR
+	str.resize(size+1); // +1 for null char
+    rdsize = read( &str[0], size);
+    if( rdsize!=size ){ return -2; } // ERROR
+	return size;
+}
+
+
 int Sock::readString(void* buff, const size_t buffSize){ // make sure buff is at least 256 char long
     unsigned char size; // since size is an unsigned char it can not be illegal
     int rdsize = read( &size, sizeof(size) );

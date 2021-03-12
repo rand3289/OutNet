@@ -95,9 +95,9 @@ int Config::loadFromDisk(LocalData& lData, BlackList& bList){
         if( keyValue(line, key, value)){
             toLower(key);
             if( key == "configrefresh" ){
-                refreshRate = atoi( value.c_str() );
+                refreshRate = stoi(value);
             } else if (key == "serverport"){
-                ldata->myPort = atoi( value.c_str() );
+                ldata->myPort = stoi(value);
                 foundPort = true;
             }
         }

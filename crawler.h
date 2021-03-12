@@ -14,9 +14,9 @@ class Crawler {
     BlackList& blist;
     int merge(std::vector<HostInfo>& newData);
 public:
-    int queryRemoteService(HostInfo& hi, std::vector<HostInfo>& newData, uint32_t select);
     Crawler(LocalData& lData, RemoteData& rData, BlackList& bList):
             hostCopy(0), portCopy(0), ldata(lData), rdata(rData), blist(bList) {}
+    int queryRemoteService(HostInfo& hi, std::vector<HostInfo>& newData, uint32_t select);
     int loadRemoteDataFromDisk();
     int saveRemoteDataToDisk();
     int run();
