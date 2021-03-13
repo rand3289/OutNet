@@ -25,8 +25,11 @@ struct Service {
     string other;               // user defined filed can be path or description or id or resourse defintion
 
     Service* parse(const string& service, uint32_t myIP);
-    bool passFilters(vector<array<string,3>>& filters, bool remote);
-    bool operator==(const Service& rhs){ return fullDescription == rhs.fullDescription; }
+    bool passFilters(const vector<array<string,3>>& filters, bool remote) const;
+    bool operator==(const Service& rhs) const { return fullDescription == rhs.fullDescription; }
+    bool operator<(const string& rhs) const { return originalDescription < rhs; }
+    bool operator<(const Service& rhs) const { return originalDescription < rhs.originalDescription; }
+    bool less(const Service& rhs) const { return originalDescription < rhs.originalDescription; }
 };
 void mergeServices(vector<Service>& dest, vector<Service>& source); // helper free function
 
@@ -36,7 +39,7 @@ struct LocalData {
     uint32_t myIP;      // public ip of the local service
     uint32_t myPort;    // local service is running on this port
     PubKey localPubKey; // local service public key
-    vector<Service> services; // a list of local services we are "advertising" // TODO: should it be a set?
+    vector<Service> services; // a list of local services we are "advertising"
 
     int send(Sock& sock, uint32_t select, vector<array<string,3>>& filters, Signature& signer);
     Service* addService(const string& service);

@@ -1,6 +1,7 @@
 #include "config.h"
 #include "sock.h" // Sock::ANY_PORT
 #include "utils.h"
+#include <algorithm>
 #include <vector>
 #include <thread>
 #include <string>
@@ -23,6 +24,11 @@ int Config::watch() {
 }
 
 
+struct ServiceString: public string {
+    bool operator<(const Service& serv) const { return compare(serv.originalDescription) < 0; }
+}; // This class provides operator<(Service&) for string.  Use it with stl algorithms
+
+
 // look for *.service in current directory and load their contents into LocalData::services
 int Config::loadServiceFiles(){
     static const string extension = ".service";
@@ -30,39 +36,45 @@ int Config::loadServiceFiles(){
 
     // ~path() destructor crashes on some systems // path cwd = current_path();
     for(auto& p: directory_iterator(".") ){
-        if(p.path().extension() == extension){
-            cout << "found file " << p.path() << endl;
-            ifstream listf (p.path());
-            if( !listf ){ continue; }
-            parseLines(listf, lines);
-        }
+        if(p.path().extension() != extension){ continue; }
+        cout << "found file " << p.path() << endl;
+        ifstream listf (p.path());
+        if( !listf ){ continue; }
+        parseLines(listf, lines);
+    }
+    std::sort( begin(lines), end(lines) ); // set_difference needs sorted data
+
+    vector<string> newServices;
+    vector<Service> oldServices;
+    vector<pair<uint32_t,uint16_t>> portsToOpen;
+
+    unique_lock ulock(ldata->mutx);
+    sort( begin(ldata->services), end(ldata->services) ); // set_difference needs sorted data
+
+    // find newServices(not in ldata->services) and oldServices(not in "lines")
+    vector<ServiceString>& s = * reinterpret_cast<vector<ServiceString>*>( &lines ); // provides operator<(Service&)
+    set_difference( begin(s), end(s), begin(ldata->services), end(ldata->services), back_inserter(newServices));
+    set_difference( begin(ldata->services), end(ldata->services), begin(s), end(s), back_inserter(oldServices));
+
+    for(Service& serv: oldServices){ // delete old services
+        ldata->services.erase( remove( begin(ldata->services), end(ldata->services), serv ) );
     }
 
-    vector<Service*> portsToOpen;
-    unique_lock ulock(ldata->mutx); // lock LocalData before modifying it
-// TODO: completely replace all services with new ones loaded from files.
-// TODO: use set_difference() to find which ports to open or close
-    for(auto& s: lines){
-        bool newService = true;
-        for(Service& ls: ldata->services){
-            if( s == ls.originalDescription ) {
-                newService = false;
-                continue;
-            }
-        }
-        if(newService){
-            Service* serv = ldata->addService(s); // new service
-            if(serv){ // if it is not null, it was successfuly parsed by Service class
-                portsToOpen.push_back(serv);
-            }
-        }        
+    // insert new services and prepare to open ports for them
+    for(const string& serv: newServices){
+        auto s = ldata->addService(serv);
+        if(!s) { continue; } // did it parse correctly?
+        portsToOpen.emplace_back(s->ip, s->port);
     }
-    ulock.unlock();
+    ulock.unlock(); // after unlocking we can open and close ports which can take a while
 
-    for(Service* s: portsToOpen){ // open ports for those services after unlocking ldata
-        openPort(s->ip, s->port); // TODO: close ports for services that no longer exist???
+    for(auto& ipPort: portsToOpen){  // open router ports using UPnP protocol for new services
+        upnp.openPort(ipPort.first, ipPort.second);
     }
 
+    for(auto& old: oldServices){ // close ports for old services
+        upnp.closePort(old.ip, old.port);
+    }
     return 0;
 }
 

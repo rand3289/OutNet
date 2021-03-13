@@ -12,7 +12,6 @@ class Config {
 
     int loadBlackListFiles();
     int loadServiceFiles();
-    int openPort(uint32_t ip, uint16_t port){ return 0; } // open router port using UPnP
 public:
     int loadFromDisk(LocalData& ldata, BlackList& blist);
     int saveToDisk();

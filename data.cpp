@@ -84,15 +84,15 @@ Service* Service::parse(const string& servStr, uint32_t myIP){
 // There can be two types of service related filters specified in the HTTP GET Query string:
 // local filters apply to local services (start with L) and remote (start with R)
 // example: RPROT_EQ_HTTP&RPORT_LT_1025
-bool Service::passFilters(vector<array<string,3>>& filters, bool remote){
+bool Service::passFilters(const vector<array<string,3>>& filters, bool remote) const {
     string svc =    remote ? "RSVC"  : "LSVC";
     string prot =   remote ? "RPROT" : "LPROT";
     string lrport = remote ? "RPORT" : "LPORT";
 
     for(auto& filter: filters){
-        string& func  = filter[0];
-        string& oper  = filter[1];
-        string& value = filter[2];
+        const string& func  = filter[0];
+        const string& oper  = filter[1];
+        const string& value = filter[2];
 
         if( func == svc ){
             if( service != value) { return false; }
