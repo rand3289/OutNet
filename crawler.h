@@ -3,6 +3,7 @@
 #include "data.h"
 #include "sign.h"
 #include <vector>
+#include <string>
 
 
 class Crawler {
@@ -16,7 +17,7 @@ class Crawler {
 public:
     Crawler(LocalData& lData, RemoteData& rData, BlackList& bList):
             hostCopy(0), portCopy(0), ldata(lData), rdata(rData), blist(bList) {}
-    int queryRemoteService(HostInfo& hi, std::vector<HostInfo>& newData, uint32_t select);
+    int queryRemoteService(HostInfo& hi, std::vector<HostInfo>& newData, uint32_t select, std::vector<std::string>* filters = nullptr);
     int loadRemoteDataFromDisk();
     int saveRemoteDataToDisk();
     int run();

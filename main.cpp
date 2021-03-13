@@ -71,6 +71,7 @@ int main(int argc, char* argv[]){
     while(true){
         Sock conn;
         if(INVALID_SOCKET == server.accept(conn) ){ continue; }
+        conn.setRWtimeout(3); // 3 second read/write timeout // TODO: add it to config???
 
         uint32_t ip = conn.getIP();
         if( blist.isBanned(ip) ){

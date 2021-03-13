@@ -13,17 +13,19 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    LocalData ldata;
+    LocalData ldata; // this is all dummy data to create a Crawler object
     RemoteData rdata;
     BlackList blist;
     Crawler crawl(ldata, rdata, blist);
 
-    HostInfo service;
+    HostInfo service; // connect to this service
     service.host = Sock::strToIP(argv[1]);
     service.port = atoi(argv[2] );
-    vector<HostInfo> newData;
-    uint32_t select = SELECTION::IP | SELECTION::PORT | SELECTION::RSVC;
-    crawl.queryRemoteService(service, newData, select); // TODO: add a way to pass filters
+
+    vector<HostInfo> newData; // results will be returned here
+    uint32_t select = SELECTION::IP | SELECTION::PORT | SELECTION::RSVC; // we want remote IP:PORT and services
+    vector<string> filters; // = {"RPROT=ftp"}; // we are looking for FTP servers
+    crawl.queryRemoteService(service, newData, select, &filters);
 
     for(HostInfo& hi: newData){
         cout << Sock::ipToString(hi.host) << ":" << hi.port << endl;

@@ -12,6 +12,10 @@ using namespace std;
     #define errno WSAGetLastError()
     typedef int socklen_t;
     typedef SOCKADDR sockaddr;
+    struct timeval { // in windows it is a little endian DWORD
+        uint32_t tv_sec: 10; // divides by 1024 not 1000 but close enough
+        uint32_t tv_usec: 22;
+    };
 #else // posix
     #include <unistd.h> // close()
     #include <netdb.h> // gethostbyname()
@@ -32,6 +36,25 @@ void initNetwork(){
         cerr << "Error upon WSAStartup()" << endl;
     }
 #endif
+}
+
+
+// set read()/write() timeout otherwise a remote client/server can get our process stuck!
+int Sock::setRWtimeout(int seconds){
+	struct timeval tv;
+	tv.tv_usec = 0;
+	tv.tv_sec = seconds;
+	if( setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, (char*)&tv, sizeof tv) ){ // RCV
+		int err = errno;
+		cerr << "error connecting to remote host via TCP: " << strerror(err) << " (" << err << ")" << endl;
+		return err; // errno returns positive numbers
+	}
+	if( setsockopt(s, SOL_SOCKET, SO_SNDTIMEO, (char*)&tv, sizeof tv) ){ // SND
+		int err = errno;
+		cerr << "error connecting to remote host via TCP: " << strerror(err) << " (" << err << ")" << endl;
+		return err; // errno returns positive numbers
+    }
+	return 0;
 }
 
 
@@ -172,8 +195,6 @@ int Sock::close(void){
 	return 0;
 }
 
-
-// TODO: rewrite read()/write() to accept a timeout
 
 int Sock::write(const void* buff, size_t size){
 	cout << "WRITE: " << size << endl; // DEBUGGING!!!

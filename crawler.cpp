@@ -14,7 +14,8 @@
 using namespace std;
 
 
-int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_t select){
+// filters is optional. It defaults to nullptr.
+int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_t select, vector<string>* filters){
     shared_lock slock(rdata.mutx);
 
     cout << "Connecting to " << Sock::ipToString(hi.host) << ":" << hi.port << endl;
@@ -43,6 +44,9 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
     if( 0 == hi.offlineCount && hi.seen > system_clock::from_time_t(0) ){
         int ageMinutes = duration_cast<seconds>(system_clock::now() - hi.seen).count();
         ss << "&AGE_LT_" << ageMinutes;
+    }
+    if(filters){ // did the caller include any query parameters?
+        for(string& f: *filters){ ss << "&" << f; }
     }
     ss << " HTTP/1.1\n";
 
