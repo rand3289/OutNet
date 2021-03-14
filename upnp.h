@@ -5,8 +5,8 @@
 class UPnP {
 public:
     UPnP(){}
-    int openPort( IPADDR ip, uint16_t port){ return 0; }
-    int closePort(IPADDR ip, uint16_t port){ return 0; }
+    int openPort( IPADDR ip, uint16_t port){ return 0; } // TODO:
+    int closePort(IPADDR ip, uint16_t port){ return 0; } // TODO:
 };
 
 #endif // UPNP_H_INCLUDED

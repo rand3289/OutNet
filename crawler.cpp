@@ -98,11 +98,15 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
 
     // local data
     LocalData ld;
-    if(selectRet & SELECTION::LKEY){ // TODO: check if key is blacklisted
+    if(selectRet & SELECTION::LKEY){
         rdsize = sock.read(&ld.localPubKey, sizeof(PubKey));
         if(sign){ signer.write(&ld.localPubKey, sizeof(PubKey)); }
         if( rdsize != sizeof(PubKey) ){
             cerr << "ERROR: reading remote public key" << endl;
+            return 0;
+        }
+        if( blist.isBanned(ld.localPubKey) ){
+            cerr << "ERROR: key is banned. Disconnecting!" << endl;
             return 0;
         }
     }
@@ -163,6 +167,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
         hil.referIP = hi.host;
         hil.referPort = hi.port;
         hil.met = system_clock::now();
+        bool discard = false; // if record is bad, continue reading but discard it at the end
 
         if( selectRet & SELECTION::IP ){ // do not use Sock::read32() - IP does not need ntohl()
             rdsize = sock.read( &hil.host, sizeof(hil.host));
@@ -182,14 +187,14 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
             }
         }
 
-        if( hil.host==0 || hil.port==0 ){ // throw away services with invalid host or port
-            unverifiedData.pop_back();
-            continue;
-        }
+        if( selectRet&SELECTION::IP && selectRet&SELECTION::PORT ){
+            if( hil.host==0 || hil.port==0 || !Sock::isRoutable(hil.host) ){
+                discard = true; // throw away services with invalid host or port
+            }
 
-        if( hil.host==hostCopy && hil.port==portCopy && selectRet&SELECTION::IP && selectRet&SELECTION::PORT ){
-            unverifiedData.pop_back(); // just found myself in the list of IPs
-            continue;
+            if( hil.host==hostCopy && hil.port==portCopy){
+                discard = true; // just found myself in the list of IPs
+            }
         }
 
         if( selectRet & SELECTION::AGE ){
@@ -218,6 +223,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
                     cerr << "ERROR reading public key." << endl;
                     return 0;
                 }
+                if( blist.isBanned(*hil.key) ) { discard = true; }
             }
         }
 
@@ -238,6 +244,10 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
                 }
                 hil.addService(buff);
             }
+        }
+
+        if( discard ){
+            unverifiedData.pop_back();
         }
     } // for (adding HostInfo)
 
