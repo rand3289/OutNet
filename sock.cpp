@@ -4,35 +4,29 @@
 #include <cstring>  // memset()
 using namespace std;
 
-#ifdef WIN32
-    #pragma comment(lib, "Ws2_32.lib") // link to winsock2 library
-    #define ::close(s) closesocket(s)
-//    #define UNREACHABLE WSAECONNRESET
+#ifdef _WIN32
+    #define close(s) closesocket(s)
     #undef errno // do not use stdlib version in this file
     #define errno WSAGetLastError()
     typedef int socklen_t;
     typedef SOCKADDR sockaddr;
-    struct timeval { // in windows it is a little endian DWORD
-        uint32_t tv_sec: 10; // divides by 1024 not 1000 but close enough
-        uint32_t tv_usec: 22;
-    };
 #else // posix
     #include <unistd.h> // close()
     #include <netdb.h> // gethostbyname()
     #include <sys/types.h>
     #include <sys/socket.h>
+    #include <arpa/inet.h> // inet_ntop()
     #define SOCKET_ERROR   (-1)
-//    #define UNREACHABLE    ECONNREFUSED
 #endif
 
 
 void initNetwork(){
-#ifdef WIN32
+#ifdef _WIN32
     static bool initialized = false;
     if(initialized){ return; }
     initialized = true;
     WSADATA wsaData;
-    if(WSAStartup(0x0202,&wsd)){
+    if(WSAStartup(0x0202,&wsaData)){
         cerr << "Error upon WSAStartup()" << endl;
     }
 #endif
@@ -132,7 +126,7 @@ int Sock::listen(uint16_t port){
 	}
 
     int reuse = 1; // allow binding to a port if previous socket is lingering
-    if ( 0 > setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) ){
+    if ( 0 > setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char*)&reuse, sizeof(reuse)) ){
 		int err = errno;
         cerr << "Error in setsockopt(SO_REUSEADDR): "<< strerror(err) << " (" << err << ")" << endl;
 		return INVALID_SOCKET;
@@ -181,12 +175,12 @@ Sock::Sock(SOCKET socket): s(socket) {
 
 Sock::~Sock(){
     if(s != INVALID_SOCKET){
-        close();
+        closeSock();
     }
 }
 
 
-int Sock::close(void){
+int Sock::closeSock(void){
 	if(::close(s)){
 		int err = errno;
 		cerr << "error closing socket: " << strerror(err) << " (" << err << ")" << endl;
@@ -202,7 +196,7 @@ int Sock::write(const void* buff, size_t size){
 		cerr << "Socket not initialized - Can't write." << endl;
 		return -1;
 	}
-	return send(s,buff,size,0);
+	return send(s, (char*) buff, size, 0);
 }
 
 
@@ -212,7 +206,7 @@ int Sock::read(void* buff, size_t size){
 		cerr << "Socket not initialized - Can't read." << endl;
 		return -1;
 	}
-	return recv(s, buff, size, 0);
+	return recv(s, (char*) buff, size, 0);
 //	return recv(s, buff, size, MSG_DONTWAIT);
 }
 
@@ -307,13 +301,15 @@ bool Sock::isRoutable(uint32_t ip){ // is it routable or non-routable IP ?
 }
 
 
-#include <arpa/inet.h> // inet_ntop()
 string Sock::ipToString(uint32_t ip){
+#ifdef _WIN32
+    unsigned char* ipc = (unsigned char*) &ip;
+    stringstream ss; // TODO: is ip in network byte order?
+    ss << ipc[0] << "." << ipc[1] << "." << ipc[2] << "." << ipc[3];
+    return ss.str();
+#else
     char buff[16];
     inet_ntop(AF_INET, &ip, buff, sizeof(buff));
-	return string(buff);
-//	unsigned char* ipc = (unsigned char*) &ip;
-//	stringstream ss; // TODO: is ip in network byte order?
-//	ss << ipc[0] << "." << ipc[1] << "." << ipc[2] << "." << ipc[3];
-//	return ss.str();
+    return string(buff);
+#endif
 }

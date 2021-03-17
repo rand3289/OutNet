@@ -2,7 +2,7 @@
 #define SOCK_H_INCLUDED
 
 #include <string>
-#ifdef WIN32
+#ifdef _WIN32
     #include <winsock2.h>
     typedef SOCKADDR_IN sockaddr_in;
 #else // posix
@@ -20,12 +20,12 @@ class Sock { // TCP socket
 public:
 	Sock();
 	Sock(SOCKET socket); // wrap an accepted connected socket in the Sock class
-	~Sock();             // calls close()
+	~Sock();             // calls closeSock()
 
 	int connect(const char * ip,  uint16_t port); // connect to remote server
-    int connect(uint32_t ip, uint16_t port); // ip has to be in the network byte order???
-    int setRWtimeout(int seconds); // set read() and write() timeouts
-	int close(void);
+	int connect(uint32_t ip, uint16_t port); // ip has to be in the network byte order???
+	int setRWtimeout(int seconds); // set read() and write() timeouts
+	int closeSock(void);
 
 	int read(void* buffer, size_t size);
 	int readLine(void* buffer, const size_t size);
@@ -39,12 +39,12 @@ public:
 	int write16(uint16_t data);
 	int writeString(const std::string& str);
 
-    // server - start listening for a connection.  Use ANY_PORT if not binding to a specific port
-    constexpr const static uint16_t ANY_PORT = 0;
+	// server - start listening for a connection.  Use ANY_PORT if not binding to a specific port
+	constexpr const static uint16_t ANY_PORT = 0;
 	int listen(uint16_t port);
 	// accept an incoming connection on a listening server socket and return a client socket
 	SOCKET accept();
-	int accept(Sock& connection); // recommended way of accepting connection
+	SOCKET accept(Sock& connection); // recommended way of accepting connection
 
 	// bound server port even if ANY_PORT was used in listen() or remote port after accept() or connect()
 	uint16_t getPort() const { return ntohs(ip.sin_port); }
