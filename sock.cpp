@@ -34,7 +34,7 @@ void initNetwork(){
 
 int err(const string& msg) { // errno returns positive numbers
 	int error = errno;
-#ifdef _WIN32
+#ifdef _MSC_VER // Visual Studio only. MinGW-w64 has a different strerror_s() definition
 	char buff[128];
 	strerror_s(buff, error);
 	cerr << "ERROR " << msg << buff << " (" << error << ")" << endl;
