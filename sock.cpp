@@ -90,7 +90,7 @@ uint32_t Sock::strToIP(const char* addr){
 
 int Sock::connect(const char* addr, uint16_t port){
 	uint32_t ip = strToIP(addr);
-	return 0==ip ? INVALID_SOCKET : connect(ip, port);
+	return 0==ip ? -1 : connect(ip, port);
 }
 
 
@@ -122,14 +122,14 @@ int Sock::listen(uint16_t port){
 	if(s==INVALID_SOCKET){
 		int err = errno;
 		cerr << "Error creating socket: " << strerror(err) << " (" << err << ")" << endl;
-		return INVALID_SOCKET;
+		return -1;
 	}
 
     int reuse = 1; // allow binding to a port if previous socket is lingering
     if ( 0 > setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char*)&reuse, sizeof(reuse)) ){
 		int err = errno;
         cerr << "Error in setsockopt(SO_REUSEADDR): "<< strerror(err) << " (" << err << ")" << endl;
-		return INVALID_SOCKET;
+		return -2;
     }
 
 	int size = sizeof(ip);
@@ -140,18 +140,18 @@ int Sock::listen(uint16_t port){
 	if ( SOCKET_ERROR==bind(s, (sockaddr*) &ip, size)){
 		int err = errno;
 		cerr << "error binding to port " << port << ": " << strerror(err) << " (" << err << ")" << endl;
-		return INVALID_SOCKET;
+		return -3;
 	}
 	if ( SOCKET_ERROR==getsockname(s, (sockaddr*) &ip, (socklen_t*)&size)){
 		int err = errno;
 		cerr << "error getting bound socket information: " << strerror(err) << " (" << err << ")" << endl;
-		return INVALID_SOCKET;
+		return -4;
 	}
 
 	if( SOCKET_ERROR == ::listen(s, SOMAXCONN) ){
 		int err = errno;
 		cerr << "error putting the socket into listening mode: " << strerror(err) << " (" << err << ")" << endl;
-		return INVALID_SOCKET;
+		return -5;
 	}
 
 	return 0;

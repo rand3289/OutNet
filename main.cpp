@@ -46,7 +46,7 @@ int main(int argc, char* argv[]){
     // first time start running on a random port (ANY_PORT)
     // but if service ran before, reuse the port number
     Sock server;
-    if( (int)INVALID_SOCKET == server.listen(ldata.myPort) ){
+    if( server.listen(ldata.myPort) < 0 ){
         cerr << "ERROR listening for connections on port " << ldata.myPort << ".  Exiting." << endl;
         return 1;
     }
@@ -70,7 +70,7 @@ int main(int argc, char* argv[]){
     Response response;
     while(true){
         Sock conn;
-        if(INVALID_SOCKET == server.accept(conn) ){ continue; }
+        if( server.accept(conn) < 0 ){ continue; }
         conn.setRWtimeout(3); // 3 second read/write timeout // TODO: add it to config???
 
         uint32_t ip = conn.getIP();
