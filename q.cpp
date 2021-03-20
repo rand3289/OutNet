@@ -1,5 +1,7 @@
-// this is a stand alone utility. it queries the service.  to compile:
+// this is a stand alone utility. it queries the service.  to compile on linux:
 // g++ --std=c++20 -g -Wall -oq q.cpp sock.cpp crawler.cpp data.cpp sign.cpp utils.cpp -lpthread
+// to compile on windows under MinGW-W64:
+// g++ --std=c++20 -g -Wall -oq q.cpp sock.cpp crawler.cpp data.cpp sign.cpp utils.cpp -lpthread -lwsock32 -static
 #include "data.h"
 #include "crawler.h"
 #include "sock.h"
