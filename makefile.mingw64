@@ -9,7 +9,7 @@ OBJ = main.o sock.o data.o crawler.o config.o http.o utils.o sign.o
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 outnet: $(OBJ)
-	$(CC) -o $@ $^ -lpthread -lwsock32
+	$(CC) -o $@ $^ -lpthread -lwsock32 -static
 
 clean:
 	/bin/rm -f *.o
