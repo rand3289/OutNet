@@ -7,8 +7,8 @@
 #include <string>
 
 class Sock;
-class LocalData;
-class RemoteData;
+struct LocalData;
+struct RemoteData;
 
 class Request{ // parse() returns QUERY bit field
     static bool parseFilter(char* filter, std::array<std::string,3>& funcOperVal);

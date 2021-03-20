@@ -15,7 +15,7 @@ char* PubKey::loadFromDisk(){
 }
 
 
-Signature::Signature(){ // load private key from disk
+Signature::Signature(): signature(), privateKey() { // load private key from disk
     ifstream privkey(privateKeyFile, std::ios::binary);
     if(!privkey){ cerr << "ERROR loading private key from disk." << endl; }
     privkey >> privateKey.key;

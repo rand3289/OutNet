@@ -46,7 +46,7 @@ int main(int argc, char* argv[]){
     // first time start running on a random port (ANY_PORT)
     // but if service ran before, reuse the port number
     Sock server;
-    if( INVALID_SOCKET == server.listen(ldata.myPort) ){
+    if( (int)INVALID_SOCKET == server.listen(ldata.myPort) ){
         cerr << "ERROR listening for connections on port " << ldata.myPort << ".  Exiting." << endl;
         return 1;
     }
