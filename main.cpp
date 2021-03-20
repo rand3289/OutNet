@@ -70,7 +70,7 @@ int main(int argc, char* argv[]){
     Response response;
     while(true){
         Sock conn;
-        if( server.accept(conn) < 0 ){ continue; }
+        if( INVALID_SOCKET == server.accept(conn) ){ continue; }
         conn.setRWtimeout(3); // 3 second read/write timeout // TODO: add it to config???
 
         uint32_t ip = conn.getIP();
