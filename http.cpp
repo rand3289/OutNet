@@ -104,7 +104,12 @@ void Response::writeDebug(Sock& conn, uint32_t select, std::vector<array<string,
         ss << f[0] << "_" << f[1] << "_" << f[2] << "<br>";
     }
     time_t now = time(NULL);
-    std::tm lnow = *localtime(&now);
+    std::tm lnow;
+#ifdef _WIN32 // fucking MSFT
+    localtime_s(&lnow, &now);
+#else
+    localtime_r(&now, &lnow);
+#endif
     ss << put_time(&lnow,"%c %Z") << "<br>";
     ss << "</body> </html>";
     conn.write(ss.str().c_str(), ss.str().size() );

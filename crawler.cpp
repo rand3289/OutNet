@@ -44,7 +44,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
     }
     // add "filter by time" if remote was contacted before. get new data only
     if( 0 == hi.offlineCount && hi.seen > system_clock::from_time_t(0) ){
-        int ageMinutes = duration_cast<seconds>(system_clock::now() - hi.seen).count();
+        int ageMinutes = (int) duration_cast<seconds>(system_clock::now() - hi.seen).count();
         ss << "&AGE_LT_" << ageMinutes;
     }
     if(filters){ // did the caller include any query parameters?
@@ -130,7 +130,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
             return 0;
         }
         // check that timestamp is not too long in the past, otherwise it can be a replay attack
-        uint32_t now = time(nullptr); // unix time does not depend on a timezone
+        uint32_t now = (uint32_t) time(nullptr); // unix time does not depend on a timezone
         if( now - timeRemote > 10*60 ){
             cerr << "ERROR: remote time stamp is older than 10 minutes!  Discarding data." << endl;
             return 0;

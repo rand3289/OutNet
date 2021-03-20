@@ -32,6 +32,17 @@ void initNetwork(){
 #endif
 }
 
+int err(const string& msg) { // errno returns positive numbers
+	int error = errno;
+#ifdef _WIN32
+	char buff[128];
+	strerror_s(buff, error);
+	cerr << "ERROR " << msg << buff << " (" << error << ")" << endl;
+#else
+	cerr << "ERROR " << msg << strerror(error) << " (" << error << ")" << endl;
+#endif
+	return error;
+}
 
 // set read()/write() timeout otherwise a remote client/server can get our process stuck!
 int Sock::setRWtimeout(int seconds){
@@ -39,14 +50,10 @@ int Sock::setRWtimeout(int seconds){
 	tv.tv_usec = 0;
 	tv.tv_sec = seconds;
 	if( setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, (char*)&tv, sizeof tv) ){ // RCV
-		int err = errno;
-		cerr << "error connecting to remote host via TCP: " << strerror(err) << " (" << err << ")" << endl;
-		return err; // errno returns positive numbers
+	    return err("connecting to remote host via TCP: "); // errno returns positive numbers
 	}
 	if( setsockopt(s, SOL_SOCKET, SO_SNDTIMEO, (char*)&tv, sizeof tv) ){ // SND
-		int err = errno;
-		cerr << "error connecting to remote host via TCP: " << strerror(err) << " (" << err << ")" << endl;
-		return err; // errno returns positive numbers
+		return err("connecting to remote host via TCP: "); // errno returns positive numbers
     }
 	return 0;
 }
@@ -65,9 +72,7 @@ int Sock::connect(uint32_t ipaddr, uint16_t port){
 	ip.sin_addr.s_addr = ipaddr;
 
 	if( ::connect(s, (sockaddr*)&ip, sizeof(ip) ) ){
-		int err = errno;
-		cerr << "error connecting to remote host via TCP: " << strerror(err) << " (" << err << ")" << endl;
-		return err; // errno returns positive numbers
+		return err("connecting to remote host via TCP: ");
 	}
 	return 0;
 }
@@ -99,8 +104,7 @@ SOCKET Sock::accept(){
 	socklen_t size = sizeof(ipr);
 	SOCKET serv = ::accept(s, (sockaddr*)&ipr, &size);
 	if(INVALID_SOCKET == serv ){
-		int err = errno;
-		cerr << "error accepting connection: " << strerror(err) << " (" << err << ")" << endl;
+		err("accepting connection: ");
 	}
 	return serv;
 }
@@ -110,8 +114,7 @@ SOCKET Sock::accept(Sock& conn){
 	socklen_t size = sizeof(conn.ip);
 	conn.s = ::accept(s, (sockaddr*)&conn.ip, &size);
 	if(INVALID_SOCKET == conn.s ){
-		int err = errno;
-		cerr << "error accepting connection: " << strerror(err) << " (" << err << ")" << endl;
+		err("accepting connection: ");
 	}
 	return conn.s;
 }
@@ -120,15 +123,13 @@ SOCKET Sock::accept(Sock& conn){
 int Sock::listen(uint16_t port){
  	s = socket(AF_INET, SOCK_STREAM, 0);
 	if(s==INVALID_SOCKET){
-		int err = errno;
-		cerr << "Error creating socket: " << strerror(err) << " (" << err << ")" << endl;
+		err("creating socket: ");
 		return -1;
 	}
 
     int reuse = 1; // allow binding to a port if previous socket is lingering
     if ( 0 > setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char*)&reuse, sizeof(reuse)) ){
-		int err = errno;
-        cerr << "Error in setsockopt(SO_REUSEADDR): "<< strerror(err) << " (" << err << ")" << endl;
+        err("in setsockopt(SO_REUSEADDR): ");
 		return -2;
     }
 
@@ -138,19 +139,16 @@ int Sock::listen(uint16_t port){
 	ip.sin_addr.s_addr = INADDR_ANY;
 
 	if ( SOCKET_ERROR==bind(s, (sockaddr*) &ip, size)){
-		int err = errno;
-		cerr << "error binding to port " << port << ": " << strerror(err) << " (" << err << ")" << endl;
+		err("binding to port ");
 		return -3;
 	}
 	if ( SOCKET_ERROR==getsockname(s, (sockaddr*) &ip, (socklen_t*)&size)){
-		int err = errno;
-		cerr << "error getting bound socket information: " << strerror(err) << " (" << err << ")" << endl;
+		err("getting bound socket information: ");
 		return -4;
 	}
 
 	if( SOCKET_ERROR == ::listen(s, SOMAXCONN) ){
-		int err = errno;
-		cerr << "error putting the socket into listening mode: " << strerror(err) << " (" << err << ")" << endl;
+		err("putting the socket into listening mode: ");
 		return -5;
 	}
 
@@ -182,8 +180,7 @@ Sock::~Sock(){
 
 int Sock::closeSock(void){
 	if(::close(s)){
-		int err = errno;
-		cerr << "error closing socket: " << strerror(err) << " (" << err << ")" << endl;
+		err("closing socket: ");
 	}
 	s=INVALID_SOCKET; // Connect checks it
 	return 0;
@@ -250,7 +247,7 @@ int Sock::write16(uint16_t data){
 
 int Sock::writeString(const string& str){
     constexpr static const int MAX_STR_LEN = 255;
-    unsigned char iclen = str.length();
+    unsigned char iclen = (unsigned char) str.length();
     if(str.length() > MAX_STR_LEN){
         iclen = MAX_STR_LEN;
         cerr << "WARNING: writeString() truncating string: " << str << endl;
@@ -276,7 +273,7 @@ int Sock::readString(void* buff, const size_t buffSize){ // make sure buff is at
     int rdsize = read( &size, sizeof(size) );
     if( 1!=rdsize ){ return -1; } // ERROR
 	int original = size;
-	size = size < buffSize ? size : buffSize-1;
+	size = (unsigned char) (size < buffSize ? size : buffSize-1);
     rdsize = read( buff, size);
     if( rdsize!=size ){ return -2; } // ERROR
     ((char*)buff)[size] = 0; // null terminate the string

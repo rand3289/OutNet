@@ -181,7 +181,7 @@ int LocalData::send(Sock& sock, uint32_t select, vector<array<string,3>>& filter
     // after 2038 there could be a glitch, but the field will stay 32 bit.
     // timestamp is important to avoid a replay attack
     if(select & SELECTION::TIME){
-        uint32_t now = htonl(time(nullptr));
+        uint32_t now = htonl( (uint32_t) time(nullptr));
         bytes += sock.write( &now, sizeof(now));
         if(sign){ signer.write(&now, sizeof(now)); }
     }
@@ -198,7 +198,7 @@ int LocalData::send(Sock& sock, uint32_t select, vector<array<string,3>>& filter
         }
     }
 
-    uint16_t count = htons( toSend.size() );
+    uint16_t count = htons( (uint16_t) toSend.size() );
     bytes += sock.write( &count, sizeof(count) );
     if(sign){ signer.write(&count, sizeof(count)); }
 
@@ -240,7 +240,7 @@ int RemoteData::send(Sock& sock, uint32_t select, vector<array<string,3>>& filte
         if( select & SELECTION::AGE ){
             auto deltaT = system_clock::now() - hi->seen;
             auto count = deltaT.count()/60000000; // ms to minutes
-            uint16_t age = count > 65500 ? 65500 : count; // reserve all above 65500
+            uint16_t age = (uint16_t) (count > 65500 ? 65500 : count); // reserve all above 65500
             age = htons(age);
             bytes+= sock.write( &age, sizeof(age) );
             if(sign){ signer.write(&age, sizeof(age) ); }
@@ -264,7 +264,7 @@ int RemoteData::send(Sock& sock, uint32_t select, vector<array<string,3>>& filte
                     svc.push_back(&s);
                 }
             }
-            uint16_t count = htons(svc.size());
+            uint16_t count = htons((uint16_t)svc.size());
             bytes+= sock.write( &count, sizeof(count));
             if(sign){ signer.write(&count, sizeof(count)); }
 

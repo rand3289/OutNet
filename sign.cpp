@@ -35,7 +35,7 @@ int Signature::write(const void* data, size_t size){ // compute "PubSign sign" f
 
 
 int Signature::writeString(const string& str){
-    unsigned char size = str.length();
+    unsigned char size = (unsigned char) str.length();
     write(&size, sizeof(size));
     write(str.c_str(), size);
     return size;
@@ -43,7 +43,7 @@ int Signature::writeString(const string& str){
 
 
 int SignatureVerify::writeString(const string& str){
-    unsigned char size = str.length();
+    unsigned char size = (unsigned char) str.length();
     write(&size, sizeof(size));
     write(str.c_str(), size);
     return size;
