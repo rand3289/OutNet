@@ -20,6 +20,8 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
 
     cout << "Connecting to " << Sock::ipToString(hi.host) << ":" << hi.port << endl;
     Sock sock;
+    sock.setRWtimeout(3); // 3 second read/write timeout // TODO: add it to config???
+
     if( sock.connect(hi.host, hi.port) ){
         cerr  << "Error connecting to " << Sock::ipToString(hi.host) << ":" << hi.port << endl;
         slock.unlock(); // there is no upgrade mechanism to unique_lock.
@@ -365,19 +367,20 @@ int Crawler::run(){
             callList.push_back(&hi); // prepare to call that service up
         }
 
+        // Sort pointers to rdata.hosts  No need for exclusive_lock.
+        // only queryRemoteService(), main() and merge() modify individual HostInfo records
         std::sort( begin(callList), end(callList), [=](HostInfo* one, HostInfo* two){ return one->seen < two->seen; } );
         slock.unlock(); // remote data
 
-        // queryRemoteService(), main() and merge() modify individual HostInfo records
         // iterate over data, connect to each remote service, get the data and place into newData
-        const uint32_t select = 0b11111111111111111; // see SELECTION in protocol.h
+        const uint32_t select = 0b11111111111; // see SELECTION in protocol.h
         for(HostInfo* hi: callList){
             queryRemoteService(*hi, newData, select);
         }
 
         int count = merge(newData);
         if( count<=0 ){ this_thread::sleep_for( seconds( (rand()%10) +60 ) ); }
-        else { saveRemoteDataToDisk(); } // found new services
+        else { saveRemoteDataToDisk(); } // found new services // TODO: save only modified/new records
     } // while(true)
     return 0;
 }

@@ -3,6 +3,8 @@
 #include "sock.h"
 #include "protocol.h"
 #include "utils.h"
+#include <iomanip> // put_time()
+#include <ctime> // time(), localtime()
 #include <sstream>
 #include <iostream>
 #include <thread>
@@ -101,8 +103,9 @@ void Response::writeDebug(Sock& conn, uint32_t select, std::vector<array<string,
     for(auto f: filters){
         ss << f[0] << "_" << f[1] << "_" << f[2] << "<br>";
     }
-    time_t now = time(NULL); 
-    ss << ctime(&now) << "<br>";
+    time_t now = time(NULL);
+    std::tm lnow = *localtime(&now);
+    ss << put_time(&lnow,"%c %Z") << "<br>";
     ss << "</body> </html>";
     conn.write(ss.str().c_str(), ss.str().size() );
 }

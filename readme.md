@@ -1,5 +1,7 @@
 ##  N3+1 (Net1) - you are the internet!
 
+This project is work in progress.  It compiles using g++ 10.2 under linux and MinGW-w64 from msys2.org on windows.  All communications are implemented but not tested.  Two major things remain to be implemented: signature and UPnP protocol.
+
 Reading further requires understanding of the following concepts:  
 https://en.wikipedia.org/wiki/Network_service  
 https://en.wikipedia.org/wiki/Server  
@@ -16,7 +18,7 @@ https://en.wikipedia.org/wiki/Domain_name
 https://en.wikipedia.org/wiki/BitTorrent_tracker  
 https://en.wikipedia.org/wiki/Bulletproof_hosting  
 
-Currently domain names allow you to find services on the internet.  There are problems with using domain names for distributing services.  A list of computer names or IPs must be maintained in one location.  An example is a BitTorrent tracker.  Most users on the internet do not have a registered domain name.  You have to pay for registering most domains.  You can not point your domain name to your home IP address since it may change.  Domain names can be shut down by third parties.  Bulletproof hosting should loose its place in a free society.  Even on the internet, detrimental aspects can be voted off instead of being regulated.
+Currently domain names allow you to find services on the internet.  There are problems with using domain names for distributing services.  A list of computer names or IPs must be maintained in one location.  An example is a BitTorrent tracker.  Most users on the internet do not have a registered domain name.  You have to pay for registering most domains.  You can not point your domain name to your home IP address since it may change.  Domain names can be shut down by third parties.  I believe instead of being regulated, detrimental aspects of the internet should be voted off by majority.
 
 Reading further requires understanding of the following concepts:  
 https://en.wikipedia.org/wiki/Digital_signature  
@@ -24,7 +26,7 @@ https://en.wikipedia.org/wiki/Public-key_cryptography
 https://en.wikipedia.org/wiki/Communication_protocol  
 https://en.wikipedia.org/wiki/Open_source  
 
-The alternative to private discovery protocols and domain names is the N3+1 (pronounced net one).  N3+1 is an open source distributed service directory communication (network) protocol.  It is designed to find conventional or distributed (P2P) services on the internet.  Services such as web pages, game servers, ftp servers, messengers, forums, video conferences, P2P and distributed services.  Another goals of N3+1 is to decentralize the internet making it resistant to control and sensorship.  N3+1 provides anonymity.  Instead of a domain or a user name, a public key  is used to identify you, your services and services provided by others.  Public key is generated locally.  Your real name is no longer needed to provide or consume services on the internet.  Your IP address however will be visible to the world unless used in conjunction with a VPN.
+The alternative to private discovery protocols and domain names is the N3+1 (pronounced net one).  N3+1 is an open source distributed service directory network protocol.  It is designed to find conventional or distributed (P2P) services on the internet.  Services such as web pages, game servers, ftp servers, messengers, forums, video conferences, P2P and distributed services.  Another goals of N3+1 is to decentralize the internet making it resistant to control and sensorship.  N3+1 provides anonymity.  Instead of a domain or a user name, a public key  is used to identify you, your services and services provided by others.  Public key is generated locally.  Your real name is no longer needed to provide or consume services on the internet.  Your IP address however will be visible to the world unless used in conjunction with a VPN.
 
 Reading further requires understanding of the following concepts:  
 https://en.wikipedia.org/wiki/Distributed_hash_table  
@@ -152,6 +154,12 @@ Notes
 Reading further requires understanding of the following concepts:  
 https://en.wikipedia.org/wiki/Netsplit  
 https://en.wikipedia.org/wiki/Botnet  
+
+## Generating public/private keys
+To generate public and private key pair we use ssh-keygen utility made available by installing OpenSSH.  By changing to service directory and issuing the following command:  
+ssh-keygen -t ecdsa -b 521 -f ./key_ecdsa  
+Press enter twice to skip passphrase creation.  Two files will be generated key_ecdsa and key_ecdsa.pub  Service will look for these file names upon startup.  Never share your private key!
+
 
 ## Securing against network splits
 
