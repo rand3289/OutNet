@@ -8,7 +8,7 @@ class Config {
     UPnP upnp;
     LocalData* ldata;
     BlackList* blist;
-    uint32_t refreshRate = 60; // seconds default
+    uint32_t refreshRate = 600; // seconds default
 
     int loadBlackListFiles();
     int loadServiceFiles();

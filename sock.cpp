@@ -188,7 +188,7 @@ int Sock::closeSock(void){
 
 
 int Sock::write(const void* buff, size_t size){
-	cout << "WRITE: " << size << endl; // DEBUGGING!!!
+//	cout << "WRITE: " << size << endl; // DEBUGGING!!!
 	if(s==INVALID_SOCKET){
 		cerr << "Socket not initialized - Can't write." << endl;
 		return -1;
@@ -198,13 +198,12 @@ int Sock::write(const void* buff, size_t size){
 
 
 int Sock::read(void* buff, size_t size){
-	cout << "READ: " << size << endl; // DEBUGGING!!!
+//	cout << "READ: " << size << endl; // DEBUGGING!!!
 	if(s==INVALID_SOCKET){
 		cerr << "Socket not initialized - Can't read." << endl;
 		return -1;
 	}
-	return recv(s, (char*) buff, size, 0);
-//	return recv(s, buff, size, MSG_DONTWAIT);
+	return recv(s, (char*) buff, size, 0); //	return recv(s, buff, size, MSG_DONTWAIT);
 }
 
 
@@ -294,6 +293,7 @@ bool Sock::isRoutable(uint32_t ip){ // is it routable or non-routable IP ?
     if( 10 == ipc[0] ){ return false; }
     if( 192 == ipc[0] && 168 == ipc[1] ){ return false; }
     if( 172 == ipc[0] && ipc[1] >= 16 && ipc[1] <=31 ){ return false; }
+    if( 127 == ipc[0] && ipc[1] == 0 && ipc[2] == 0 && ipc[3] == 1 ){ return false; }
     return true; // TODO: make this portable
 }
 

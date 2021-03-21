@@ -75,6 +75,7 @@ int main(int argc, char* argv[]){
 
         uint32_t ip = conn.getIP();
         if( blist.isBanned(ip) ){
+            cout << "Denying REQUEST from " << Sock::ipToString(ip) << " (BANNED)" << endl;
             Response::writeDenied(conn, "BANNED");
             continue;
         }
@@ -82,6 +83,7 @@ int main(int argc, char* argv[]){
         // prevent abuse if host connects too often but allow local IPs repeated queries
         auto& time = connTime[ip];
         if( time > system_clock::now() - minutes(10) && Sock::isRoutable(ip) ){
+            cout << "Denying REQUEST from " << Sock::ipToString(ip) << " (connects too often)" << endl;
             Response::writeDenied(conn, "DENIED");
             continue;
         }
@@ -97,8 +99,10 @@ int main(int argc, char* argv[]){
         }
 
         if(select > 0){ // request parsed correctly and we have a "data selection bitmap"
+            cout << "Normal REQUEST from " << Sock::ipToString(ip) << " select=" << select << endl;
             response.write(conn, select, filters, ldata, rdata);
         } else {
+            cout << "Debug REQUEST from " << Sock::ipToString(ip) << endl;
             Response::writeDebug(conn, select, filters);
         }
     } // while()

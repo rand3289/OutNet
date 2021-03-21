@@ -18,11 +18,11 @@ using namespace std;
 int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_t select, vector<string>* filters){
     shared_lock slock(rdata.mutx);
 
-    cout << "Connecting to " << Sock::ipToString(hi.host) << ":" << hi.port << endl;
+    cout << "Crawler connecting to " << Sock::ipToString(hi.host) << ":" << hi.port << endl;
     Sock sock;
 
     if( sock.connect(hi.host, hi.port) ){
-        cerr  << "Error connecting to " << Sock::ipToString(hi.host) << ":" << hi.port << endl;
+        cerr  << "ERROR connecting to " << Sock::ipToString(hi.host) << ":" << hi.port << endl;
         slock.unlock(); // there is no upgrade mechanism to unique_lock.
         unique_lock ulock(rdata.mutx); // release lock after each connection for other parts to work
         hi.missed = system_clock::now();
@@ -56,7 +56,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
 
     int len = ss.str().length();
     if(len != sock.write(ss.str().c_str(), len ) ){
-        cerr << "Error sending HTTP request." << endl;
+        cerr << "ERROR sending HTTP request." << endl;
         return 0;
     }
 
@@ -68,7 +68,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
     char buff[256];
     int rdsize = sock.readLine(buff, sizeof(buff)-1);
     if( rdsize < 8 || nullptr == strstr(buff,"200") ) {
-        cerr << "Error in queryRemoteService() while parsing: " << buff << endl;
+        cerr << "ERROR in queryRemoteService() while parsing: " << buff << endl;
         return 0;
     }
     while( sock.readLine(buff, sizeof(buff) ) ) {} // skip till empty line is read (HTTP protocol)
@@ -257,7 +257,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
     if(sign){
         PubSign signature;
         if( sizeof(signature) != sock.read( &signature, sizeof(signature) ) ) {
-            cerr << "Crawler: ERROR reading signature from remote host" << endl;
+            cerr << "ERROR reading signature from remote host" << endl;
             return 0;
         }
 
@@ -390,11 +390,13 @@ int Crawler::run(){
 // Data is periodically saved.  When service is restarted, it is loaded back up
 // RemoteData does not have to be locked here
 int Crawler::loadRemoteDataFromDisk(){
+    cout << "Loading remote data from disk." << endl;
     return 0; // TODO:
 }
 
 
 int Crawler::saveRemoteDataToDisk(){ // save data to disk
+    cout << "Saving remote data to disk." << endl;
     shared_lock slock(rdata.mutx);
     return 0; // TODO:
 }
