@@ -50,10 +50,10 @@ int Sock::setRWtimeout(int seconds){
 	tv.tv_usec = 0;
 	tv.tv_sec = seconds;
 	if( setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, (char*)&tv, sizeof tv) ){ // RCV
-	    return err("connecting to remote host via TCP: "); // errno returns positive numbers
+	    return err("setting read timeout: "); // errno returns positive numbers
 	}
 	if( setsockopt(s, SOL_SOCKET, SO_SNDTIMEO, (char*)&tv, sizeof tv) ){ // SND
-		return err("connecting to remote host via TCP: "); // errno returns positive numbers
+		return err("setting write timeout: "); // errno returns positive numbers
     }
 	return 0;
 }

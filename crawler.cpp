@@ -20,7 +20,6 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
 
     cout << "Connecting to " << Sock::ipToString(hi.host) << ":" << hi.port << endl;
     Sock sock;
-    sock.setRWtimeout(3); // 3 second read/write timeout // TODO: add it to config???
 
     if( sock.connect(hi.host, hi.port) ){
         cerr  << "Error connecting to " << Sock::ipToString(hi.host) << ":" << hi.port << endl;
@@ -31,6 +30,8 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
         --hi.rating;
         return 0;
     }
+
+    sock.setRWtimeout(3); // 3 second read/write timeout // TODO: add it to config???
 
     // if we have remote's public key, do not request it (turn it off in select)
     if( hi.signatureVerified ){ // Do not go by pure existence of a key.  It has to be verified!
