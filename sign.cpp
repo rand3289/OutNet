@@ -9,7 +9,7 @@ static const string privateKeyFile = "private.key";
 char* PubKey::loadFromDisk(){
     ifstream pubkey(pubKeyFile, std::ios::binary);
     if(!pubkey){ cerr << "ERROR loading public key from disk." << endl; return nullptr; }
-    pubkey >> key;
+//     pubkey >> key; // BUG !!! reads more than size of key and overwrites other variables! TODO:
     if(!pubkey){ cerr << "ERROR loading public key from disk." << endl; return nullptr; }
     return key;
 }

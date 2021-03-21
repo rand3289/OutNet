@@ -13,4 +13,4 @@ outnet: $(OBJ)
 # warning: Using 'gethostbyname' in statically linked applications requires at runtime the shared libraries from the glibc version used for linking
 
 clean:
-	/bin/rm -f outnet *.o
+	/bin/rm -f *.o
