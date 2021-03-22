@@ -22,7 +22,7 @@ int main(int argc, char* argv[]){
 
     if(3 == argc){ // parse command line parameters IP and port
         uint32_t ip = Sock::strToIP(argv[1]);
-        uint16_t portInt = atoi(argv[2]);
+        uint16_t portInt = strtol(argv[2], nullptr, 10); // base 10
         if( 0!=ip && 0!=portInt ){
             rdata.addContact(ip, portInt);
         }

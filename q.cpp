@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
 
     HostInfo service; // connect to this service
     service.host = Sock::strToIP(argv[1]);
-    service.port = atoi(argv[2] );
+    service.port = strtol(argv[2], nullptr, 10); // base 10
 
     vector<HostInfo> newData; // results will be returned here
     uint32_t select = SELECTION::IP | SELECTION::PORT | SELECTION::RSVC; // we want remote IP:PORT and services

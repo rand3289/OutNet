@@ -35,7 +35,7 @@ bool tokenize( char*& buffer, const char* bufferEnd, char*& token, const string&
         ++buffer; // skip to the end of token
     }
 
-    return false;
+    return buffer>token; // at last one char in the token
 }
 
 

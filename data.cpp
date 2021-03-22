@@ -63,7 +63,7 @@ Service* Service::parse(const string& servStr, uint32_t myIP){
     } else { return nullptr; }
 
     if( tokenize(start, end, token, ":") ){
-        port = atoi(token);
+        port = strtol(token, nullptr, 10); // base 10
         if(0==port){ return nullptr; }
     } else { return nullptr; }
 
@@ -99,7 +99,7 @@ bool Service::passFilters(const vector<array<string,3>>& filters, bool remote) c
         } else if( func ==  prot ){
             if( protocol != value){ return false; }
         } else if( func == lrport ){
-            uint32_t intVal = stoi(value);
+            uint32_t intVal = strtol(value.c_str(), nullptr, 10); // base 10
             if( oper == "EQ" ){
                 if( port != intVal ) { return false; }
             } else if( oper == "LT" ){
@@ -120,7 +120,7 @@ bool HostInfo::passFilters(vector<array<string,3>>& filters) {
         string& func  = filter[0];
         string& oper  = filter[1];
         string& value = filter[2];
-        uint32_t intVal = stoi(value);
+        uint32_t intVal = strtol(value.c_str(), nullptr, 10); // base 10
 
         if( func == "AGE" ){
             uint32_t tmin = duration_cast<minutes>(system_clock::now() - met).count();
