@@ -51,7 +51,7 @@ int SignatureVerify::writeString(const string& str){
 
 
 int SignatureVerify::init(const PubKey& publicKey){ // prepare to verify the signature
-    memcpy(&pubKey, &publicKey, sizeof(pubKey) );
+    pubKey = publicKey; // memcpy(&pubKey, &publicKey, sizeof(pubKey) );
     memset(&signature, 0, sizeof(signature) );
     return 0;
 }

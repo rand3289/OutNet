@@ -9,7 +9,8 @@ OBJ = main.o sock.o data.o crawler.o config.o http.o utils.o sign.o
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 outnet: $(OBJ)
-	$(CC) -o $@ $^ -lpthread # -static
+	$(CC) -o $@ $^ -lpthread
+# -static
 # warning: Using 'gethostbyname' in statically linked applications requires at runtime the shared libraries from the glibc version used for linking
 
 clean:

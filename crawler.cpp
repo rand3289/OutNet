@@ -279,6 +279,10 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
     slock.unlock(); // there is no upgrade mechanism to unique_lock.
     unique_lock ulock2(rdata.mutx); // release the lock after each connection to allow other threads to work
     if(sign) { // if we requested signature verification
+        if(!hi.key && (selectRet&SELECTION::LKEY) ){
+            hi.key = make_shared<PubKey>();
+            *hi.key = ld.localPubKey;
+        }
         hi.signatureVerified = true; // mark signature verified
         ++hi.rating;                 // increase remote's rating for verifying signature
     }
