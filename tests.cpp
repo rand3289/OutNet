@@ -39,9 +39,12 @@ int main(int argc, char* argv[]) {
     service.host = Sock::strToIP(argv[1]);
     service.port = strtol(argv[2], nullptr, 10); // base 10
 
-//    uint32_t select = SELECTION::IP | SELECTION::PORT | SELECTION::RSVC; // we want remote IP:PORT and services
+    uint32_t sel = SELECTION::IP | SELECTION::PORT | SELECTION::RSVC; // we want remote IP:PORT and services
+    queryService(crawl, service, sel);
+    cout << "press enter to continue..." << endl;
+    cin.ignore();
 
-    for(int32_t select = 0; select < 2048; ++select){
+    for(int32_t select = 1; select < 32*1024; ++select){
         queryService(crawl, service, select);
     }
 }

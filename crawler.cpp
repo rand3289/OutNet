@@ -73,23 +73,25 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
     }
     while( sock.readLine(buff, sizeof(buff) ) ) {} // skip till empty line is read (HTTP protocol)
 
+/************ Everything read below this line is signed *************/
     bool error = false;
     uint32_t selectRet = sock.read32(error);
     if(error){
         cerr << "ERROR reading 'select'" << endl;
         return 0;
     }
+// TODO: allow local services to add themselves by connecting to outnet with SPORT= set to their port
+// when outnet connects to it, allow replies without signing the response.
+// when local (non-routable) address is detected, do not enter it as a remote service but local.
     const bool sign = selectRet & SELECTION::SIGN; // is signature requested?
     if( (select & SELECTION::SIGN) && !sign ){ // we requested a signature but it was not returned
-        cerr << "ERROR: remote refused to sign response.  Disconnecting!" << endl; // this is a security problem
+        cerr << "ERROR: remote refused to sign response." << endl; // this is a security problem
         return 0;
     }
-    if(sign){ signer.write(&selectRet, sizeof(selectRet)); }
 
     uint32_t myip = 0;
     if( selectRet & SELECTION::MYIP ){
         myip = sock.read32(error);
-        if(sign){ signer.write(&myip, sizeof(myip)); }
         if(error){
             cerr << "ERROR reading 'my ip'" << endl;
             return 0;
@@ -98,12 +100,11 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
             hostCopy = myip; // TODO: propagate this ip to LocalData::myIP
         } // TODO: if you know your external ip and remote gives you a wrong one, ban it?
     }
-
+// TODO: instead of using LocalData, use a vector<string> lservices; shared_ptr<PubKey> lkey;
     // local data
-    LocalData ld;
+    LocalData ld; 
     if(selectRet & SELECTION::LKEY){
         rdsize = sock.read(&ld.localPubKey, sizeof(PubKey));
-        if(sign){ signer.write(&ld.localPubKey, sizeof(PubKey)); }
         if( rdsize != sizeof(PubKey) ){
             cerr << "ERROR: reading remote public key" << endl;
             return 0;
@@ -113,7 +114,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
             return 0;
         }
     }
-    if(sign){
+    if(sign){ // after receiving remote's public key, we can start prepare to check signature
         if(hi.signatureVerified) { signer.init(*hi.key); } // use old key
         else if(selectRet & SELECTION::LKEY) { signer.init(ld.localPubKey); } // use new key
         else if(hi.key) { signer.init(*hi.key); } // use old key if it exists
@@ -121,6 +122,9 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
             cerr << "ERROR no key available for signature verification." << endl;
             return 0;
         }
+        signer.write(&selectRet, sizeof(selectRet)); // always received
+        if( selectRet & SELECTION::MYIP ){ signer.write(&myip, sizeof(myip)); }
+        if( selectRet & SELECTION::LKEY ){ signer.write(&ld.localPubKey, sizeof(PubKey)); }
     }
 
     if(selectRet & SELECTION::TIME){
@@ -279,6 +283,9 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
     slock.unlock(); // there is no upgrade mechanism to unique_lock.
     unique_lock ulock2(rdata.mutx); // release the lock after each connection to allow other threads to work
     if(sign) { // if we requested signature verification
+        if(ld.services.size() > 0){
+            // TODO:
+        }
         if(!hi.key && (selectRet&SELECTION::LKEY) ){
             hi.key = make_shared<PubKey>();
             *hi.key = ld.localPubKey;
