@@ -16,6 +16,7 @@ HostInfo::HostInfo(): host(0), port(0), signatureVerified(false), offlineCount(0
 
 
 Service* HostInfo::addService(const string& service){
+    if(services.end() != find(services.begin(), services.end(), service) ) { return nullptr; } // exists
     auto s = services.emplace( services.end() )->parse(service, host); // parsing remote service
     if(!s){ services.pop_back(); } // if it was not parsed, delete it
     return s;
@@ -23,6 +24,7 @@ Service* HostInfo::addService(const string& service){
 
 
 Service* LocalData::addService(const string& service){
+    if(services.end() != find(services.begin(), services.end(), service) ) { return nullptr; } // exists
     auto s = services.emplace( services.end() )->parse(service, myIP); // parsing local service
     if(!s){ services.pop_back(); } // if it was not parsed, delete it
     return s;

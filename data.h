@@ -26,6 +26,7 @@ struct Service {
     Service* parse(const std::string& service, uint32_t myIP);
     bool passFilters(const std::vector<std::array<std::string,3>>& filters, bool remote) const;
     bool operator==(const Service& rhs) const { return fullDescription == rhs.fullDescription; }
+    bool operator==(const std::string& rhs) const { return originalDescription == rhs; }
     bool operator<(const std::string& rhs) const { return originalDescription < rhs; }
     bool operator<(const Service& rhs) const { return originalDescription < rhs.originalDescription; }
     bool less(const Service& rhs) const { return originalDescription < rhs.originalDescription; }
