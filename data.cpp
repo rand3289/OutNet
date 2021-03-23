@@ -281,8 +281,8 @@ int RemoteData::send(Sock& sock, uint32_t select, vector<array<string,3>>& filte
 
 
 // is this ip in our black list
-bool BlackList::isBanned(IPADDR host){ return false; }
+bool BlackList::isBanned(IPADDR host){ return false; } // TODO:
 
 
 // is this public key in our black list
-bool BlackList::isBanned(PubKey& key){ return false; }
+bool BlackList::isBanned(PubKey& key){ return false; } // TODO:

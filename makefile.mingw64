@@ -4,12 +4,16 @@ CC = g++
 CFLAGS = -g --std=c++20 -Wall -Wextra -Wno-unused-parameter
 DEPS = config.h crawler.h data.h http.h protocol.h sign.h sock.h upnp.h utils.h
 OBJ = main.o sock.o data.o crawler.o config.o http.o utils.o sign.o
+TESTOBJ =  tests.o sock.o crawler.o data.o sign.o utils.o # for building tests
 
 %.o: %.cpp $(DEPS)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 outnet: $(OBJ)
 	$(CC) -o $@ $^ -lpthread -lwsock32 -static
+
+tests: $(TESTOBJ)
+	$(CC) -o $@ $^ -lwsock32 -static
 
 clean:
 	/bin/rm -f *.o

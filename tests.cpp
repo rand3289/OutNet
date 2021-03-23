@@ -2,6 +2,7 @@
 // g++ --std=c++20 -g -Wall -otests tests.cpp sock.cpp crawler.cpp data.cpp sign.cpp utils.cpp -lpthread
 // to compile on windows under MinGW-W64:
 // g++ --std=c++20 -g -Wall -otests tests.cpp sock.cpp crawler.cpp data.cpp sign.cpp utils.cpp -lpthread -lwsock32 -static
+// using make utility: "make tests" or "make -f makefile.mingw64 tests" on windows
 #include "data.h"
 #include "crawler.h"
 #include "sock.h"
