@@ -7,9 +7,27 @@
 #include <array>
 #include <map> // #include <unordered_map>
 #include <string>
-#include <thread>
+#include <sstream>
 #include <iostream>
+#include <thread>
 using namespace std;
+
+
+std::string selectStr(uint32_t sel){
+    std::stringstream ss;
+    if(sel & LKEY){ ss << "LKEY "; }
+    if(sel & TIME){ ss << "TIME "; }
+    if(sel & SIGN){ ss << "SIGN "; }
+    if(sel & LSVC){ ss << "LSVC "; }
+    if(sel & IP  ){ ss << "IP "; }
+    if(sel & PORT){ ss << "PORT "; }
+    if(sel & AGE ){ ss << "AGE "; }
+    if(sel & RKEY){ ss << "RKEY "; }
+    if(sel & RSVC){ ss << "RSVC "; }
+    if(sel & RSVCF){ ss << "RSVCF "; }
+    if(sel & MYIP){ ss << "MYIP "; }
+    return ss.str();
+}
 
 
 // Three threads: main one serves requests, second (crawler) collects info, 
@@ -99,7 +117,7 @@ int main(int argc, char* argv[]){
         }
 
         if(select > 0){ // request parsed correctly and we have a "data selection bitmap"
-            cout << "Normal REQUEST from " << Sock::ipToString(ip) << " select=" << select << endl;
+            cout << "REQUEST from " << Sock::ipToString(ip) << " (" << selectStr(select) << ")" << endl;
             response.write(conn, select, filters, ldata, rdata);
         } else {
             cout << "Debug REQUEST from " << Sock::ipToString(ip) << endl;

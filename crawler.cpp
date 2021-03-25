@@ -1,6 +1,6 @@
 #include "crawler.h"
 #include "sock.h"
-#include "protocol.h"
+#include "http.h"
 #include "utils.h"
 #include <memory>
 #include <algorithm>
@@ -387,7 +387,7 @@ int Crawler::run(){
         slock.unlock(); // remote data
 
         // iterate over data, connect to each remote service, get the data and place into newData
-        const uint32_t select = 0b11111111111; // see SELECTION in protocol.h
+        const uint32_t select = 0b11111111111; // see SELECTION in http.h
         for(HostInfo* hi: callList){
             queryRemoteService(*hi, newData, select);
         }

@@ -145,7 +145,6 @@
     <ClInclude Include="..\crawler.h" />
     <ClInclude Include="..\data.h" />
     <ClInclude Include="..\http.h" />
-    <ClInclude Include="..\protocol.h" />
     <ClInclude Include="..\sign.h" />
     <ClInclude Include="..\sock.h" />
     <ClInclude Include="..\upnp.h" />

@@ -1,7 +1,6 @@
 #include "data.h"
 #include "http.h"
 #include "sock.h"
-#include "protocol.h"
 #include "utils.h"
 #include <iomanip> // put_time()
 #include <ctime> // time(), localtime()
