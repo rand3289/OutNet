@@ -45,7 +45,7 @@ Service* Service::parse(const string& servStr, uint32_t myIP){
     originalDescription = servStr;
 
     char* start = const_cast<char*>( servStr.c_str() ); // living dangerous :)
-    const char* end = start+service.length();
+    const char* end = start+servStr.length();
     char* token;
 
     if( tokenize(start, end, token, ":") ){

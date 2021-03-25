@@ -16,6 +16,10 @@ void queryService(Crawler& crawl, HostInfo& service, uint32_t select){
     vector<string> filters; // = {"AGE_LT_600"}; // = {"RPROT=ftp"}; // for FTP servers
     crawl.queryRemoteService(service, newData, select, &filters);
 
+    for(auto& s: service.services){
+        cout << "local: " << s.fullDescription << endl;
+    }
+
     for(HostInfo& hi: newData){
         cout << Sock::ipToString(hi.host) << ":" << hi.port << endl;
         for(Service& s: hi.services){
@@ -40,7 +44,8 @@ int main(int argc, char* argv[]) {
     service.host = Sock::strToIP(argv[1]);
     service.port = strtol(argv[2], nullptr, 10); // base 10
 
-    uint32_t sel = SELECTION::IP | SELECTION::PORT | SELECTION::RSVC; // we want remote IP:PORT and services
+    // we want local services, remote IP:PORT and services
+    uint32_t sel = SELECTION::LSVC | SELECTION::IP | SELECTION::PORT | SELECTION::RSVC;
     queryService(crawl, service, sel);
     cout << "press enter to continue..." << endl;
     cin.ignore();
