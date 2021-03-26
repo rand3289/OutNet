@@ -294,6 +294,8 @@ bool Sock::isRoutable(uint32_t ip){ // is it routable or non-routable IP ?
     if( 192 == ipc[0] && 168 == ipc[1] ){ return false; }
     if( 172 == ipc[0] && ipc[1] >= 16 && ipc[1] <=31 ){ return false; }
     if( 127 == ipc[0] && ipc[1] == 0 && ipc[2] == 0 && ipc[3] == 1 ){ return false; }
+    if( 169 == ipc[0] && ipc[1] == 254 ){ return false; } // APIPA
+    if( 224 <= ipc[0] && ipc[0] <= 239 ){ return false; } // multicast RFC 5771
     return true; // TODO: make this portable
 }
 

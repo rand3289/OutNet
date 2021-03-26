@@ -62,7 +62,11 @@ int Config::loadServiceFiles(){
 
     for(Service& serv: oldServices){ // delete old services
         ldata->services.erase( remove( begin(ldata->services), end(ldata->services), serv ) );
-    }
+    } // TODO: if services are allowed to register with OutNet service directly, this has to change!
+
+    // TODO: config should keep a list of ports forwarded on a router with their lease times
+    // extend the lease times every hour if a service accepts a TCP connection 
+    // or swallows a 0 size UDP packet
 
     // insert new services and prepare to open ports for them
     for(const string& serv: newServices){
