@@ -33,24 +33,7 @@ The alternative to private discovery protocols like Kazaa and domain names is th
 ## Proposed implementation
 OutNet is implemented by a service with the same name that runs on your machine.  It gathers and provides a list of IPv4 addresses, corresponding port numbers and ages of nodes participating in the OutNet.  In addition, OutNet lists the types of remote services and local services you run such as your web sites, game servers and P2P services.
 
-When OutNet starts, it tries to contact some of the known remote OutNet severs. It collects their information such as public keys and lists of services they advertise.  Local services can query OutNet to find a list of peers.  Querying OutNet returns a response described below in pseudocode:
-
-```cpp
-struct Response {
-    char publicKey[256];      // RSA public key for this service
-    vector<string> services;  // local services we are trying to advertise
-    vector<HostInfo> list;    // list of remote (other) service instances this service is aware of. See HostInfo below.
-    char signature[256];      // RSA whole message digital signature
-};
-
-struct HostInfo {             // all fields are in the network byte order
-    uint32 host;              // IPv4 address
-    uint16 port;              // IPv4 port number (1-65535, 0=reserved)
-    uint16 age;               // in minutes (up to 45.5 days old) since the server has been seen on line
-    char key[256];            // remote service' public key
-    vector<string> rservices; // remote services being advertised
-};
-```
+When OutNet starts, it tries to contact some of the known remote OutNet severs. It collects their information such as public keys and lists of services they advertise.  Local services can query OutNet to find a list of peers.  Querying OutNet returns a response that contains it's public key, a list of local services OutNet is advertising, a list of remote OutNet services it knows (ip:port) and services they advertise.  Response is signed by the private key.
 
 Reading further requires understanding of the following concepts:  
 https://en.wikipedia.org/wiki/Private_network  
@@ -86,10 +69,74 @@ https://en.wikipedia.org/wiki/Wide_area_network
 * OutNet runs as a REST service over HTTP to bypass some firewalls and network restrictions.  It can run on different port numbers that can change over time.  Your other services do not have to run over HTTP or TCP.
 * OutNet can sign responses with a private key and supply a public key for signature verification.
 * OutNet can deny connections to external/routable IPs if frequency of requests coming from them is high.
-* OutNet has a peer list for your public local services.  They can find their peers by querying a local OutNet instance.
-* OutNet should include itself in the service list.  This advertises the external/routable/public IP for other services to use.
+* Your public local services can find their peers by querying a local OutNet instance.
+* OutNet should include itself in the advertised service list.  This provides the external/routable/public IP for other services to use.
 * OutNet is capable of "opening a port in your router" via UPnP in order to be accessible from outside of your network (WAN side).
 * It can "open" additional ports for your distributed services to accept connections.
+
+
+Reading further requires understanding of the following concepts:  
+https://en.wikipedia.org/wiki/Graphical_user_interface  
+https://en.wikipedia.org/wiki/Library_(computing)  
+https://en.wikipedia.org/wiki/Client_(computing)  
+https://en.wikipedia.org/wiki/Whitelisting  
+https://en.wikipedia.org/wiki/Media_type  
+https://en.wikipedia.org/wiki/TCP_Wrappers  
+https://en.wikipedia.org/wiki/Usenet  
+https://en.wikipedia.org/wiki/Hyperlink  
+https://en.wikipedia.org/wiki/Messaging_spam  
+https://en.wikipedia.org/wiki/Network_News_Transfer_Protocol  
+https://en.wikipedia.org/wiki/Web_of_trust  
+https://en.wikipedia.org/wiki/Search_engine_indexing  
+https://en.wikipedia.org/wiki/Authentication  
+https://en.wikipedia.org/wiki/Hash_function  
+https://en.wikipedia.org/wiki/Cryptographic_hash_function  
+https://en.wikipedia.org/wiki/Cryptocurrency  
+https://en.wikipedia.org/wiki/E-commerce  
+
+
+##  Future Base Services
+
+* OutNet should be treated as a piece of an eco system.  It is the backbone on top of which all other services are built.  The simplest service one can write based on OutNet is a query tool to find certain types of services and launch a client that supports that service.  For example a query tool can get list of servers for your favorite game.  Present it to you in a GUI.  When you click a certain server it will start the game and give it a URL (ip and port) on the command line.
+
+
+* There is a need for OutNet notification service.  E-mail is not shared by the OutNet service to prevent network-wide spam.  OutNetMsg receives messages addressed to your public key.  If it is from some one you trust (their public key is on your white list), it tries to open the message using the protocol/mime specified in the message.  OutNetMsg can display the message, offer to open/save the message or file, forward it to one of the services running on your system (for example, by acting as a TCP wrapper) or suggest you install a corresponding protocol handler / service.  For example it will to open a Zoom conference.
+It has to be able to manage other's public keys to be able to put them on your contact list.  It should be possible to create "groups" of public keys. It should be able to share public keys and public key lists with others and notify of updates to the list.  It should be able to send a message or a file to the list.  There should be a mechanism to request that your public key is added to someone's friend list or group list.  Messages from public keys not on your list will be discarded.  Only direct (non-public) messages will be handled by OutNetMsg.  Public messages or publicly shared files should be handled by other services.  OutNet service provides public key to IP:PORT mapping for OutNetMsg to find the recepients.
+
+
+* While OutNetMsg takes care of direct communication, there is a need for distributed message board service similar to twitter, reddit, facebook or newsgroups.  Public messages and files exchanged by this service OutNetExchange (alternatively OutNetX or OutNetShare) are not addressed to an individual but reach users subscribed on a particular subject or key.  Subject (thread) can have a hierarchical structure for example: local.USA.SanFrancisco.pizza  similar to a usenet group (section 3.2 in rfc977).  software.x86.linux.games.myBlaster can be used to distribute software.  Alternatively a public key could become a subject allowing subscription to an individual source.  A file hash becomes a URL where documents are hyperlinked by using their hash.  A hybrid model can be implemented where large files are distributed using BitTorrent and small files or file metadata/hashes propagate similar to usenet articles.  OutNetExchange can duplicate some usenet features while avoiding these problems:
+    + Spam (anyone could post / no signatures / no ratings).
+    + Need for a usenet server (not everyone has it).
+    + Use of a SINGLE server (all articles have to be in one place).
+    + Maximum article size varied among servers.
+    + NNTP is a text based protocol.
+
+
+* Another significant aspect is a rating system.  Ratings is the basis of trust in a distrubuted system.  Two things things that need to be rated are data (text/images/video) and public keys.  
+
+Each document, image or media file can be addressed by it's hash.  All one needs to increase its rating is to make that piece of data local.  By making it local you store it on your disk, allow others to find it by its hash and download it.  Content rating count (number of seeds) should be inversly proportional to it's size: larger files will always have less seeds however they should be highly prized.  On the other side small files will require more seeds to increase it's rating since the "price" of storing them on the hard drive is small.
+
+You should be able to rate your interactions with owners of a public key.  Intention of this rating is different than the "Web of trust".  In OutNet the key comes first and the name is secondary.  The name is not important unless verified through personal communication.  The rating does not state if you know the entity or entity's name in real life.  It rates a specific type of transaction/interaction you had.  For example an instance of a running OutNet service can be rated.  An internet purchase of an item description signed by a key can be rated.  A software/release signed by a key can be rated.  Securyty (virus/trojan free) of the content can be ensured by the rating service.  Software or content releases have to be signed by a private key of the author.  Authors's public keys in turn will be rated by users.  The way you trust in Microsoft, Google or Apple's content distribution system, individual authors have to earn your thrust in their public keys.  Rating should always contain a subject as described in OutNetExchange since an owner of a key can provide multiple services.  For example sell physical items or services and at the same time distribute free software.  His web store should not be rated highly just because he makes great freeware video games.
+
+Information on how governing bodies try to regulate electronic IDs can be found here: https://en.wikipedia.org/wiki/EIDAS
+
+
+* OutNetSearch service is used to index information (keys, subjects, content, file hashes) distributed by local services and EXCHANGE it with other search services or local distributed services.  You control what gets indexed.
+
+
+* Authentication service is needed to enable seamless authentication on any conventional (server based) internet resource using your public/private key pair.  Similar to authentication via amazon/google/yahoo/facebook.  However instead of contacting them, it will contact you.
+
+
+* To support other distributed services OutNet provides a library for signature creation uning private key and verification using public key.  Your private key does not have to be shared with your other services.  In addition OutNet needs to provide libraries to help you query the OutNet service and register your service with OutNet.
+
+
+* OutNet is a network which should be able to self-regulate.  There is a need for a security service.  Cybersecurity organizations you trust can limit detrimental activity such as botnets via releasing blacklists, ratings or software that interacts with OutNet.  If you trust a blacklist signed by a certain public key, you can include it into your collection and limit propagation of certain protocols, host information or public keys.  Blacklist mechanisms are built into OutNet. However downloading and updating black lists should be done by other programs/services for flexibility.  For example you can trust a list provided by some organization on their web site that limits content equivalent to PG-13.  This will stop propagation of certain information through your node.  Other OutNet nodes will not be affected.  If you find the list blocks your favorite content, you can add it to a white lists to override it.  Adding an item to a black list or a white list can be shared as a rating for other users.
+
+
+* A system to associate OutNet public keys and cryptocurrency wallets. Could be done through OutNetMsg.
+
+
+* A free distributed e-commerce platform can be built based on this infrastructure.
 
 
 Reading further requires understanding of the following concepts:  
@@ -173,54 +220,3 @@ Press enter twice to skip passphrase creation.  Two files will be generated key_
 
 ## Securing agains Botnets
 Health and stability of the internet should be every user's goal.  A botnet client can masquerade as a regular OutNet client.  To prevent any botnets from using this service, it is the responsibility of each user to add IP filters as problems come up.  OutNet has built in blacklist support for IPs and keys.
-
-Reading further requires understanding of the following concepts:  
-https://en.wikipedia.org/wiki/Library_(computing)  
-https://en.wikipedia.org/wiki/Client_(computing)  
-https://en.wikipedia.org/wiki/Whitelisting  
-https://en.wikipedia.org/wiki/Media_type  
-https://en.wikipedia.org/wiki/TCP_Wrappers  
-https://en.wikipedia.org/wiki/Usenet  
-https://en.wikipedia.org/wiki/Messaging_spam  
-https://en.wikipedia.org/wiki/Network_News_Transfer_Protocol  
-https://en.wikipedia.org/wiki/Web_of_trust  
-https://en.wikipedia.org/wiki/Search_engine_indexing  
-https://en.wikipedia.org/wiki/Authentication  
-https://en.wikipedia.org/wiki/Hash_function  
-https://en.wikipedia.org/wiki/Cryptographic_hash_function  
-https://en.wikipedia.org/wiki/Cryptocurrency  
-https://en.wikipedia.org/wiki/E-commerce  
-
-##  Future Base Services
-
-* Although OutNet can work by itself, it should be treated as a piece of an eco system.  Other services working with OutNet provide functionality or mitigate problems.  The simplest thing one can write based on OutNet is a query tool to find certain types of services and launch a client that supports that service.  For example a query tool can query the OutNet service and request a list of servers for your favorite game.  Present it for your selection in a UI.  When you click a certain server it will start the game and give it a URL (ip and port) on the command line.
-
-
-* There is a need for OutNet notification service.  E-mail is not shared by the OutNet service to prevent network-wide spam.  OutNetMsg  (OutNetDirect???) receives messages addressed to your public key.  If it is from some one you trust (their public key is on your white list), it tries to open the message using the protocol/mime specified in the message.  OutNetMsg can display the message, offer to open/save the message or file, forward it to one of the services running on your system (for example, by acting as a TCP wrapper) or suggest you install a corresponding protocol handler / service.  For example it might be possible to open a Zoom conference this way.
-It has to be able to manage other's public keys to be able to put them on your contact list.  It should be possible to create "groups" of public keys. It should be able to share public keys and public key lists with others and notify of updates.  It should be able to send a message or a file to the list.  There should be a mechanism to request that your public key is added to someone's friend list.  Messages from public keys not on your list will be discarded.  Only direct (non-public) messages will be handled by OutNetMsg.  Public messages or publicly shared files should be handled by other services.  OutNet provides public key to IP:PORT mapping for your service to find the recepients.
-
-
-* While OutNetMsg takes care of direct communication, there is a need for distributed message board service similar to twitter, parler, reddit or newsgroups.  Public messages and files exchanged by this service OutNetExchange (OutNetX OutNetShare) are not addressed to an individual but reach users subscribed on a particular subject.  Subject (thread) can have a hierarchical structure for example: local.USA.SanFrancisco.pizza  similar to a usenet group (section 3.2 in rfc977).  software.x86.linux.games.myBlaster can be used to distribute software.  Alternatively a public key (or it's hash) could become a subject allowing subscription to an individual source.  A hybrid model can be implemented where large files are distributed using BitTorrent and small files or file meta data propagate similar to usenet articles.  OutNetExchange can duplicate some usenet features while avoiding these problems:
-    + Spam (anyone could post / no signatures / no ratings).
-    + Need for a usenet server (not everyone has it).
-    + Use of a SINGLE server (all articles have to be in one place).
-    + Maximum article size varied among servers.
-    + NNTP is a text based protocol.
-
-
-* Another significant service is a public key rating system.  OutNetRate rating service lays at the center of trust in a distrubuted system.  You should be able to rate your interactions with owners of a public key.  Intention of this service is different than the "Web of trust".  In OutNet the key comes first and the name is secondary.  The name is not important unless verified through personal communication.  The rating does not state if you know the entity or entity's name in real life.  It rates a specific type of transaction/interaction you had.  For example an instance of a running OutNet service can be rated.  An internet purchase of an item description signed by a key can be rated.  A software/release signed by a key can be rated.  Securyty (virus/trojan free) of the content can be ensured by the rating service.  Software or content releases have to be signed by a private key of the author.  Authors's public keys in turn will be rated by users.  The way you trust in Microsoft, Google or Apple's content distribution system, individual authors have to earn your thrust in their public keys.  Rating should always contain a subject as described in OutNetExchange since an owner of a key can provide multiple services.  For example sell items or services and at the same time distribute free software.  His web store should not be rated highly just because he makes great freeware video games.  Information on how governing bodies try to regulate electronic IDs can be found here: https://en.wikipedia.org/wiki/EIDAS
-
-
-* To support other distributed services OutNet provides a library for signature creation uning private key and verification using public key.  Your private key does not have to be shared with your other services.  In addition OutNet needs to provide libraries to help you query the OutNet service and register your service with OutNet.
-
-
-* OutNet is a network which should be able to self-regulate.  There is a need for a security service.  Cybersecurity organizations you trust can limit detrimental activity such as botnets via releasing blacklists, ratings or software that interacts with OutNet.  If you trust a blacklist signed by a certain public key, you can include it into your collection and limit propagation of certain protocols, host information or public keys.  Blacklist mechanisms are built into OutNet. However downloading and updating black lists should be done by other programs/services for flexibility.  For example you can trust a list provided by some organization on their web site that limits content equivalent to PG-13.  This will stop propagation of certain information through your node.  Other OutNet nodes will not be affected.  If you find the list blocks your favorite content, you can add it to a white lists to override it.  Adding an item to a black list or a white list can be shared as a rating for other users.
-
-
-* OutNetSearch service is used to index information (keys, subjects, content, file hashes) distributed by local services and EXCHANGE it with other search services or local distributed services.  You control what gets indexed.
-
-* Authentication service is needed to enable seamless authentication on any conventional (server based) internet resource using your public/private key pair.  Similar to authentication via amazon/google/yahoo/facebook.  However instead of contacting them, it will contact you.
-
-* A system to associate OutNet public keys and cryptocurrency wallets. Could be done through OutNetMsg.
-
-* A free distributed e-commerce platform can be built based on this infrastructure.
