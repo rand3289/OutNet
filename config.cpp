@@ -60,9 +60,9 @@ int Config::loadServiceFiles(){
     set_difference( begin(s), end(s), begin(ldata->services), end(ldata->services), back_inserter(newServices));
     set_difference( begin(ldata->services), end(ldata->services), begin(s), end(s), back_inserter(oldServices));
 
-    for(Service& serv: oldServices){ // delete old services
-        ldata->services.erase( remove( begin(ldata->services), end(ldata->services), serv ) );
-    } // TODO: if services are allowed to register with OutNet service directly, this has to change!
+//    for(Service& serv: oldServices){ // delete old services
+//        ldata->services.erase( remove( begin(ldata->services), end(ldata->services), serv ) );
+//    } // TODO: if services are allowed to register with OutNet service directly, this has to change!
 
     // TODO: config should keep a list of ports forwarded on a router with their lease times
     // extend the lease times every hour if a service accepts a TCP connection 
@@ -77,12 +77,13 @@ int Config::loadServiceFiles(){
     ulock.unlock(); // after unlocking we can open and close ports which can take a while
 
     for(auto& ipPort: portsToOpen){  // open router ports using UPnP protocol for new services
-        upnp.openPort(ipPort.first, ipPort.second);
+        string ip = Sock::ipToString(ipPort.first);
+        upnp.add_port_mapping("OutNet", ip.c_str(), ipPort.second, ipPort.second, "TCP"); // TODO: UDP?
     }
 
-    for(auto& old: oldServices){ // close ports for old services
-        upnp.closePort(old.ip, old.port);
-    }
+//    for(auto& old: oldServices){ // close ports for old services
+//        upnp.closePort(old.ip, old.port);
+//    }
     return 0;
 }
 
@@ -94,7 +95,7 @@ int Config::loadBlackListFiles(){ return 0; }
 static const string configName = "settings.cfg";
 
 // load port and refresh rate from config file
-int Config::loadFromDisk(LocalData& lData, BlackList& bList){
+void Config::init(LocalData& lData, BlackList& bList){
     cout << "Loading configuration data." << endl;
     ldata = &lData;
     blist = &bList;
@@ -102,14 +103,28 @@ int Config::loadFromDisk(LocalData& lData, BlackList& bList){
     loadServiceFiles();
     loadBlackListFiles();
 
-    ldata->myPort = Sock::ANY_PORT; // default
-    vector<string> lines;
+    cout << "Retrieving external IP from the router..." << endl;
+    string ipStr;
+    upnp.init(); // TODO: move it to upnp constructor ???
+    upnp.getExternalIP(ipStr);
+    if( ipStr.length() > 6){ // at least x.x.x.x
+        ldata->myIP = Sock::strToIP( ipStr.c_str() );
+        if( ldata->myIP > 0 ){
+            cout << "Retrieved external IP from the router: " << ipStr << endl;
+        } else { // TODO: this is an indication there is no NAT taking place.
+            cerr << "Error retrieving external IP from the router." << endl;
+        }
+    }
+
+    ldata->myPort = Sock::ANY_PORT; // default port for OutNet to listen on
+
     ifstream config (configName);
     if( !config ){
         cout << configName << " not found. Setting configuration data to defaults." << endl;
-        return saveToDisk();
+        return;
     }
 
+    vector<string> lines;
     parseLines(config, lines);
     config.close();
     bool foundPort = false;
@@ -126,9 +141,12 @@ int Config::loadFromDisk(LocalData& lData, BlackList& bList){
             }
         }
     }
-    if( !foundPort) { saveToDisk(); } // config is corrupted
-    cout << "Configuration data loaded successfuly." << endl;
-    return 0;
+
+    if( foundPort) {
+        cout << "Configuration data loaded successfuly." << endl;
+    }else {
+        cout << "Config file is corrupted.  It will be regenerated." << endl;
+    }
 }
 
 
@@ -141,4 +159,11 @@ int Config::saveToDisk(){
     shared_lock slock(ldata->mutx);
     config << "ServerPort=" << ldata->myPort << " # server will accept connections on this port" << endl;
     return 0;
+}
+
+
+bool Config::forwardLocalPort(uint16_t port){
+    uint32_t localIP = Sock::localIP();
+    string localAddr = Sock::ipToString(localIP);
+    return upnp.add_port_mapping("OutNet main", localAddr.c_str(), port, port, "TCP");
 }

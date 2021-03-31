@@ -52,7 +52,7 @@ int main(int argc, char* argv[]){
 
 
     Config config; // config is aware of service port, LocalData and BWLists
-    config.loadFromDisk(ldata, blist); // load ldata,bwlists
+    config.init(ldata, blist); // load ldata,bwlists
 
     char* pkey = ldata.localPubKey.loadFromDisk(); // load public key from disk into ldata
     if(!pkey){
@@ -69,9 +69,18 @@ int main(int argc, char* argv[]){
         return 1;
     }
 
-    ldata.myPort = server.getPort(); // get bound server port number from socket
-    config.saveToDisk();
-    cout << "Running on port " << ldata.myPort << endl;
+    uint16_t port = server.getPort(); // get bound server port number from socket
+    if( ldata.myPort != port ){       // Assuming there was no config file since ports are different.
+        ldata.myPort = port;          // no need to lock since only one thread is running so far
+        config.saveToDisk();          // this will overwrite the whole config file!
+    }
+    cout << "Running OutNet service on port " << port << endl;
+    if( config.forwardLocalPort(port) ){
+        cout << "Opened port " << port << " on the router (enabled port forwarding)." << endl;
+    } else {
+        cerr << "ERROR opening port " << port << " on the router (port forwarding)." << endl;
+        cerr << "If you have a NAT router, forward port " << port << " to local host manually!" << endl;
+    }
 
     // create a thread that watches files for service and BWList updates
     std::thread watch( &Config::watch, &config);

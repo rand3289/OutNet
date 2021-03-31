@@ -10,10 +10,11 @@ https://en.wikipedia.org/wiki/Peer-to-peer
 https://en.wikipedia.org/wiki/Distributed_computing  
 https://en.wikipedia.org/wiki/Domain_name  
 https://en.wikipedia.org/wiki/BitTorrent_tracker  
+https://en.wikipedia.org/wiki/Dynamic_DNS  
 
 As computers get faster the need for large service providers should decrease. More can be done locally on your own computer.  Home users due to their sheer numbers have more computing power than any company.  Yet corporations maintain control of your data by building centralized services.  Use of centralized services can be avoided by distributing the equivalent of the server parts of these services among users.  Everyone can run a tiny search engine, a phone app store or a social network at home.  This model requires linking many small services in a distributed (P2P) network.
 
-Currently domain names allow you to find services on the internet.  There are problems with using domain names for distributing services.  A list of computer names or IPs must be maintained in one location.  An example is a BitTorrent tracker.  Most users on the internet do not have a registered domain name.  You have to pay for registering most domains.  You can not point your domain name to your home IP address since it may change.  Domain names can be shut down by third parties.  I believe instead of being regulated, detrimental aspects of the internet should be voted off by majority.
+Currently domain names allow you to find services on the internet.  There are problems with using domain names for distributing services.  A list of computer names or IPs must be maintained in one location.  An example is a BitTorrent tracker.  Most users on the internet do not have a registered domain name.  You have to pay for registering most domains.  You can not point your domain name to your home IP address since it may change except with dynamic DNS.  Domain names can be shut down by third parties.  I believe instead of being regulated, detrimental aspects of the internet should be voted off by majority.
 
 Reading further requires understanding of the following concepts:  
 https://en.wikipedia.org/wiki/Kazaa

@@ -1,11 +1,11 @@
 #ifndef CONFIG_H_INCLUDED
 #define CONFIG_H_INCLUDED
 #include "data.h"
-#include "upnp.h"
+#include "upnpnat.h"
 
 // loads refresh rate, port, local services, black & white lists from disk, stores port
 class Config {
-    UPnP upnp;
+    UPNPNAT upnp;
     LocalData* ldata;
     BlackList* blist;
     uint32_t refreshRate = 600; // seconds default
@@ -13,7 +13,8 @@ class Config {
     int loadBlackListFiles();
     int loadServiceFiles();
 public:
-    int loadFromDisk(LocalData& ldata, BlackList& blist);
+    void init(LocalData& ldata, BlackList& blist);
+    bool forwardLocalPort(uint16_t port);
     int saveToDisk();
     int watch();
 };

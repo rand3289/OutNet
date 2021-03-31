@@ -51,8 +51,9 @@ public:
 	uint16_t getPort() const { return ntohs(ip.sin_port); }
 	// remote IP after connect() or after object was returned by accept()
 	uint32_t getIP() const { return ip.sin_addr.s_addr; } 
-	SOCKET getRawSocket() const { return s; }
+	SOCKET getSocketFD() const { return s; }
 
+	static uint32_t localIP(){ return 0; } // TODO: TODO: TODO: TODO: TODO:
 	static uint32_t strToIP(const char* addr);
 	static std::string ipToString(uint32_t ip);
 	static bool isRoutable(uint32_t ip);

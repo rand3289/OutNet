@@ -147,7 +147,6 @@
     <ClInclude Include="..\http.h" />
     <ClInclude Include="..\sign.h" />
     <ClInclude Include="..\sock.h" />
-    <ClInclude Include="..\upnp.h" />
     <ClInclude Include="..\utils.h" />
   </ItemGroup>
   <ItemGroup>
