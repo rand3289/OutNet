@@ -103,17 +103,23 @@ void Config::init(LocalData& lData, BlackList& bList){
     loadServiceFiles();
     loadBlackListFiles();
 
-    cout << "Retrieving external IP from the router..." << endl;
-    string ipStr;
+    cout << "Looking for your NAT router..." << endl;
     upnp.init(); // TODO: move it to upnp constructor ???
-    upnp.getExternalIP(ipStr);
-    if( ipStr.length() > 6){ // at least x.x.x.x
-        ldata->myIP = Sock::strToIP( ipStr.c_str() );
-        if( ldata->myIP > 0 ){
-            cout << "Retrieved external IP from the router: " << ipStr << endl;
-        } else { // TODO: this is an indication there is no NAT taking place.
-            cerr << "Error retrieving external IP from the router." << endl;
+    if ( upnp.discovery(3) ){
+        cout << "Retrieving external IP from the router..." << endl;
+        string ipStr;
+        upnp.getExternalIP(ipStr, ldata->localIP);
+        if( ipStr.length() > 6){ // at least x.x.x.x
+            ldata->myIP = Sock::stringToIP( ipStr.c_str() );
+            if( ldata->myIP > 0 ){
+                cout << "Retrieved external IP from the router: " << ipStr << endl;
+            } else { // TODO: this is an indication there is no NAT taking place.
+                cerr << "Error retrieving external IP from the router." << endl;
+            }
         }
+    } else {
+        cerr << "Failed to find a NAT router.  ERROR: " << upnp.get_last_error() << endl;
+        // TODO: fill ldata->myIP and ldata->localIP without using router's help
     }
 
     ldata->myPort = Sock::ANY_PORT; // default port for OutNet to listen on
@@ -163,7 +169,12 @@ int Config::saveToDisk(){
 
 
 bool Config::forwardLocalPort(uint16_t port){
-    uint32_t localIP = Sock::localIP();
-    string localAddr = Sock::ipToString(localIP);
+    cout << "Forwarding local port " << port << endl;
+    if( 0 == ldata->localIP ){
+        cerr << "ERROR: local ip is blank! Can not forward port." << endl;
+        return false;
+    }
+    string localAddr = Sock::ipToString(ldata->localIP);
+    cout << "Local IP: " << localAddr << endl;
     return upnp.add_port_mapping("OutNet main", localAddr.c_str(), port, port, "TCP");
 }

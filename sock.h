@@ -53,8 +53,7 @@ public:
 	uint32_t getIP() const { return ip.sin_addr.s_addr; } 
 	SOCKET getSocketFD() const { return s; }
 
-	static uint32_t localIP(){ return 0; } // TODO: TODO: TODO: TODO: TODO:
-	static uint32_t strToIP(const char* addr);
+	static uint32_t stringToIP(const char* addr);
 	static std::string ipToString(uint32_t ip);
 	static bool isRoutable(uint32_t ip);
 };

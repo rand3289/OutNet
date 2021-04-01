@@ -472,8 +472,8 @@ bool UPNPNAT::add_port_mapping(const char * _description, const char * _destinat
 	
 	std::string http_request=action_message+soap_message;
 
-printf("\nSENDING:\n");
-printf(http_request.c_str());
+//printf("\nSENDING:\n");
+//printf(http_request.c_str());
 	
 	//send request
 	ret=send(sock, http_request.c_str(), http_request.size(),0);
@@ -487,8 +487,8 @@ printf(http_request.c_str());
 	}
 	closesocket(sock);
 
-printf("\nRESPONSE:\n");
-printf(response.c_str());
+//printf("\nRESPONSE:\n");
+//printf(response.c_str());
 
 	if(response.find(HTTP_OK)!=std::string::npos){
 		return true;
@@ -501,7 +501,7 @@ printf(response.c_str());
 }
 
 
-bool UPNPNAT::getExternalIP(std::string& IpOut){
+bool UPNPNAT::getExternalIP(std::string& IpOut, uint32_t& localIP){
 #define EXTERNAL_IP_ACTION	"GetExternalIPAddress"
 #define EXTERNAL_IP_PARAMS  " " // "<NewExternalIPAddress></NewExternalIPAddress>\r\n"
 
@@ -524,6 +524,14 @@ bool UPNPNAT::getExternalIP(std::string& IpOut){
 		return false;
     }
 	
+	// get local IP
+	localIP = 0;
+	sockaddr addr;
+	socklen_t addrSize = sizeof(addr);
+	if( 0==getsockname(sock, &addr, &addrSize ) ){
+		localIP = ((sockaddr_in*) &addr.sa_data)->sin_addr.s_addr; // in network byte order
+	}
+
 	char buff[MAX_BUFF_SIZE+1];
 	sprintf(buff, SOAP_ACTION, EXTERNAL_IP_ACTION, service_type.c_str(), "", EXTERNAL_IP_ACTION);
 	std::string soap_message=buff;
@@ -533,8 +541,8 @@ bool UPNPNAT::getExternalIP(std::string& IpOut){
 	
 	std::string http_request=action_message+soap_message;
 
-printf("\nSENDING:\n");
-printf(http_request.c_str());
+//printf("\nSENDING:\n");
+//printf(http_request.c_str());
 	
 	//send request
 	ret=send(sock, http_request.c_str(), http_request.size(),0);
@@ -548,8 +556,8 @@ printf(http_request.c_str());
 	}
 	closesocket(sock);
 
-printf("\nRESPONSE:\n");
-printf(response.c_str());
+//printf("\nRESPONSE:\n");
+//printf(response.c_str());
 
 	if(response.find(HTTP_OK)!=std::string::npos){
 		long unsigned int index = response.find("<?xml ");

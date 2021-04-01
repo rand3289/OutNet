@@ -76,12 +76,6 @@ int Response::write(Sock& conn, uint32_t select, vector<array<string,3>>& filter
     bytes+= conn.write32(select);
     if(sign) { signer.write(&select, sizeof(select) ); }
 
-    if( select & SELECTION::MYIP ){
-        uint32_t remoteIP = conn.getIP();                // remote IP the way I see it
-        bytes+=conn.write( &remoteIP, sizeof(remoteIP)); // helps other server find it's NATed IPs
-        if(sign){ signer.write(&remoteIP, sizeof(remoteIP)); }
-    }
-
     bytes+= ldata.send(conn, select, filters, signer);
     bytes+= rdata.send(conn, select, filters, signer);
 
@@ -95,10 +89,9 @@ int Response::write(Sock& conn, uint32_t select, vector<array<string,3>>& filter
 
 void Response::writeDebug(Sock& conn, uint32_t select, std::vector<array<string,3>>& filters){
     stringstream ss;
-    ss << "HTTP/1.1 200 OK\n";
-    ss << "Server: n3+1\n\n"; // "\n" separates headers from html
+    ss << "HTTP/1.1 200 OK\n\n"; // second "\n" separates headers from html
     ss << "<html><body>";
-    ss << "<a href='https://github.com/rand3289/OutNet'>INFO</a><br>";
+    ss << "<a href='https://github.com/rand3289/OutNet'>OutNet INFO</a><br>";
     ss << "QUERY=" <<  select << "<br>";
     for(auto f: filters){
         ss << f[0] << "_" << f[1] << "_" << f[2] << "<br>";

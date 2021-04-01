@@ -24,8 +24,7 @@ std::string selectStr(uint32_t sel){
     if(sel & AGE ){ ss << "AGE "; }
     if(sel & RKEY){ ss << "RKEY "; }
     if(sel & RSVC){ ss << "RSVC "; }
-    if(sel & RSVCF){ ss << "RSVCF "; }
-    if(sel & MYIP){ ss << "MYIP "; }
+    if(sel & RSVCF){ss << "RSVCF "; }
     return ss.str();
 }
 
@@ -39,7 +38,7 @@ int main(int argc, char* argv[]){
     BlackList blist;  // Black and White lists
 
     if(3 == argc){ // parse command line parameters IP and port
-        uint32_t ip = Sock::strToIP(argv[1]);
+        uint32_t ip = Sock::stringToIP(argv[1]);
         uint16_t portInt = strtol(argv[2], nullptr, 10); // base 10
         if( 0!=ip && 0!=portInt ){
             rdata.addContact(ip, portInt);

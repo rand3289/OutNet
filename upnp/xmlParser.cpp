@@ -63,6 +63,7 @@
 #endif
 // he has some fancy switch statement magic that generates a lot of warnings under g++
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough=" 
+#pragma GCC diagnostic ignored "-Wclass-memaccess"
 
 #include <memory.h>
 #include <assert.h>

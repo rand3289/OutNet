@@ -21,7 +21,7 @@ public:
 	// destination_port: internal port
 	// protocol:         TCP or UDP
 	bool add_port_mapping(const char * description, const char * destination_ip, unsigned short int port_ex, unsigned short int destination_port, const char * protocol);
-    bool getExternalIP(std::string& IpOut);
+    bool getExternalIP(std::string& externalIPout, uint32_t& localIPout);
 private:
 	bool get_description();
 	bool parse_description();

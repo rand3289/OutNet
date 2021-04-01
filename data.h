@@ -36,6 +36,7 @@ void mergeServices(std::vector<Service>& dest, std::vector<Service>& source); //
 
 struct LocalData {
     std::shared_mutex mutx;  // This datastructure is accessed by several threads.  Lock mutex before access.
+    uint32_t localIP;   // local (non-routable) IP of this host
     uint32_t myIP;      // public ip of the local service
     uint32_t myPort;    // local service is running on this port
     PubKey localPubKey; // local service public key

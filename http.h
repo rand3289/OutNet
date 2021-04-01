@@ -26,8 +26,7 @@ enum SELECTION {
     RSVC   = (1<<8),  // remote service list
 
     RSVCF  = (1<<9), // FILTER remote service list by protocol or send all?
-    MYIP   = (1<<10)  // return my IP where my crawler is connecting from
-};
+}; // if records are filtered by service, we can still send all services for that record.
 
 
 class Request{ // parse() returns QUERY bit field

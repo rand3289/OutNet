@@ -32,6 +32,7 @@ void initNetwork(){
 #endif
 }
 
+
 int err(const string& msg) { // errno returns positive numbers
 	int error = errno;
 #ifdef _MSC_VER // Visual Studio only. MinGW-w64 has a different strerror_s() definition
@@ -43,6 +44,7 @@ int err(const string& msg) { // errno returns positive numbers
 #endif
 	return error;
 }
+
 
 // set read()/write() timeout otherwise a remote client/server can get our process stuck!
 int Sock::setRWtimeout(int seconds){
@@ -78,23 +80,8 @@ int Sock::connect(uint32_t ipaddr, uint16_t port){
 }
 
 
-uint32_t Sock::strToIP(const char* addr){
-    hostent* ipent=gethostbyname(addr);
-	if(!ipent){
-		cerr << "Can't gethostbyname()" << endl;
-		return 0;
-	}
-	uint32_t ip = *(uint32_t*) ipent->h_addr;  // h_addr is a macro for h_addr_list[0]
-	if(ip == INADDR_NONE){
-		cerr << "gethostbyname() returned INADDR_NONE" << endl;
-		return 0;
-	}
-	return ip;
-}
-
-
 int Sock::connect(const char* addr, uint16_t port){
-	uint32_t ip = strToIP(addr);
+	uint32_t ip = stringToIP(addr);
 	return 0==ip ? -1 : connect(ip, port);
 }
 
@@ -300,14 +287,29 @@ bool Sock::isRoutable(uint32_t ip){ // is it routable or non-routable IP ?
 }
 
 
-string Sock::ipToString(uint32_t ip){
+uint32_t Sock::stringToIP(const char* addr){ // static
+    hostent* ipent=gethostbyname(addr);
+	if(!ipent){
+		cerr << "Can't gethostbyname()" << endl;
+		return 0;
+	}
+	uint32_t ip = *(uint32_t*) ipent->h_addr;  // h_addr is a macro for h_addr_list[0]
+	if(ip == INADDR_NONE){
+		cerr << "gethostbyname() returned INADDR_NONE" << endl;
+		return 0;
+	}
+	return ip;
+}
+
+
+string Sock::ipToString(uint32_t ip){ // static
 #ifdef _WIN32
     unsigned char* ipc = (unsigned char*) &ip;
     stringstream ss; // TODO: is ip in network byte order?
     ss << ipc[0] << "." << ipc[1] << "." << ipc[2] << "." << ipc[3];
     return ss.str();
 #else
-    char buff[16];
+    char buff[32];
     inet_ntop(AF_INET, &ip, buff, sizeof(buff));
     return string(buff);
 #endif

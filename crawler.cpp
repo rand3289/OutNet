@@ -89,18 +89,6 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
         return 0;
     }
 
-    uint32_t myip = 0;
-    if( selectRet & SELECTION::MYIP ){
-        myip = sock.read32(error);
-        if(error){
-            cerr << "ERROR reading 'my ip'" << endl;
-            return 0;
-        }
-        if( 0 == hostCopy ){ // TODO: ask multiple servers before trusting it
-            hostCopy = myip; // TODO: propagate this ip to LocalData::myIP
-        } // TODO: if you know your external ip and remote gives you a wrong one, ban it?
-    }
-
     shared_ptr<PubKey> locPubKey;
     if(selectRet & SELECTION::LKEY){
         locPubKey = make_shared<PubKey>();
@@ -123,7 +111,6 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
             return 0;
         }
         signer.write(&selectRet, sizeof(selectRet)); // always received
-        if( selectRet & SELECTION::MYIP ){ signer.write(&myip, sizeof(myip)); }
         if( selectRet & SELECTION::LKEY ){ signer.write(&*locPubKey, sizeof(PubKey)); }
     }
 

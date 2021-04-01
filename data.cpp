@@ -59,7 +59,7 @@ Service* Service::parse(const string& servStr, uint32_t myIP){
     } else { return nullptr; }
 
     if( tokenize(start, end, token, ":") ){
-        ip = Sock::strToIP(token);
+        ip = Sock::stringToIP(token);
         if(0==ip){ return nullptr; }
     } else { return nullptr; }
 
