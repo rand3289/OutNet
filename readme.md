@@ -14,7 +14,10 @@ https://en.wikipedia.org/wiki/Dynamic_DNS
 
 As computers get faster the need for large service providers should decrease. More can be done locally on your own computer.  Home users due to their sheer numbers have more computing power than any company.  Yet corporations maintain control of your data by building centralized services.  Use of centralized services can be avoided by distributing the equivalent of the server parts of these services among users.  Everyone can run a tiny search engine, a phone app store or a social network at home.  This model requires linking many small services in a distributed (P2P) network.
 
-Currently domain names allow you to find services on the internet.  There are problems with using domain names for distributing services.  A list of computer names or IPs must be maintained in one location.  An example is a BitTorrent tracker.  Most users on the internet do not have a registered domain name.  You have to pay for registering most domains.  You can not point your domain name to your home IP address since it may change except with dynamic DNS.  Domain names can be shut down by third parties.  I believe instead of being regulated, detrimental aspects of the internet should be voted off by majority.
+Participating in OutNet or projects like OutNet is the only way for you to take control over your information, your content and monetization of your content.  It is the only way of preventing large companies from owning your data.  With OutNet, you get to host your videos, your posts, your pictures and no one can tell you what to do, shut you down or take that away from you.  OutNet does not hide any illegal activities.  It stops other from gaining control over you.
+
+Currently domain names allow you to find services on the internet.  Using domain names is not suitable for distributing services.  When domain names are used, resourses must be maintained in a few central locations.  An example is a BitTorrent tracker.  Another problem is that most users on the internet do not have a registered domain name.  You have to pay for registering most domains.  You can not point your domain name to your home IP address since it may change except with dynamic DNS.  Domain names can be shut down by third parties.  With OutNet, instead of being regulated, detrimental aspects of the internet can be voted off by majority and get lost within the noise.
+
 
 Reading further requires understanding of the following concepts:  
 https://en.wikipedia.org/wiki/Kazaa
@@ -28,13 +31,14 @@ https://en.wikipedia.org/wiki/Distributed_hash_table
 https://en.wikipedia.org/wiki/IPv4  
 https://en.wikipedia.org/wiki/GNUnet  
 
-The alternative to private discovery protocols like Kazaa and domain names is the OutNet.  OutNet is an open source distributed service directory network protocol (peer discovery).  It is designed to find conventional or distributed (P2P) services on the internet.  Services such as web pages, game servers, ftp servers, messengers, forums, video conferences, P2P and distributed services.  Another goals of OutNet is to decentralize the internet making it resistant to control and sensorship.  OutNet provides anonymity.  Instead of a domain or a user name, a public key  is used to identify you, your services and services provided by others.  Public key is generated locally.  Your real name is no longer needed to provide or consume services on the internet.  Your IP address however will be visible to the world unless used in conjunction with a VPN.  OutNet is similar to the DNS system which allows finding services by name however it allows finding services on the internet by network protocol, service type or a public key.  OutNet is different from a blockchain and much simpler. Peers can have a partial view of the information.  There is similarity with GNUnet since OutNet provides peer discovery and authentication.  However unlike GNUnet OutNet does not provide any encryption or privacy.  The upside is there are no dependencies on other services.
+The alternative to private discovery protocols like Kazaa and domain names is the OutNet.  OutNet is a free and open source distributed service directory network protocol (peer discovery).  It is designed to find conventional or distributed (P2P) services on the internet.  Services such as web pages, game servers, ftp servers, messengers, forums, video conferences, P2P and distributed services.  Another goals of OutNet is to decentralize the internet making it resistant to control and sensorship.  OutNet provides anonymity.  Instead of a domain or a user name, a public key  is used to identify you, your services and services provided by others.  Public key is generated locally.  Your real name is no longer needed to provide or consume services on the internet.  Your IP address however will be visible to the world unless used in conjunction with a VPN.  OutNet is similar to the DNS system which allows finding services by name, however instead it allows finding services on the internet by a network protocol name, a service type or a public key.  OutNet is different from a blockchain and much simpler. Peers can have a partial view of the information.  There is similarity with GNUnet since OutNet provides peer discovery and authentication.  However unlike GNUnet OutNet does not provide any encryption or privacy.  The upside is there are NO dependencies on external components.
 
 
 ## Proposed implementation
 OutNet is implemented by a service with the same name that runs on your machine.  It gathers and provides a list of IPv4 addresses, corresponding port numbers and ages of nodes participating in the OutNet.  In addition, OutNet lists the types of remote services and local services you run such as your web sites, game servers and P2P services.
 
-When OutNet starts, it tries to contact some of the known remote OutNet severs. It collects their information such as public keys and lists of services they advertise.  Local services can query OutNet to find a list of peers.  Querying OutNet returns a response that contains it's public key, a list of local services OutNet is advertising, a list of remote OutNet services it knows (ip:port) and services they advertise.  Response is signed by the private key.
+When OutNet starts, it tries to contact some of the known remote OutNet severs. It collects their information such as public keys and lists of services they advertise.  Local services can query OutNet to find a list of peers.  Querying OutNet returns a response that contains it's public key, a list of local services OutNet is advertising, a list of remote OutNet services it knows and services they advertise.  Response is signed by the private key.
+
 
 Reading further requires understanding of the following concepts:  
 https://en.wikipedia.org/wiki/Private_network  
@@ -46,12 +50,15 @@ https://en.wikipedia.org/wiki/Universal_Plug_and_Play
 https://en.wikipedia.org/wiki/Connection-oriented_communication  
 https://en.wikipedia.org/wiki/GNU_Compiler_Collection
 https://en.wikipedia.org/wiki/Mingw-w64
+https://en.wikipedia.org/wiki/Repository_(version_control)
 
 
-Since one does not want to expose ALL available local services on the internet, OutNet does not discover local services.  Local services can register with OutNet or be added via configuration files.  Service descriptions have to contain routable (public/external) IP addresses instead of host names.  If OutNet determines your service is behind a NAT router and IP is a non-routable IP, it will replace your non-routable IP with it's own external routable IP when listing your service.  In addition, OutNet will open a port in the router via UPnP protocol that will allow your service to accept connections.
+Since one does not want to expose ALL available local services on the internet, OutNet does not discover local services.  Local services can register with OutNet or be added via configuration files.  Service descriptions visible to the world have to contain routable (public/external) IP addresses instead of host names.  If OutNet determines your service is behind a NAT router and IP is a non-routable IP, it will replace your non-routable IP with it's own external routable IP when listing your service.  In addition, OutNet will open a port in the router via UPnP protocol that will allow your service to accept connections.
+
 
 ## Project status
-This project is work in progress.  All communications are implemented but not tested.  Two major things remain: signature and UPnP protocol.  Currently project does not have ANY dependencies.  It compiles using g++ 10.2 under linux, MinGW-w64 from msys2.org on windows and Visual Studio.  Fuck Apple for requiring an Apple ID to download Command Line Tools.  This project does not run under macOS because of that.
+This project is work in progress.  All communications are implemented.  UPnP protocol is supported. One thing that remains to be implemented is digital signature support.  I am CAREFULY reviewing all options.  Currently project does not have ANY dependencies.  Everything is built-in (source code available from ONE git repository).  It compiles using g++ 10.2 under linux, MinGW-w64 from msys2.org on windows and Visual Studio.  Apple requires an Apple ID to download Command Line Tools.  Apple ID registration requires submission of your phone number.  This project has not been ported to macOS for this reason.
+
 
 Reading further requires understanding of the following concepts:  
 https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol  
@@ -66,14 +73,15 @@ https://en.wikipedia.org/wiki/Unicast
 https://en.wikipedia.org/wiki/Information_retrieval  
 https://en.wikipedia.org/wiki/Wide_area_network  
 
-* Mechanisms/protocols required to implement OutNet are HTTP 1.1, UPnP and digital signatures.
+
 * OutNet runs as a REST service over HTTP to bypass some firewalls and network restrictions.  It can run on different port numbers that can change over time.  Your other services do not have to run over HTTP or TCP.
-* OutNet can sign responses with a private key and supply a public key for signature verification.
-* OutNet can deny connections to external/routable IPs if frequency of requests coming from them is high.
 * Your public local services can find their peers by querying a local OutNet instance.
-* OutNet should include itself in the advertised service list.  This provides the external/routable/public IP for other services to use.
 * OutNet is capable of "opening a port in your router" via UPnP in order to be accessible from outside of your network (WAN side).
 * It can "open" additional ports for your distributed services to accept connections.
+* OutNet can sign responses with a private key and supply a public key for signature verification.
+* OutNet can deny connections to external/routable IPs if frequency of requests coming from them is high.
+* OutNet has built in blacklist support for filtering selected IPs and keys.
+* Mechanisms/protocols required to implement OutNet are HTTP 1.1, UPnP and digital signatures.
 
 
 Reading further requires understanding of the following concepts:  
@@ -165,33 +173,33 @@ Same device, different protocol:  "printer:ipp:8.8.8.8:12345:2nd floor printer"
 OutNet can be queried to return local info and/or a filtered list of discovered remote OutNet services.  For example a query can limit the results by service type, availability of "remote public keys" or what fields are included in response.
 
 Returned fields can be any of the following:
-* local public key  (LKEY)
-* current datetime (TIME)
+* local public key of the service being queried (LKEY)
+* signature (signing the whole message) (SIGN)
+* current local datetime (TIME)
 * local service list (LSVC)
-* IP   (IP)
-* port (PORT)
-* age  (AGE)
+The following are fields in the list of known remote OutNet services:
+* remote OutNet service IP (IP)
+* remote OutNet service PORT (PORT)
+* remote record age - when was this remote OutNet service last seen (AGE)
 * remote public key (RKEY)
 * remote service list (RSVC)
-* signature (sign the whole message) (SIGN)
-* remote service list filtered by service type/protocol or return all services
 
 
-Where as fields are controlled by including them in the SELECT parameter, returned records are limited by FILTER parameters:
-* local service type/protocol exact string match
-* IP range or equal
-* port range or equal
-* age range of HostInfo records
-* remote public key count (RKEYC) (one key per service is allowed but OutNet can receive different keys from other OutNet services)
-* remote public key exact string match
-* remote service list count (RSVCC)
-* remote service type/protocol exact string match
+Where as fields are controlled by including them in the SELECT query parameter, returned records are limited by FILTER parameters:
+* local service type/protocol (exact string match)
+* IP (range or exact match)
+* port (range or exact match)
+* age (range)
+* remote service type/protocol (exact string match)
+* remote service list count (RSVCC) (greater than #)
+* remote public key (exact string match)
+* remote public key count (RKEYC) (greater than #) One key per service is allowed but OutNet can potentially receive different keys from other OutNet services for a single IP.
 
 
 Notes
-* For numeric operators greater/less/equal allowed operands are an immediate plus one of RANGE, AGE, RKEYC, IP, PORT, RSVCC
+* For numeric operators greater/less/equal allowed operands are an immediate plus one of AGE, RKEYC, IP, PORT, RSVCC
 * For operator "string equal" allowed operands are a constant string plust one of RKEY, RSVC, LSVC
-* REST call (http get) Example: SELECT=2036&FILTER=RANGE_GT_500,RANGE_LT_900,RSVC_EQ_HTTP,RKEYC_GT_0
+* REST call (HTTP GET) Example: SELECT=2036&FILTER=RANGE_GT_500,RANGE_LT_900,RSVC_EQ_HTTP,RKEYC_GT_0
 * If any of the received bit fields or query parameters are not defined, they are ignored
 
 * Design OutNet without protocol identifiers to be less detectable and less likely to be blocked.
@@ -211,13 +219,13 @@ Press enter twice to skip passphrase creation.  Two files will be generated key_
 
 
 ## Securing against network splits
+* Small world network properties can be used to find relatively small semi-isolated connectivity islands that might be trying to split the network and eliminate them.  This might require user interaction.  Any fresh client connecting to such an island can become isolated from the rest of the OutNet.  It is important to trust your first connection source.  OutNet services returning HostInfo records without any overlap with existing records can receive a negative rating.  After verification of returned records the raiting should raise above 0.
 
-* Small world network properties can be used to find relatively small semi-isolated connectivity islands that might be trying to split the network and eliminate them.  This might require user interaction.
+## Concerns
 * OutNet needs to verify HostInfo records received from other OutNet instances by contacting the host in the record.  An OutNet service raiting should be incremented for each verified record and decremented for each failed verification.  Records received from OutNet services with negative rating should not be shared with other OutNet services.
 * Age of each record can be taken into account when rating
 * Younger records should be validated first if record age is taken into account during rating.
 * New records from highly rated services should be verified first.
-* OutNet services returning HostInfo records without any overlap with existing records should receive negative rating (- # of records???) After the verification the raiting will raise above 0.
 
 ## Securing agains Botnets
 Health and stability of the internet should be every user's goal.  A botnet client can masquerade as a regular OutNet client.  To prevent any botnets from using this service, it is the responsibility of each user to add IP filters as problems come up.  OutNet has built in blacklist support for IPs and keys.
