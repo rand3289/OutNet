@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
     Crawler crawl(ldata, rdata, blist);
 
     HostInfo service; // connect to this service
-    service.host = Sock::strToIP(argv[1]);
+    service.host = Sock::stringToIP(argv[1]);
     service.port = strtol(argv[2], nullptr, 10); // base 10
 
     // we want local services, remote IP:PORT and services

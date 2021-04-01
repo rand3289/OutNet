@@ -106,9 +106,10 @@ void Config::init(LocalData& lData, BlackList& bList){
     cout << "Looking for your NAT router..." << endl;
     upnp.init(); // TODO: move it to upnp constructor ???
     if ( upnp.discovery(3) ){
-        cout << "Retrieving external IP from the router..." << endl;
+        cout << "Retrieving local IP & external IP from the router..." << endl;
         string ipStr;
         upnp.getExternalIP(ipStr, ldata->localIP);
+        cout << "Local IP: " << Sock::ipToString(ldata->localIP) << endl;
         if( ipStr.length() > 6){ // at least x.x.x.x
             ldata->myIP = Sock::stringToIP( ipStr.c_str() );
             if( ldata->myIP > 0 ){

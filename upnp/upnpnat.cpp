@@ -526,10 +526,10 @@ bool UPNPNAT::getExternalIP(std::string& IpOut, uint32_t& localIP){
 	
 	// get local IP
 	localIP = 0;
-	sockaddr addr;
+	sockaddr_in addr;
 	socklen_t addrSize = sizeof(addr);
-	if( 0==getsockname(sock, &addr, &addrSize ) ){
-		localIP = ((sockaddr_in*) &addr.sa_data)->sin_addr.s_addr; // in network byte order
+	if( 0==getsockname(sock, (sockaddr*) &addr, &addrSize ) ){
+		localIP = addr.sin_addr.s_addr; // in network byte order
 	}
 
 	char buff[MAX_BUFF_SIZE+1];

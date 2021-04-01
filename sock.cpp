@@ -290,12 +290,12 @@ bool Sock::isRoutable(uint32_t ip){ // is it routable or non-routable IP ?
 uint32_t Sock::stringToIP(const char* addr){ // static
     hostent* ipent=gethostbyname(addr);
 	if(!ipent){
-		cerr << "Can't gethostbyname()" << endl;
+		err ("Can't gethostbyname(): ");
 		return 0;
 	}
 	uint32_t ip = *(uint32_t*) ipent->h_addr;  // h_addr is a macro for h_addr_list[0]
 	if(ip == INADDR_NONE){
-		cerr << "gethostbyname() returned INADDR_NONE" << endl;
+		err("gethostbyname() returned INADDR_NONE: ");
 		return 0;
 	}
 	return ip;
@@ -309,8 +309,11 @@ string Sock::ipToString(uint32_t ip){ // static
     ss << ipc[0] << "." << ipc[1] << "." << ipc[2] << "." << ipc[3];
     return ss.str();
 #else
-    char buff[32];
-    inet_ntop(AF_INET, &ip, buff, sizeof(buff));
+    char buff[INET_ADDRSTRLEN];
+    if( NULL == inet_ntop(AF_INET, &ip, buff, sizeof(buff) ) ){
+        err("Error converting IP to string: ");
+        return "";
+    }
     return string(buff);
 #endif
 }
