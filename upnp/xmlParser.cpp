@@ -61,9 +61,12 @@
 #include <Windows.h> // to have IsTextUnicode, MultiByteToWideChar, WideCharToMultiByte to handle unicode files
                      // to have "MessageBoxA" to display error messages for openFilHelper
 #endif
+
+#ifdef __GNUG__ // disable some g++ warnings
 // he has some fancy switch statement magic that generates a lot of warnings under g++
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough=" 
 #pragma GCC diagnostic ignored "-Wclass-memaccess"
+#endif
 
 #include <memory.h>
 #include <assert.h>

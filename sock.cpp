@@ -11,6 +11,7 @@ using namespace std;
     typedef int socklen_t;
     typedef SOCKADDR sockaddr;
 #else // posix
+    #include <signal.h> // signal() 
     #include <unistd.h> // close()
     #include <netdb.h> // gethostbyname()
     #include <sys/types.h>
@@ -29,6 +30,8 @@ void initNetwork(){
     if(WSAStartup(0x0202,&wsaData)){
         cerr << "Error upon WSAStartup()" << endl;
     }
+#else // TODO: use sigaction()?  set a handler and log received signals?
+    signal(SIGPIPE, SIG_IGN); // ignore SIGPIPE signal which can occur on write() or send()
 #endif
 }
 
@@ -173,6 +176,9 @@ int Sock::closeSock(void){
 	return 0;
 }
 
+//#ifndef MSG_NOSIGNAL
+//#define MSG_NOSIGNAL 0
+//#endif
 
 int Sock::write(const void* buff, size_t size){
 //	cout << "WRITE: " << size << endl; // DEBUGGING!!!
@@ -180,7 +186,7 @@ int Sock::write(const void* buff, size_t size){
 		cerr << "Socket not initialized - Can't write." << endl;
 		return -1;
 	}
-	return send(s, (char*) buff, size, 0);
+	return send(s, (char*) buff, size, MSG_NOSIGNAL);
 }
 
 

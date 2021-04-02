@@ -567,7 +567,7 @@ bool UPNPNAT::getExternalIP(std::string& IpOut, uint32_t& localIP){
 		}
         XMLResults result;
 		XMLNode envelope=XMLNode::parseString(&response[index], "s:Envelope", &result);
-		XMLNode body = envelope.getChildNode();
+		XMLNode body = envelope.getChildNode(); // TODO: iterate to find needed node?
 		XMLNode resp = body.getChildNode();
 		XMLNode ipNode = resp.getChildNode("NewExternalIPAddress");
 	    if(ipNode.isEmpty())
