@@ -312,7 +312,7 @@ string Sock::ipToString(uint32_t ip){ // static
 #ifdef _WIN32
     unsigned char* ipc = (unsigned char*) &ip;
     stringstream ss; // TODO: is ip in network byte order?
-    ss << ipc[0] << "." << ipc[1] << "." << ipc[2] << "." << ipc[3];
+    ss << (int)ipc[0] << "." << (int)ipc[1] << "." << (int)ipc[2] << "." << (int)ipc[3];
     return ss.str();
 #else
     char buff[INET_ADDRSTRLEN];
