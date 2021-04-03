@@ -176,9 +176,9 @@ int Sock::closeSock(void){
 	return 0;
 }
 
-//#ifndef MSG_NOSIGNAL
-//#define MSG_NOSIGNAL 0
-//#endif
+#ifndef MSG_NOSIGNAL // windows does not define it
+#define MSG_NOSIGNAL 0
+#endif
 
 int Sock::write(const void* buff, size_t size){
 //	cout << "WRITE: " << size << endl; // DEBUGGING!!!

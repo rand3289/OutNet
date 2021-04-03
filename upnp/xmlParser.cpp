@@ -197,7 +197,7 @@ char myIsTextWideChar(const void *b, int len) { return FALSE; }
         return FALSE;
     }
     #else
-    char myIsTextWideChar(const void *b,int l) { return (char)IsTextUnicode((CONST LPVOID)b,l,NULL); }
+    char myIsTextWideChar(const void *b,int l) { return (char)IsTextUnicode((LPVOID)b,l,NULL); }
     #endif
 #endif
 
