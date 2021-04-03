@@ -63,9 +63,6 @@ bool Signature::loadKeys(PubKey& pubKey){ // static
 }
 
 
-Signature::Signature(): buff() {}
-
-
 int Signature::init(){ // prepare to sign data written via write()
     buff.reset();
     buff.reserve( SIGNATURE_SIZE ); // reserve space for signature

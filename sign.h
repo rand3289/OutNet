@@ -28,7 +28,6 @@ class Signature {
     static PubKey     publicKey;  // cached publicKey - access it with loadKeys()
 public:
     static bool loadKeys(PubKey& publicKey); // load both keys, but return public key only.
-    Signature();
     int init();
     int write(const void* data, size_t size);
     int writeString(const std::string& str);
