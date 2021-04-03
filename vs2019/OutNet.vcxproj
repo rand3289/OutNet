@@ -118,10 +118,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\upnp\;$(ProjectDir)..\sign\</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;Ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -146,7 +149,10 @@
     <ClInclude Include="..\data.h" />
     <ClInclude Include="..\http.h" />
     <ClInclude Include="..\sign.h" />
+    <ClInclude Include="..\sign\tweetnacl.h" />
     <ClInclude Include="..\sock.h" />
+    <ClInclude Include="..\upnp\upnpnat.h" />
+    <ClInclude Include="..\upnp\xmlParser.h" />
     <ClInclude Include="..\utils.h" />
   </ItemGroup>
   <ItemGroup>
@@ -156,7 +162,10 @@
     <ClCompile Include="..\http.cpp" />
     <ClCompile Include="..\main.cpp" />
     <ClCompile Include="..\sign.cpp" />
+    <ClCompile Include="..\sign\tweetnacl.c" />
     <ClCompile Include="..\sock.cpp" />
+    <ClCompile Include="..\upnp\upnpnat.cpp" />
+    <ClCompile Include="..\upnp\xmlParser.cpp" />
     <ClCompile Include="..\utils.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

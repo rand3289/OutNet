@@ -176,9 +176,9 @@ int Sock::closeSock(void){
 	return 0;
 }
 
-//#ifndef MSG_NOSIGNAL
-//#define MSG_NOSIGNAL 0
-//#endif
+#ifndef MSG_NOSIGNAL // windows does not define it
+#define MSG_NOSIGNAL 0
+#endif
 
 int Sock::write(const void* buff, size_t size){
 //	cout << "WRITE: " << size << endl; // DEBUGGING!!!
@@ -209,7 +209,7 @@ int Sock::readLine(void* buff, const size_t maxSize){
 		if( *curr!='\r' ){ ++curr; }  // skip \r
 	}
 	*curr = 0;
-	return curr-(char*)buff;
+	return (int) (curr-(char*)buff);
 }
 
 uint32_t Sock::read32(bool& error){
@@ -312,7 +312,7 @@ string Sock::ipToString(uint32_t ip){ // static
 #ifdef _WIN32
     unsigned char* ipc = (unsigned char*) &ip;
     stringstream ss; // TODO: is ip in network byte order?
-    ss << ipc[0] << "." << ipc[1] << "." << ipc[2] << "." << ipc[3];
+    ss << (int)ipc[0] << "." << (int)ipc[1] << "." << (int)ipc[2] << "." << (int)ipc[3];
     return ss.str();
 #else
     char buff[INET_ADDRSTRLEN];

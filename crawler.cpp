@@ -54,7 +54,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
     ss << " HTTP/1.1\n";
 
 
-    int len = ss.str().length();
+    int len = (int) ss.str().length();
     if(len != sock.write(ss.str().c_str(), len ) ){
         cerr << "ERROR sending HTTP request." << endl;
         return 0;
@@ -294,7 +294,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
     hi.offlineCount = 0;
     hi.seen = system_clock::now();
 
-    return unverifiedData.size();
+    return (int) unverifiedData.size();
 }
 
 

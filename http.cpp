@@ -51,7 +51,7 @@ int Request::parse(Sock& conn, vector<array<string,3>>& filters, uint16_t& port)
             if( strncmp(token, "QUERY=", 6) == 0 ){ // parse QUERY
                 query = atol(token+6);
             } else if( strncmp(token, "SPORT=", 6) == 0){ // parse remote server port
-                port = strtol(token+6, nullptr, 10); // base 10
+                port = (uint16_t) strtol(token+6, nullptr, 10); // base 10
             } else if( strcmp(token,"HTTP") && strcmp(token,"1.1") ){ // throw away these tokens
                 array<string,3> funcOperVal; // auto funcOperVal = filters.emplace_back();
                 if( parseFilter(token, funcOperVal) ){

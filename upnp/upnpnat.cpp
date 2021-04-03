@@ -1,6 +1,9 @@
 // https://www.codeproject.com/Articles/27237/Easy-Port-Forwarding-and-Managing-Router-with-UPnP
 #ifdef _WIN32
+    #define _CRT_SECURE_NO_WARNINGS           // sprintf: This function may be unsafe
+    #define _WINSOCK_DEPRECATED_NO_WARNINGS 1 // gethostbyname(), inet_addr() are deprecated in windows
     #include <winsock2.h>
+    #include <ws2tcpip.h> // socklen_t
 #else
     #include <arpa/inet.h> // inet_addr()
     #include <netinet/in.h> // sockaddr_in
@@ -8,7 +11,7 @@
     #include <sys/ioctl.h>
     #define ioctlsocket(s,o,v) ioctl(s,o,v)
     #define closesocket(s) close(s)
-    #define _sleep(t) usleep((t)*1000)
+    #define Sleep(t) usleep((t)*1000)
     #define SOCKET_ERROR   (-1)
 #endif
 
@@ -205,7 +208,7 @@ bool UPNPNAT::discovery(int retry)
 	for(int i=1; i<=retry; ++i)
     {
         ret=sendto(udp_socket, send_buff.c_str(), send_buff.size(), 0, (struct sockaddr*)&r_address, sizeof(struct sockaddr_in));
-        _sleep(1000);
+        Sleep(1000);
 
         ret=recvfrom(udp_socket,buff,MAX_BUFF_SIZE,0,NULL,NULL);
 		if(ret==SOCKET_ERROR){
@@ -466,8 +469,9 @@ bool UPNPNAT::add_port_mapping(const char * _description, const char * _destinat
 	
 	sprintf(buff,SOAP_ACTION,ACTION_ADD,service_type.c_str(),action_params.c_str(),ACTION_ADD);
 	std::string soap_message=buff;
-    
-	sprintf(buff,HTTP_HEADER_ACTION,path.c_str(),host.c_str(),port,service_type.c_str(),ACTION_ADD,soap_message.size());
+
+	long unsigned int ss = soap_message.size();
+	sprintf(buff,HTTP_HEADER_ACTION,path.c_str(),host.c_str(),port,service_type.c_str(),ACTION_ADD, ss);
 	std::string action_message=buff;
 	
 	std::string http_request=action_message+soap_message;
@@ -536,7 +540,8 @@ bool UPNPNAT::getExternalIP(std::string& IpOut, uint32_t& localIP){
 	sprintf(buff, SOAP_ACTION, EXTERNAL_IP_ACTION, service_type.c_str(), "", EXTERNAL_IP_ACTION);
 	std::string soap_message=buff;
 
-	sprintf(buff,HTTP_HEADER_ACTION,path.c_str(),host.c_str(),port,service_type.c_str(),EXTERNAL_IP_ACTION,soap_message.size());
+	long unsigned int ss = soap_message.size();
+	sprintf(buff,HTTP_HEADER_ACTION,path.c_str(),host.c_str(),port,service_type.c_str(),EXTERNAL_IP_ACTION, ss);
 	std::string action_message=buff;
 	
 	std::string http_request=action_message+soap_message;
