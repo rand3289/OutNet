@@ -7,7 +7,7 @@
 
 
 class Crawler {
-    SignatureVerify signer;
+    Signature signer;
     uint32_t hostCopy;
     uint16_t portCopy;
     LocalData& ldata;

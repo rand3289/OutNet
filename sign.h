@@ -2,40 +2,39 @@
 #define SIGN_H_INCLUDED
 #include <cstring> // size_t, memset(), memcpy(), memcmp()
 #include <string>
+#include "tweetnacl.h"
+#include "utils.h"
 
-struct PubSign    { char sign[256]; };
-struct PrivateKey { char  key[256]; };
+#define SIGNATURE_SIZE (crypto_sign_BYTES)
+#define PUBKEY_SIZE    (crypto_sign_PUBLICKEYBYTES)
+#define SECRETKEY_SIZE (crypto_sign_SECRETKEYBYTES)
 
-struct PubKey     {
-    char  key[256];
-    char* loadFromDisk();
+
+struct PubSign    { unsigned char sign[SIGNATURE_SIZE]; };
+struct PrivateKey { unsigned char  key[SECRETKEY_SIZE]; };
+
+struct PubKey {
+    unsigned char  key[PUBKEY_SIZE];
     bool operator==(const PubKey& rhs){ return 0==memcmp( &key, &rhs.key, sizeof(key) ); }
     PubKey& operator=(const PubKey& rhs){ memcpy(key, rhs.key, sizeof(key)); return *this; }
 //    PubKey(const PubKey& rhs){ memcpy(key, rhs.key, sizeof(key)); }
-//    PubKey(){}
 };
 
 
 class Signature {
-    PubSign signature;
-    PrivateKey privateKey; // TODO: make this static. Load it from disk once.
+    Buffer32 buff;
+    static bool keysLoaded;
+    static PrivateKey privateKey; // static field loaded by loadKeys()
+    static PubKey     publicKey;  // cached publicKey - access it with loadKeys()
 public:
-    Signature(); // load private key from disk
-    int init();  // clear "PubSign signature"
-    int write(const void* data, size_t size); // compute signature from data chunks
+    static bool loadKeys(PubKey& publicKey); // load both keys, but return public key only.
+    Signature();
+    int init();
+    int write(const void* data, size_t size);
     int writeString(const std::string& str);
-    const PubSign& getSignature() const { return signature; }
+    bool generate(PubSign& pubSign);
+    bool verify(const PubSign& signature, const PubKey& pubKey);
 };
 
-
-class SignatureVerify {
-    PubSign signature;
-    PubKey pubKey;
-public:
-    int init(const PubKey& pubKey);           // prepare to verify the signature
-    int write(const void* data, size_t size); // compute "PubSign sign" from data chunks
-    int writeString(const std::string& str);
-    bool verify(const PubSign& signature) const;    // did computed signature match given signature?
-};
 
 #endif //SIGN_H_INCLUDED

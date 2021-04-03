@@ -15,7 +15,7 @@ outnet: $(OBJ)
 # warning: Using 'gethostbyname' in statically linked applications requires at runtime the shared libraries from the glibc version used for linking
 
 tests: $(TESTOBJ)
-	$(CC) -o $@ $^
+	$(CC) -o $@ $^ -lpthread
 
 clean:
 	/bin/rm -f *.o upnp/*.o sign/*.o

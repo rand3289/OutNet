@@ -74,17 +74,22 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
     while( sock.readLine(buff, sizeof(buff) ) ) {} // skip till empty line is read (HTTP protocol)
 
 /************ Everything read below this line is signed *************/
+    const bool sign = select & SELECTION::SIGN; // is signature requested?
+    if(sign){ signer.init(); }
+
     bool error = false;
     uint32_t selectRet = sock.read32(error);
     if(error){
         cerr << "ERROR reading 'select'" << endl;
         return 0;
     }
+    signer.write(&selectRet, sizeof(selectRet)); // always received
+
 // TODO: allow local services to add themselves by connecting to outnet with SPORT= set to their port
-// when outnet connects to it, allow replies without signing the response.
+// when outnet connects to it, allow replies without signing the response. (sign=false;)
 // when local (non-routable) address is detected, do not enter it as a remote service but local.
-    const bool sign = selectRet & SELECTION::SIGN; // is signature requested?
-    if( (select & SELECTION::SIGN) && !sign ){ // we requested a signature but it was not returned
+
+    if( sign && !(selectRet & SELECTION::SIGN) ){ // we requested a signature but it was not returned
         cerr << "ERROR: remote refused to sign response." << endl; // this is a security problem
         return 0;
     }
@@ -101,17 +106,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
             cerr << "ERROR: key is banned. Disconnecting!" << endl;
             return 0;
         }
-    }
-    if(sign){ // after receiving remote's public key, we can start prepare to check signature
-        if(hi.signatureVerified) { signer.init(*hi.key); } // use old key
-        else if(selectRet & SELECTION::LKEY) { signer.init(*locPubKey); } // use new key
-        else if(hi.key) { signer.init(*hi.key); } // use old key if it exists
-        else {
-            cerr << "ERROR no key available for signature verification." << endl;
-            return 0;
-        }
-        signer.write(&selectRet, sizeof(selectRet)); // always received
-        if( selectRet & SELECTION::LKEY ){ signer.write(&*locPubKey, sizeof(PubKey)); }
+        if(sign){ signer.write(&*locPubKey, sizeof(PubKey)); }
     }
 
     if(selectRet & SELECTION::TIME){
@@ -136,6 +131,8 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
             cerr << "ERROR reading remote service count." << endl;
             return 0;
         }
+        if(sign){ signer.write(&count, sizeof(count)); }
+
         for(int i=0; i < count; ++i){
             rdsize = sock.readString(buff, sizeof(buff));
             if(rdsize <=0){
@@ -143,9 +140,8 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
                 return 0;
             }
             lservices.push_back(buff);
+            if(sign){ signer.writeString(buff); }
         }
-        if(sign){ signer.write(&count, sizeof(count)); }
-        if(sign){ signer.writeString(buff); }
     }
 
     // remote data
@@ -252,10 +248,21 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
             return 0;
         }
 
-        // verify signature. If signature can not be verified, discard the data and reduce hi.rating below 0
-        if( !signer.verify(signature) ){
+        PubKey* key = nullptr;
+        if(selectRet & SELECTION::LKEY) { // use new key if available
+            key = locPubKey.get();
+        } else if(hi.key) { // otherwise use the old key if it exists
+            key = hi.key.get(); // shared_ptr to regular pointer
+        } else {
+            cerr << "ERROR no key available for signature verification." << endl;
+            return 0;
+        }
+
+        // If signature can not be verified, discard the data and reduce hi.rating below 0
+        if( !signer.verify(signature, *key) ){
             slock.unlock(); // there is no upgrade mechanism to unique_lock.
             unique_lock ulock2(rdata.mutx); // release lock after each connection for other parts to work
+// TODO: if keys are different, these are different hosts with the same IP !!!
             hi.signatureVerified = false;
             hi.key.reset(); // delete stored public key since signature verification failed
             hi.rating = hi.rating < 0 ? hi.rating-1 : -1;
@@ -265,23 +272,25 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
         }
     }
 
+    slock.unlock();
     std::copy( move_iterator(begin(unverifiedData)), move_iterator(end(unverifiedData)),
             back_inserter(newData));
+    unique_lock ulock2(rdata.mutx); // there is no upgrade mechanism to unique_lock.
+    // release the lock after each connection to allow other threads to work
 
-    slock.unlock(); // there is no upgrade mechanism to unique_lock.
-    unique_lock ulock2(rdata.mutx); // release the lock after each connection to allow other threads to work
-
-    for(string& ls: lservices){
-        hi.addService(ls); // add newly found services to that host's service list
-    }
-
-    if(sign) { // if we requested signature verification
+    if(sign) {
+// TODO: if signatures are different, it's a different service!!!  Create a new HostInfo.
         if( !hi.signatureVerified && locPubKey ){ // (selectRet&SELECTION::LKEY) && !hi.key
             hi.key = locPubKey;
         }
         hi.signatureVerified = true; // mark signature verified
         ++hi.rating;                 // increase remote's rating for verifying signature
     }
+
+    for(string& ls: lservices){
+        hi.addService(ls); // add newly found services to that host's service list
+    }
+
     hi.offlineCount = 0;
     hi.seen = system_clock::now();
 

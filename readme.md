@@ -213,13 +213,10 @@ https://en.wikipedia.org/wiki/Netsplit
 https://en.wikipedia.org/wiki/Botnet  
 
 ## Generating public/private keys
-To generate public and private key pair we use ssh-keygen utility made available by installing OpenSSH.  By changing to service directory and issuing the following command:  
-ssh-keygen -t ecdsa -b 521 -f ./key_ecdsa  
-Press enter twice to skip passphrase creation.  Two files will be generated key_ecdsa and key_ecdsa.pub  Service will look for these file names upon startup.  Never share your private key!
-
+Public and private keys will be generated automatically if you do not have files publicOutNet.key and secretOutNet.key in the OutNet service directory.  If one of the keys is missing, the keys will also be regenerated.  Never share your private key!  Make backup of you private and public keys.  You will NOT be able to recover the private key if it is lost.
 
 ## Securing against network splits
-* Small world network properties can be used to find relatively small semi-isolated connectivity islands that might be trying to split the network and eliminate them.  This might require user interaction.  Any fresh client connecting to such an island can become isolated from the rest of the OutNet.  It is important to trust your first connection source.  OutNet services returning HostInfo records without any overlap with existing records can receive a negative rating.  After verification of returned records the raiting should raise above 0.
+Small world network properties can be used to find relatively small semi-isolated connectivity islands that might be trying to split the network and exclude them.  Any fresh client connecting to such an island can become isolated from the rest of the OutNet.  It is important to trust your first connection source.  OutNet services returning HostInfo records without any overlap with existing records can receive a negative rating.  After verification of returned records the raiting should raise above 0.
 
 ## Concerns
 * OutNet needs to verify HostInfo records received from other OutNet instances by contacting the host in the record.  An OutNet service raiting should be incremented for each verified record and decremented for each failed verification.  Records received from OutNet services with negative rating should not be shared with other OutNet services.

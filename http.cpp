@@ -80,8 +80,9 @@ int Response::write(Sock& conn, uint32_t select, vector<array<string,3>>& filter
     bytes+= rdata.send(conn, select, filters, signer);
 
     if(sign){
-        const PubSign& psign = signer.getSignature();
-        bytes+= conn.write( &psign, sizeof(PubSign) );
+        PubSign psign;
+        signer.generate(psign);
+        bytes+= conn.write( &psign, sizeof(psign) );
     }
     return bytes;
 }

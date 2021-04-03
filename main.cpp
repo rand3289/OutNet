@@ -46,26 +46,25 @@ int main(int argc, char* argv[]){
     } else if(1 != argc){
         cerr << "ERROR parsing command line parameters.  ";
         cerr << "usage: " << argv[0] << " host port" << endl;
-        return -1;
+        return 1;
     }
 
 
     Config config; // config is aware of service port, LocalData and BWLists
     config.init(ldata, blist); // load ldata,bwlists
 
-    char* pkey = ldata.localPubKey.loadFromDisk(); // load public key from disk into ldata
-    if(!pkey){
-        cerr << "ERROR loading public key!  Exiting." << endl;
-        return -1;
+    if( !Signature::loadKeys(ldata.localPubKey) ){ // load public key from disk into ldata
+        cerr << "ERROR loading keys.  Exiting." << endl;
+        return 2;
     }
 
     // create the server returning all queries
-    // first time start running on a random port (ANY_PORT)
-    // but if service ran before, reuse the port number
+    // first time it starts running on a random port (ANY_PORT)
+    // but if service ran before, reuse the port number.  It was saved by Config class.
     Sock server;
     if( server.listen(ldata.myPort) < 0 ){
         cerr << "ERROR listening for connections on port " << ldata.myPort << ".  Exiting." << endl;
-        return 1;
+        return 3;
     }
 
     uint16_t port = server.getPort(); // get bound server port number from socket

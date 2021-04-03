@@ -10,34 +10,95 @@
 #include <chrono>
 using namespace std;
 
-static const string pubKeyFile = "public.key";
-static const string privateKeyFile = "private.key";
+static const string pubKeyFile = "publicOutNet.key";
+static const string privateKeyFile = "secretOutNet.key";
+bool       Signature::keysLoaded = false; // static
+PrivateKey Signature::privateKey;         // static
+PubKey     Signature::publicKey;          // static
 
-char* PubKey::loadFromDisk(){
+
+// Load both keys at once.  If one file is missing, regenerate BOTH and save.
+bool Signature::loadKeys(PubKey& pubKey){ // static
+    if(keysLoaded){ // TODO: return const reference instead???
+        memcpy(pubKey.key, publicKey.key, sizeof(publicKey));
+        return true;
+    }
+
     ifstream pubkey(pubKeyFile, std::ios::binary);
-    if(!pubkey){ cerr << "ERROR loading public key from disk." << endl; return nullptr; }
-//     pubkey >> key; // BUG !!! reads more than size of key and overwrites other variables! TODO:
-    if(!pubkey){ cerr << "ERROR loading public key from disk." << endl; return nullptr; }
-    return key;
+    ifstream seckey(privateKeyFile, std::ios::binary);
+
+    if( pubkey.good() && seckey.good() ){ // both files are there
+        pubkey.read( (char*) publicKey.key, sizeof(publicKey) );
+        if( pubkey.good() ){
+            seckey.read( (char*) privateKey.key, sizeof(privateKey) );
+            if(seckey.good() ){ return true; }
+        }
+        rename(privateKeyFile.c_str(), (privateKeyFile+".old").c_str() );
+        rename(pubKeyFile.c_str(), (pubKeyFile+".old").c_str() );
+        cout << "WARNING: one of the key files could not be read." << endl;
+        cout << "Both files had to be renamed to *.old and will be regenerated." << endl;
+    } else if( (!pubkey ^ !seckey) ){ // one of them exists instead of both.  Rename it.
+        const string& exists = !pubkey ? privateKeyFile : pubKeyFile;
+        rename(privateKeyFile.c_str(), (privateKeyFile+".old").c_str() );
+        cout << "WARNING: missing ONE private or public key file!" << endl; 
+        cout << "Renamed existing file "<< exists << " to " << exists << ".old" << endl;
+    } else {
+        cout << "Public and private key files are missing and will be generated." << endl;
+    }
+    pubkey.close();
+    seckey.close();
+
+    crypto_sign_keypair(publicKey.key, privateKey.key); // Create new public and private keys
+    cout << "Generated NEW private and public keys." << endl;
+    memcpy(pubKey.key, publicKey.key, sizeof(publicKey));
+
+    ofstream pubk(pubKeyFile, std::ios::binary);
+    ofstream seck(privateKeyFile, std::ios::binary);
+    pubk.write( (char*) publicKey.key, sizeof(publicKey) );
+    seck.write( (char*) privateKey.key, sizeof(privateKey) );
+    // TODO: check that the write succeeded
+
+    keysLoaded = true;
+    return true;
 }
 
 
-Signature::Signature(): signature(), privateKey() { // load private key from disk
-    ifstream privkey(privateKeyFile, std::ios::binary);
-    if(!privkey){ cerr << "ERROR loading private key from disk." << endl; }
-    privkey >> privateKey.key;
-    if(!privkey){ cerr << "ERROR loading private key from disk." << endl; }
-}
+Signature::Signature(): buff() {}
 
 
 int Signature::init(){ // prepare to sign data written via write()
-    memset(&signature, 0, sizeof(signature) );
+    buff.reset();
+    buff.reserve( SIGNATURE_SIZE ); // reserve space for signature
     return 0;
 }
 
 
+bool Signature::generate(PubSign& pubSign){
+    unsigned char* start = (unsigned char*) buff.get() + SIGNATURE_SIZE;
+    unsigned long long len = buff.size();// buff always has extra SIGNATURE_SIZE bytes
+    vector<unsigned char> m2(len);
+    crypto_sign(&m2[0], &len, start, len-SIGNATURE_SIZE, privateKey.key);
+    memcpy(pubSign.sign, &m2[0], SIGNATURE_SIZE); // first crypto_sign_BYTES is the signature
+    return true;
+}
+
+
+bool Signature::verify(const PubSign& sign, const PubKey& pubKey) {
+    unsigned char* start = (unsigned char*) buff.get();
+    memcpy(start, sign.sign, sizeof(sign)); // prepend signature to the beginning of the buffer
+    unsigned long long len = buff.size();
+    vector<unsigned char> m2(len); // do not worry about extra SIGNATURE_SIZE bytes
+    if(-1 == crypto_sign_open(&m2[0], &len, start, len, (unsigned char*) pubKey.key) ){ // returns 0 on success
+        cout << "Signature failed verification!" << endl;
+        return false;
+    }
+    return true;
+}
+
+
 int Signature::write(const void* data, size_t size){ // compute "PubSign sign" from data chunks
-    return 0; // TODO:
+    buff.write(data, size);
+    return 0;
 }
 
 
@@ -46,31 +107,6 @@ int Signature::writeString(const string& str){
     write(&size, sizeof(size));
     write(str.c_str(), size);
     return size;
-}
-
-
-int SignatureVerify::writeString(const string& str){
-    unsigned char size = (unsigned char) str.length();
-    write(&size, sizeof(size));
-    write(str.c_str(), size);
-    return size;
-}
-
-
-int SignatureVerify::init(const PubKey& publicKey){ // prepare to verify the signature
-    pubKey = publicKey; // memcpy(&pubKey, &publicKey, sizeof(pubKey) );
-    memset(&signature, 0, sizeof(signature) );
-    return 0;
-}
-
-
-bool SignatureVerify::verify(const PubSign& sign) const {
-    return 0 == memcmp(&signature, &sign, sizeof(PubSign) );
-}
-
-
-int SignatureVerify::write(const void* data, size_t size){ // compute "PubSign sign" from data chunks
-    return 0; // TODO:
 }
 
 

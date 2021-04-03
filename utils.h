@@ -24,4 +24,36 @@ void parseLines(std::istream& stream, std::vector<std::string>& lines);
 // Return true if str is a key=value pair.
 bool keyValue(const std::string& str, std::string& key, std::string& value);
 
+
+template <typename SIZET> // uint32_t or uint64_t
+class Buffer {
+    SIZET len;
+    SIZET maxLen;
+    char* buff;
+public:
+    Buffer(): len(0), maxLen(0), buff(nullptr) {}
+    virtual ~Buffer(){ if(buff){ free(buff); } }
+
+    void reset() { len = 0; }
+    char* get()  { return buff; }
+    SIZET size() { return len; }
+
+    void write(const void* bytes, SIZET count){
+        char* where = reserve(count);
+        memcpy(where, bytes, count);
+    }
+    char* reserve(SIZET bytes){
+        SIZET oldLen = len;
+        len += bytes;
+        if(len > maxLen){
+            maxLen = len < (64*1024) ? (64*1024) : 2*len;
+            buff = (char*) realloc(buff, maxLen);
+        }
+        return buff+oldLen;
+    }
+};
+typedef Buffer<uint32_t> Buffer32;
+typedef Buffer<uint64_t> Buffer64;
+
+
 #endif // UTILS_H_INCLUDED
