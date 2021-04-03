@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
 
     HostInfo service; // connect to this service
     service.host = Sock::stringToIP(argv[1]);
-    service.port = strtol(argv[2], nullptr, 10); // base 10
+    service.port = (uint16_t) strtol(argv[2], nullptr, 10); // base 10
 
     // we want local services, remote IP:PORT and services
     uint32_t sel = SELECTION::LSVC | SELECTION::IP | SELECTION::PORT | SELECTION::RSVC;

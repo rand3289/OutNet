@@ -97,7 +97,7 @@ bool Signature::verify(const PubSign& sign, const PubKey& pubKey) {
 
 
 int Signature::write(const void* data, size_t size){ // compute "PubSign sign" from data chunks
-    buff.write(data, size);
+    buff.write(data, (uint32_t) size);
     return 0;
 }
 
@@ -123,8 +123,8 @@ void randombytes(unsigned char* bytes, unsigned long long byteCount){
                 device.reset();          // we don't want it
                 cout << "INFO: random device is not available on the system" << endl;
             }
-        } catch(std::exception& err){ // or (...)
-            device.reset(); // it can throw in operator()
+        } catch(...){
+            device.reset(); // it can throw in operator() not just constructor
             cout << "INFO: random device is not available on the system." << endl;
         }
     });
@@ -136,7 +136,7 @@ void randombytes(unsigned char* bytes, unsigned long long byteCount){
     } else {
         auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
         std::default_random_engine generator(seed);
-        std::uniform_int_distribution<unsigned char> distribution(0,255);
+        std::uniform_int_distribution<int> distribution(0,255);
         for(unsigned long long i=0; i < byteCount; ++i){
             bytes[i] = distribution(generator);
         }

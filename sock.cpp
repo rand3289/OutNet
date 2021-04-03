@@ -209,7 +209,7 @@ int Sock::readLine(void* buff, const size_t maxSize){
 		if( *curr!='\r' ){ ++curr; }  // skip \r
 	}
 	*curr = 0;
-	return curr-(char*)buff;
+	return (int) (curr-(char*)buff);
 }
 
 uint32_t Sock::read32(bool& error){

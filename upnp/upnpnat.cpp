@@ -1,5 +1,7 @@
 // https://www.codeproject.com/Articles/27237/Easy-Port-Forwarding-and-Managing-Router-with-UPnP
 #ifdef _WIN32
+    #define _CRT_SECURE_NO_WARNINGS           // sprintf: This function may be unsafe
+    #define _WINSOCK_DEPRECATED_NO_WARNINGS 1 // gethostbyname(), inet_addr() are deprecated in windows
     #include <winsock2.h>
     #include <ws2tcpip.h> // socklen_t
 #else

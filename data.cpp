@@ -64,7 +64,7 @@ Service* Service::parse(const string& servStr, uint32_t myIP){
     } else { return nullptr; }
 
     if( tokenize(start, end, token, ":") ){
-        port = strtol(token, nullptr, 10); // base 10
+        port = (uint16_t) strtol(token, nullptr, 10); // base 10
         if(0==port){ return nullptr; }
     } else { return nullptr; }
 
@@ -224,7 +224,7 @@ int RemoteData::send(Sock& sock, uint32_t select, vector<array<string,3>>& filte
     }
 
     int bytes = 0; // write record count first
-    uint32_t count = htonl(data.size());
+    uint32_t count = htonl((uint32_t) data.size());
     bytes+= sock.write( &count, sizeof(count));
     if(sign){ signer.write(&count, sizeof(count)); }
 
