@@ -15,6 +15,7 @@ using namespace std;
 
 std::string selectStr(uint32_t sel){
     std::stringstream ss;
+    ss << sel << ": ";
     if(sel & LKEY){ ss << "LKEY "; }
     if(sel & TIME){ ss << "TIME "; }
     if(sel & SIGN){ ss << "SIGN "; }
@@ -119,7 +120,7 @@ int main(int argc, char* argv[]){
         // parse remote server port, "SELECT field bitmap" and filters from remote's "HTTP get" query
         vector<array<string,3>> filters; // function + parameter pairs
         uint16_t port = 0;
-        uint32_t select = Request::parse(conn, filters, port);
+        int select = Request::parse(conn, filters, port);
 
         if(port > 0){ // remote sent us its server port.  Add accepted connection to RemoteData
             rdata.addContact(conn.getIP(), port );

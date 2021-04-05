@@ -43,13 +43,13 @@ int Request::parse(Sock& conn, vector<array<string,3>>& filters, uint16_t& port)
     }
     string line = buff; // save it for debugging
 
-    uint32_t query = 0;
+    int query = 0;
     char* start = buff + 3; // skip "GET"
     const char * end = start+strlen(start);
     char* token = nullptr;
     while( tokenize( start, end, token, " &?/") ){
         if( strncmp(token, "QUERY=", 6) == 0 ){ // parse QUERY
-            query = atol(token+6);
+            query = strtol(token+6, nullptr, 10); // base 10
         } else if( strncmp(token, "SPORT=", 6) == 0){ // parse remote server port
             port = (uint16_t) strtol(token+6, nullptr, 10); // base 10
         } else if( strcmp(token,"HTTP") && strcmp(token,"1.1") ){ // throw away these tokens
@@ -59,7 +59,7 @@ int Request::parse(Sock& conn, vector<array<string,3>>& filters, uint16_t& port)
             }
         }
     }
-    if(0==query){
+    if( query <= 0 ){
         cout << "ERROR parsing query: " << line << endl;
     }
     return query;
@@ -67,7 +67,7 @@ int Request::parse(Sock& conn, vector<array<string,3>>& filters, uint16_t& port)
 
 
 int Response::write(Sock& conn, uint32_t select, vector<array<string,3>>& filters, LocalData& ldata, RemoteData& rdata){
-    static const string header =  "HTTP/1.1 200 OK\r\n\r\n";
+    static const string header =  "HTTP/1.1 200 OK\r\n\r\n"; // TODO: need full header???
     int bytes = conn.write(header.c_str(), header.size() ); // no need to sign the header
 
     bool sign = select & SELECTION::SIGN;
@@ -90,13 +90,8 @@ int Response::write(Sock& conn, uint32_t select, vector<array<string,3>>& filter
 
 void Response::writeDebug(Sock& conn, uint32_t select, std::vector<array<string,3>>& filters){
     stringstream ss;
-    ss << "HTTP/1.1 200 OK\r\n\r\n"; // second "\n" separates headers from html
     ss << "<html><body>";
-    ss << "<a href='https://github.com/rand3289/OutNet'>OutNet INFO</a><br>";
-    ss << "QUERY=" <<  select << "<br>";
-    for(auto f: filters){
-        ss << f[0] << "_" << f[1] << "_" << f[2] << "<br>";
-    }
+
     time_t now = time(NULL);
     std::tm lnow;
 #ifdef _WIN32
@@ -105,8 +100,22 @@ void Response::writeDebug(Sock& conn, uint32_t select, std::vector<array<string,
     localtime_r(&now, &lnow);
 #endif
     ss << put_time(&lnow,"%c %Z") << "<br>";
+
+    ss << "<a href='https://github.com/rand3289/OutNet'>OutNet INFO</a><br>";
+    ss << "QUERY=" <<  select << "<br>";
+    for(auto f: filters){
+        ss << f[0] << "_" << f[1] << "_" << f[2] << "<br>";
+    }
     ss << "</body> </html>";
-    conn.write(ss.str().c_str(), ss.str().size() );
+
+    stringstream ssh; // ss header
+    ssh << "HTTP/1.1 200 OK\r\n"; // second "\r\n" separates headers from html
+    ssh << "Content-Type: text/html\r\n";
+    ssh << "Content-Length: " << ss.str().length() << "\r\n";
+    ssh << "\r\n";
+    ssh << ss.str();
+
+    conn.write(ssh.str().c_str(), ssh.str().size() );
 }
 
 
