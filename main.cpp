@@ -32,6 +32,7 @@ std::string selectStr(uint32_t sel){
 // Three threads: main one serves requests, second (crawler) collects info, 
 // third thread subscribes services & loads black lists.
 int main(int argc, char* argv[]){
+    cout << "OutNet service version 0.1" << endl;
     // LocalData, RemoteData  and BWLists are shared among threads.  They all have internal mutexes.
     LocalData ldata;  // info about local services and local public key
     RemoteData rdata; // information gathered about remote services
@@ -78,7 +79,6 @@ int main(int argc, char* argv[]){
     if( config.forwardLocalPort(port) ){
         cout << "Opened port " << port << " on the router (enabled port forwarding)." << endl;
     } else {
-        cerr << "ERROR opening port " << port << " on the router (port forwarding)." << endl;
         cerr << "If you have a NAT router, forward port " << port << " to local host manually!" << endl;
     }
 

@@ -160,6 +160,18 @@ bool UPNPNAT::tcp_connect(int& sock, const char * host,unsigned short int port)
 {
 	sock=socket(AF_INET,SOCK_STREAM,0);
 
+	// set recv() timeout
+	#ifdef _WIN32
+		DWORD tv = 5*1000; // milliseconds // fucking MSFT
+	#else
+		struct timeval tv = {5,0}; // 5 seconds // tv.tv_sec = 5; tv.tv_usec = 0;
+	#endif
+	if ( setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&tv, sizeof(tv) ) ) { // rcve() timeout
+		closesocket(sock);
+		last_error = "Error setting read timeout on socket";
+		return false;
+	}
+
 	struct sockaddr_in r_address;
     r_address.sin_family = AF_INET;
 	r_address.sin_port=htons(port);
@@ -171,16 +183,6 @@ bool UPNPNAT::tcp_connect(int& sock, const char * host,unsigned short int port)
 		char temp[100];
 		sprintf(temp, "Failed to connect to %s:%i\n", host, port);
 		last_error=temp;
-		return false;
-	}
-
-	// set recv() timeout
-	struct timeval tv;
-	tv.tv_usec = 0;
-	tv.tv_sec = 5;
-	if( setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&tv, sizeof tv) ){ // RCV
-        closesocket(sock);
-	    last_error = "Error setting read timeout on socket";
 		return false;
 	}
 
@@ -245,11 +247,11 @@ bool UPNPNAT::discovery(int retry)
 		}
 
 printf( "Got data from Describe URL: %s\n", describe_url.c_str() );
-printf("Base URL: %s\n", this->base_url.c_str() );
 printf("Control URL: %s\n", this->control_url.c_str() );
-printf("Service URL: %s\n", this->service_describe_url.c_str() );
 printf("Service Type: %s\n", this->service_type.c_str() );
-// printf("Description Info: %s\n",this->description_info.c_str() );
+//printf("Base URL: %s\n", this->base_url.c_str() );
+//printf("Service URL: %s\n", this->service_describe_url.c_str() );
+//printf("Description Info: %s\n",this->description_info.c_str() );
 
         closesocket(udp_socket);
 		return true ;
@@ -275,9 +277,7 @@ bool UPNPNAT::get_description()
     int sock;
 	ret = tcp_connect(sock, host.c_str(),port);
 	if(!ret){
-		last_error = "Error connecting to " + describe_url;
-        closesocket(sock);
-		return false;
+		return false; // last_error is set in tcp_connect()
 	}
 
 	char request[200];
@@ -461,9 +461,7 @@ bool UPNPNAT::add_port_mapping(const char * _description, const char * _destinat
 	int sock;
 	ret=tcp_connect(sock, host.c_str(),port);
 	if(!ret){
-		last_error = "Error connecting to " + control_url;
-		closesocket(sock);
-		return false;
+		return false; // last_error is set in tcp_connect()
     }
 	
 	char buff[MAX_BUFF_SIZE+1];
@@ -505,7 +503,6 @@ bool UPNPNAT::add_port_mapping(const char * _description, const char * _destinat
 	sprintf(temp,"Failed to add port mapping (%s/%s)\n",_description,_protocol);
 	last_error=temp;
 	last_error += response;
-	last_error += "\n";
 	return false;
 }
 
@@ -528,9 +525,7 @@ bool UPNPNAT::getExternalIP(std::string& IpOut, uint32_t& localIP){
 	int sock;
 	ret=tcp_connect(sock, host.c_str(),port);
 	if(!ret){
-		last_error = "Error connecting to "+ control_url;
-		closesocket(sock);
-		return false;
+		return false; // last_error is set in tcp_connect()
     }
 	
 	// get local IP

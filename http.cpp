@@ -99,8 +99,8 @@ void Response::writeDebug(Sock& conn, uint32_t select, std::vector<array<string,
     }
     time_t now = time(NULL);
     std::tm lnow;
-#ifdef _WIN32 // fucking MSFT
-    localtime_s(&lnow, &now);
+#ifdef _WIN32
+    localtime_s(&lnow, &now); // fucking MSFT
 #else
     localtime_r(&now, &lnow);
 #endif

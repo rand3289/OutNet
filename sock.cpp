@@ -5,11 +5,13 @@
 using namespace std;
 
 #ifdef _WIN32
+    #include <ws2tcpip.h> // socklen_t //    typedef int socklen_t;
     #define close(s) closesocket(s)
     #undef errno // do not use stdlib version in this file
     #define errno WSAGetLastError()
-    typedef int socklen_t;
-    typedef SOCKADDR sockaddr;
+    #ifndef sockaddr
+        typedef SOCKADDR sockaddr;
+    #endif
 #else // posix
     #include <signal.h> // signal() 
     #include <unistd.h> // close()
@@ -51,9 +53,11 @@ int err(const string& msg) { // errno returns positive numbers
 
 // set read()/write() timeout otherwise a remote client/server can get our process stuck!
 int Sock::setRWtimeout(int seconds){
-	struct timeval tv;
-	tv.tv_usec = 0;
-	tv.tv_sec = seconds;
+#ifdef _WIN32
+	DWORD tv = seconds*1000; // milliseconds // fucking MSFT
+#else
+	struct timeval tv = { seconds,0 }; // tv.tv_sec = seconds; tv.tv_usec = 0;
+#endif
 	if( setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, (char*)&tv, sizeof tv) ){ // RCV
 	    return err("setting read timeout: "); // errno returns positive numbers
 	}

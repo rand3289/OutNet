@@ -170,10 +170,14 @@ int Config::saveToDisk(){
 
 bool Config::forwardLocalPort(uint16_t port){
     string localAddr = Sock::ipToString(ldata->localIP);
-    cout << "Forwarding port " << port << " to local " << localAddr << ":" << port << endl;
+    cout << "Forwarding router's WAN port " << port << " to local " << localAddr << ":" << port << endl;
     if( 0 == ldata->localIP || port == 0){
         cerr << "ERROR: local IP or PORT are blank! Can not forward port." << endl;
         return false;
     }
-    return upnp.add_port_mapping("OutNet main", localAddr.c_str(), port, port, "TCP");
+    if( !upnp.add_port_mapping("OutNet main", localAddr.c_str(), port, port, "TCP")){
+        cerr << upnp.get_last_error() << endl;
+        return false;
+    }
+    return true;
 }
