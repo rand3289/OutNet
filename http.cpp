@@ -34,33 +34,32 @@ bool Request::parseFilter(char* filter, array<string,3>& funcOperVal){ // refere
 
 // look for a line like: GET /?QUERY=2036&SPORT=33344&PORT_EQ_2132 HTTP/1.1
 int Request::parse(Sock& conn, vector<array<string,3>>& filters, uint16_t& port){
-    uint32_t query = 0;
     char buff[2048];
-    for(int i=0; i< 10; ++i) { // drop if the other side is slow to send request
-        if(! conn.readLine(buff, sizeof(buff) ) ) {
-            this_thread::sleep_for(milliseconds(100));
-            continue;
-        }
+    while(true){
+        int rd = conn.readLine(buff, sizeof(buff));
+        if(rd < 0){ return -1; } // error reading more data (connection closed/timed out)
+        if( strncmp(buff,"GET",3) ){ break; } // found http GET query
         cout << buff << endl; // DEBUGGING ONLY!!!
-        if( strncmp(buff,"GET",3) ){ continue; } // we want http GET query
+    }
 
-        char* start = buff + 3; // skip "GET"
-        const char * end = start+strlen(start);
-        char* token = nullptr;
-        while( tokenize( start, end, token, " &?/") ){
-            if( strncmp(token, "QUERY=", 6) == 0 ){ // parse QUERY
-                query = atol(token+6);
-            } else if( strncmp(token, "SPORT=", 6) == 0){ // parse remote server port
-                port = (uint16_t) strtol(token+6, nullptr, 10); // base 10
-            } else if( strcmp(token,"HTTP") && strcmp(token,"1.1") ){ // throw away these tokens
-                array<string,3> funcOperVal; // auto funcOperVal = filters.emplace_back();
-                if( parseFilter(token, funcOperVal) ){
-                    filters.push_back( move(funcOperVal) );
-                }
+    uint32_t query = 0;
+    char* start = buff + 3; // skip "GET"
+    const char * end = start+strlen(start);
+    char* token = nullptr;
+    while( tokenize( start, end, token, " &?/") ){
+        if( strncmp(token, "QUERY=", 6) == 0 ){ // parse QUERY
+            query = atol(token+6);
+        } else if( strncmp(token, "SPORT=", 6) == 0){ // parse remote server port
+            port = (uint16_t) strtol(token+6, nullptr, 10); // base 10
+        } else if( strcmp(token,"HTTP") && strcmp(token,"1.1") ){ // throw away these tokens
+            array<string,3> funcOperVal; // auto funcOperVal = filters.emplace_back();
+            if( parseFilter(token, funcOperVal) ){
+                filters.push_back( move(funcOperVal) );
             }
         }
-        if(query>0){ break; } // we got all we need
-        cout << "### Query did not parse correctly. Entering HTTP request debug mode. ###" << endl;
+    }
+    if(0==query){
+        cout << "ERROR parsing query: " << buff << endl;
     }
     return query;
 }

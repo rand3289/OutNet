@@ -199,7 +199,10 @@ int Sock::read(void* buff, size_t size){
 int Sock::readLine(void* buff, size_t maxSize){
     char* curr = (char*)buff;
 	while( maxSize > (size_t) (curr-(char*)buff) ){
-		if( read(curr,1) <= 0 ){ break; }
+		if( read(curr,1) <= 0 ){
+			if(curr == buff){ return -1; }
+			break;
+		}
 		if( *curr==0 ) { break; }
 		if( *curr=='\n'){ break; }
 		if( *curr!='\r' ){ ++curr; }  // skip \r only
