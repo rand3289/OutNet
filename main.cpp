@@ -36,16 +36,18 @@ int main(int argc, char* argv[]){
     LocalData ldata;  // info about local services and local public key
     RemoteData rdata; // information gathered about remote services
     BlackList blist;  // Black and White lists
+    initNetwork(); // WSAStartup() on windows or ignore SIGPIPE on unix
 
     if(3 == argc){ // parse command line parameters IP and port
         uint32_t ip = Sock::stringToIP(argv[1]);
         uint16_t portInt = (uint16_t) strtol(argv[2], nullptr, 10); // base 10
         if( 0!=ip && 0!=portInt ){
+            cout << "Adding " << Sock::ipToString(ip) << ":" << portInt << " to list of IPs to scan." << endl;
             rdata.addContact(ip, portInt);
         }
     } else if(1 != argc){
         cerr << "ERROR parsing command line parameters.  ";
-        cerr << "usage: " << argv[0] << " host port" << endl;
+        cerr << "usage: " << argv[0] << " IP port" << endl;
         return 1;
     }
 

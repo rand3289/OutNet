@@ -104,7 +104,6 @@ void Config::init(LocalData& lData, BlackList& bList){
     loadBlackListFiles();
 
     cout << "Looking for your NAT router..." << endl;
-    upnp.init(); // TODO: move it to upnp constructor ???
     if ( upnp.discovery(3) ){
         cout << "Retrieving local IP & external IP from the router..." << endl;
         string ipStr;

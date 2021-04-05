@@ -10,7 +10,7 @@
 class UPNPNAT
 {
 public:
-	bool init();
+	bool initNetwork();
 	bool discovery(int retry = 3); // find router
 	std::string& get_last_error(){ return last_error; }
 

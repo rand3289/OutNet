@@ -141,13 +141,15 @@ static bool parseUrl(const char* url, std::string& host, unsigned short* port, s
 //*********************************************************************************
 
 
-bool UPNPNAT::init()
+bool UPNPNAT::initNetwork()
 {
 #ifdef _WIN32 // linux does not need initialization
     WORD wVersionRequested = MAKEWORD (2, 2);
     WSADATA wsaData;
     int err = WSAStartup (wVersionRequested, &wsaData);
 	if(err != 0) return false;
+#else
+	signal(SIGPIPE, SIG_IGN); // ignore SIGPIPE signal which can occur in write() or send()
 #endif
 	return true;
 }
