@@ -112,9 +112,9 @@ void Config::init(LocalData& lData, BlackList& bList){
         if( ipStr.length() > 6){ // at least x.x.x.x
             ldata->myIP = Sock::stringToIP( ipStr.c_str() );
             if( ldata->myIP > 0 ){
-                cout << "Retrieved external IP from the router: " << ipStr << endl;
+                cout << "WAN IP: " << ipStr << endl;
             } else { // TODO: this is an indication there is no NAT taking place.
-                cerr << "Error retrieving external IP from the router." << endl;
+                cerr << "Error retrieving IPs from the router." << endl;
             }
         }
     } else {

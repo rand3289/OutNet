@@ -35,12 +35,13 @@ bool Request::parseFilter(char* filter, array<string,3>& funcOperVal){ // refere
 // look for a line like: GET /?QUERY=2036&SPORT=33344&PORT_EQ_2132 HTTP/1.1
 int Request::parse(Sock& conn, vector<array<string,3>>& filters, uint16_t& port){
     char buff[2048];
-    while(true){
-        int rd = conn.readLine(buff, sizeof(buff));
-        if(rd < 0){ return -1; } // error reading more data (connection closed/timed out)
-        if( strncmp(buff,"GET",3) ){ break; } // found http GET query
+    int rd = conn.readLine(buff, sizeof(buff));
+    if(rd < 0){ return -1; } // error reading more data (connection closed/timed out)
+    if( strncmp(buff,"GET",3) ){ // not an http GET query
         cout << buff << endl; // DEBUGGING ONLY!!!
+        return -1;
     }
+    string line = buff; // save it for debugging
 
     uint32_t query = 0;
     char* start = buff + 3; // skip "GET"
@@ -59,7 +60,7 @@ int Request::parse(Sock& conn, vector<array<string,3>>& filters, uint16_t& port)
         }
     }
     if(0==query){
-        cout << "ERROR parsing query: " << buff << endl;
+        cout << "ERROR parsing query: " << line << endl;
     }
     return query;
 }
