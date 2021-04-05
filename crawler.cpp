@@ -31,7 +31,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
         return 0;
     }
 
-    sock.setRWtimeout(3); // 3 second read/write timeout // TODO: add it to config???
+    sock.setRWtimeout(5); // seconds read/write timeout // TODO: add it to config???
 
     // if we have remote's public key, do not request it (turn it off in select)
     if( hi.signatureVerified ){ // Do not go by pure existence of a key.  It has to be verified!
@@ -51,7 +51,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
     if(filters){ // did the caller include any query parameters?
         for(string& f: *filters){ ss << "&" << f; }
     }
-    ss << " HTTP/1.1\n";
+    ss << " HTTP/1.1\r\n";
 
 
     int len = (int) ss.str().length();
@@ -64,9 +64,9 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
     // if we requested signature, and the server did not send it, rating -100, dispose of data
     // read PubKey, services and wait till end of parsing / signature verification to lock and copy to "hi"
 
-    // read HTTP/1.1 200 OK\nServer: n3+1\n\n
+    // read HTTP/1.1 200 OK\r\n\r\n
     char buff[256];
-    int rdsize = sock.readLine(buff, sizeof(buff)-1);
+    int rdsize = sock.readLine(buff, sizeof(buff) );
     if( rdsize < 8 || nullptr == strstr(buff,"200") ) {
         cerr << "ERROR in queryRemoteService() while parsing: " << buff << endl;
         return 0;

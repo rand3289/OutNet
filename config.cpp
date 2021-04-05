@@ -105,7 +105,7 @@ void Config::init(LocalData& lData, BlackList& bList){
 
     cout << "Looking for your NAT router..." << endl;
     if ( upnp.discovery(3) ){
-        cout << "Retrieving local IP & external IP from the router..." << endl;
+        cout << "Retrieving this host's IP and WAN IP from the router..." << endl;
         string ipStr;
         upnp.getExternalIP(ipStr, ldata->localIP);
         cout << "Local IP: " << Sock::ipToString(ldata->localIP) << endl;
@@ -158,9 +158,10 @@ void Config::init(LocalData& lData, BlackList& bList){
 
 int Config::saveToDisk(){
     cout << "Saving configuration data to disk." << endl;
-    string msg = "# If this config file is deleted or corrupted it will be regenerated.";
+    string msg1 = "# Configuration file for OutNet service https://github.com/rand3289/OutNet";
+    string msg2 = "# If this file is deleted or corrupted it will be regenerated.";
     ofstream config(configName);
-    config << msg << endl;
+    config << msg1 << endl << msg2 << endl;
     config << "ConfigRefresh=" << refreshRate << " # how often do I look for new or updated files (seconds)" <<  endl;
     shared_lock slock(ldata->mutx);
     config << "ServerPort=" << ldata->myPort << " # server will accept connections on this port" << endl;

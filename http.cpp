@@ -67,7 +67,7 @@ int Request::parse(Sock& conn, vector<array<string,3>>& filters, uint16_t& port)
 
 
 int Response::write(Sock& conn, uint32_t select, vector<array<string,3>>& filters, LocalData& ldata, RemoteData& rdata){
-    static const string header =  "HTTP/1.1 200 OK\n\n";
+    static const string header =  "HTTP/1.1 200 OK\r\n\r\n";
     int bytes = conn.write(header.c_str(), header.size() ); // no need to sign the header
 
     bool sign = select & SELECTION::SIGN;
@@ -90,7 +90,7 @@ int Response::write(Sock& conn, uint32_t select, vector<array<string,3>>& filter
 
 void Response::writeDebug(Sock& conn, uint32_t select, std::vector<array<string,3>>& filters){
     stringstream ss;
-    ss << "HTTP/1.1 200 OK\n\n"; // second "\n" separates headers from html
+    ss << "HTTP/1.1 200 OK\r\n\r\n"; // second "\n" separates headers from html
     ss << "<html><body>";
     ss << "<a href='https://github.com/rand3289/OutNet'>OutNet INFO</a><br>";
     ss << "QUERY=" <<  select << "<br>";
@@ -111,6 +111,6 @@ void Response::writeDebug(Sock& conn, uint32_t select, std::vector<array<string,
 
 
 void Response::writeDenied(Sock& conn, const string& reason){
-    string msg = string("HTTP/1.1 403 ").append(reason).append("\n\n");
+    string msg = string("HTTP/1.1 403 ").append(reason).append("\r\n\r\n");
     conn.write(msg.c_str(), msg.length() );
 }

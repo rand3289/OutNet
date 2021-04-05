@@ -58,10 +58,10 @@ int Sock::setRWtimeout(int seconds){
 #else
 	struct timeval tv = { seconds,0 }; // tv.tv_sec = seconds; tv.tv_usec = 0;
 #endif
-	if( setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, (char*)&tv, sizeof tv) ){ // RCV
+	if( setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, (char*)&tv, sizeof(tv) ) ){ // RCV
 	    return err("setting read timeout: "); // errno returns positive numbers
 	}
-	if( setsockopt(s, SOL_SOCKET, SO_SNDTIMEO, (char*)&tv, sizeof tv) ){ // SND
+	if( setsockopt(s, SOL_SOCKET, SO_SNDTIMEO, (char*)&tv, sizeof(tv) ) ){ // SND
 		return err("setting write timeout: "); // errno returns positive numbers
     }
 	return 0;
@@ -186,31 +186,23 @@ int Sock::closeSock(void){
 
 int Sock::write(const void* buff, size_t size){
 //	cout << "WRITE: " << size << endl; // DEBUGGING!!!
-	if(s==INVALID_SOCKET){
-		cerr << "Socket not initialized - Can't write." << endl;
-		return -1;
-	}
 	return send(s, (char*) buff, size, MSG_NOSIGNAL);
 }
 
 
 int Sock::read(void* buff, size_t size){
 //	cout << "READ: " << size << endl; // DEBUGGING!!!
-	if(s==INVALID_SOCKET){
-		cerr << "Socket not initialized - Can't read." << endl;
-		return -1;
-	}
 	return recv(s, (char*) buff, size, 0); //	return recv(s, buff, size, MSG_DONTWAIT);
 }
 
 
-int Sock::readLine(void* buff, const size_t maxSize){
+int Sock::readLine(void* buff, size_t maxSize){
     char* curr = (char*)buff;
-	while( (size_t)(curr-(char*)buff) < maxSize-1 ){
+	while( maxSize > (size_t) (curr-(char*)buff) ){
 		if( read(curr,1) <= 0 ){ break; }
 		if( *curr==0 ) { break; }
 		if( *curr=='\n'){ break; }
-		if( *curr!='\r' ){ ++curr; }  // skip \r
+		if( *curr!='\r' ){ ++curr; }  // skip \r only
 	}
 	*curr = 0;
 	return (int) (curr-(char*)buff);
@@ -264,7 +256,7 @@ int Sock::readString(string& str){
 }
 
 
-int Sock::readString(void* buff, const size_t buffSize){ // make sure buff is at least 256 char long
+int Sock::readString(void* buff, size_t buffSize){ // make sure buff is at least 256 char long
     unsigned char size; // since size is an unsigned char it can not be illegal
     int rdsize = read( &size, sizeof(size) );
     if( 1!=rdsize ){ return -1; } // ERROR

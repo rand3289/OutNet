@@ -31,8 +31,10 @@ public:
 	int closeSock(void);
 
 	int read(void* buffer, size_t size);
-	int readLine(void* buffer, const size_t size);
-	int readString(void* buff, const size_t size);
+	// read a line ending in \r\n from the socket
+	int readLine(void* buffer, size_t size);
+	// read a string encoded as 1 byte for length + characters (no null termination)
+	int readString(void* buff, size_t size);
 	int readString(std::string& str);
 	uint16_t read16(bool& error);
 	uint32_t read32(bool& error);
@@ -40,7 +42,7 @@ public:
 	int write(const void* buffer, size_t size);
 	int write32(uint32_t data);
 	int write16(uint16_t data);
-	int writeString(const std::string& str);
+	int writeString(const std::string& str); // encoded as 1 byte for length + data
 
 	// server - start listening for a connection.  Use ANY_PORT if not binding to a specific port
 	constexpr const static uint16_t ANY_PORT = 0;
