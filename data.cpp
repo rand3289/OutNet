@@ -257,6 +257,7 @@ int RemoteData::send(Sock& sock, uint32_t select, vector<array<string,3>>& filte
                 if(sign){ signer.write(&hi->key, sizeof(PubKey)); }
             }
         }
+        // TODO: send hi->signatureVerified ??? (of interest to local services)
         if( select & SELECTION::RSVC ){
             bool includeAllServices = !(select & SELECTION::RSVCF);
             vector<Service*> svc;

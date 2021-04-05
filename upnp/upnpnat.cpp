@@ -5,6 +5,7 @@
     #include <winsock2.h>
     #include <ws2tcpip.h> // socklen_t
 #else
+    #include <signal.h>
     #include <arpa/inet.h> // inet_addr()
     #include <netinet/in.h> // sockaddr_in
     #include <unistd.h> // close(), usleep()
@@ -503,6 +504,8 @@ bool UPNPNAT::add_port_mapping(const char * _description, const char * _destinat
 	char temp[100];
 	sprintf(temp,"Failed to add port mapping (%s/%s)\n",_description,_protocol);
 	last_error=temp;
+	last_error += response;
+	last_error += "\n";
 	return false;
 }
 
