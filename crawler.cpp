@@ -85,12 +85,13 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
     const bool sign = select & SELECTION::SIGN; // is signature requested?
     if(sign){ signer.init(); }
 
-    bool error = false;
-    uint32_t selectRet = sock.read32(error);
-    if(error){
+    uint32_t selectRet; // SELECT is always received
+    rdsize = sock.read(&selectRet, sizeof(selectRet) );
+    if(rdsize != sizeof(selectRet)){
         return ERR("reading 'select'");
     }
-    if(sign){ signer.write(&selectRet, sizeof(selectRet)); }// always received
+    if(sign){ signer.write(&selectRet, sizeof(selectRet)); } // signer gets data in network byte order
+    selectRet = ntohl(selectRet);
 
 // TODO: allow local services to add themselves by connecting to outnet with SPORT= set to their port
 // when outnet connects to it, allow replies without signing the response. (sign=false;)
@@ -113,11 +114,13 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
     }
 
     if(selectRet & SELECTION::TIME){
-        uint32_t timeRemote = sock.read32(error);
-        if(error){
+        uint32_t timeRemote;
+        rdsize = sock.read(&timeRemote, sizeof(timeRemote) );
+        if(rdsize != sizeof(timeRemote) ){
             return ERR("reading remote's time.");
         }
         if(sign){ signer.write(&timeRemote, sizeof(timeRemote)); }
+        timeRemote = ntohl(timeRemote);
         // check that timestamp is not too long in the past, otherwise it can be a replay attack
         uint32_t now = (uint32_t) time(nullptr); // unix time does not depend on a timezone
         if( now - timeRemote > 10*60 ){
@@ -127,11 +130,13 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
 
     vector<string> lservices;
     if( selectRet & SELECTION::LSVC ){
-        uint16_t count = sock.read16(error);
-        if(error){
+        uint16_t count;
+        rdsize = sock.read(&count, sizeof(count));
+        if(rdsize != sizeof(count) ){
             return ERR("reading remote service count.");
         }
         if(sign){ signer.write(&count, sizeof(count)); }
+        count = ntohs(count);
 
         for(int i=0; i < count; ++i){
             rdsize = sock.readString(buff, sizeof(buff));
@@ -144,11 +149,13 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
     }
 
     // remote data
-    uint32_t count = sock.read32(error); // count is always there even if data is not
-    if(error){
+    uint32_t count;
+    rdsize = sock.read(&count, sizeof(count) ); // count is always there even if data is not
+    if(rdsize != sizeof(count) ){
         return ERR("reading HostInfo count.");
     }
     if(sign){ signer.write(&count, sizeof(count)); }
+    count = ntohl(count);
 
     vector<HostInfo> unverifiedData;
     for(uint32_t i=0; i< count; ++i){
@@ -167,11 +174,12 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
         }
 
         if( selectRet & SELECTION::PORT ){
-            hil.port = sock.read16(error);
-            if(error){
+            rdsize = sock.read(&hil.port, sizeof(hil.port) );
+            if(rdsize != sizeof(hil.port) ){
                 return ERR("reading port.");
             }
             if(sign){ signer.write(&hil.port, sizeof(hil.port)); }
+            hil.port = ntohs(hil.port);
         }
 
         if( selectRet&SELECTION::IP && selectRet&SELECTION::PORT ){
@@ -185,11 +193,13 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
         }
 
         if( selectRet & SELECTION::AGE ){
-            uint16_t age = sock.read16(error);
-            if(error){
+            uint16_t age;
+            rdsize = sock.read(&age, sizeof(age) );
+            if(rdsize != sizeof(age) ){
                 return ERR("reading age.");
             }
             if(sign){ signer.write(&age, sizeof(age)); }
+            age = ntohs(age);
             hil.seen = system_clock::now() - minutes(age); // TODO: check some reserved values ???
         }
 
@@ -212,11 +222,14 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
         }
 
         if( selectRet & SELECTION::RSVC ){
-            uint16_t cnt = sock.read16(error);
-            if(error){
+            uint16_t cnt;
+            rdsize = sock.read(&cnt, sizeof(cnt) );
+            if(rdsize != sizeof(cnt) ){
                 return ERR("reading remote service count.");
             }
             if(sign){ signer.write(&cnt, sizeof(cnt)); }
+            cnt = ntohs(cnt);
+
             for(int i=0; i< cnt; ++i){
                 rdsize = sock.readString(buff, sizeof(buff));
                 if(rdsize <=0){

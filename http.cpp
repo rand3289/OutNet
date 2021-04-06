@@ -73,8 +73,9 @@ int Response::write(Sock& conn, uint32_t select, vector<array<string,3>>& filter
     bool sign = select & SELECTION::SIGN;
     if(sign){ signer.init(); }
 
-    bytes+= conn.write32(select);
-    if(sign) { signer.write(&select, sizeof(select) ); }
+    uint32_t nsel = htonl(select);
+    bytes+= conn.write(&nsel, sizeof(nsel));
+    if(sign) { signer.write(&nsel, sizeof(nsel) ); }
 
     bytes+= ldata.send(conn, select, filters, signer);
     bytes+= rdata.send(conn, select, filters, signer);

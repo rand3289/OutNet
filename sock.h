@@ -39,9 +39,9 @@ public:
 	uint16_t read16(bool& error);
 	uint32_t read32(bool& error);
 
-	int write(const void* buffer, size_t size);
 	int write32(uint32_t data);
 	int write16(uint16_t data);
+	int write(const void* buffer, size_t size);
 	int writeString(const std::string& str); // encoded as 1 byte for length + data
 
 	// server - start listening for a connection.  Use ANY_PORT if not binding to a specific port
