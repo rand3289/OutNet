@@ -76,6 +76,8 @@ bool Signature::generate(PubSign& pubSign){
     vector<unsigned char> m2(len);
     crypto_sign(&m2[0], &len, start, len-SIGNATURE_SIZE, privateKey.key);
     memcpy(pubSign.sign, &m2[0], SIGNATURE_SIZE); // first crypto_sign_BYTES is the signature
+    cout << "Generated signed message:" << endl;
+    printHex( &m2[0], len);
     return true;
 }
 
@@ -85,6 +87,8 @@ bool Signature::verify(const PubSign& sign, const PubKey& pubKey) {
     memcpy(start, sign.sign, sizeof(sign)); // prepend signature to the beginning of the buffer
     unsigned long long len = buff.size();   // len will be read twice & written to
     vector<unsigned char> m2(len);          // do not worry about extra SIGNATURE_SIZE bytes
+    cout << "Received signed message:" << endl;
+    printHex( (unsigned char*) buff.get(), len);
     return !crypto_sign_open(&m2[0], &len, start, len, (unsigned char*) pubKey.key); // returns 0 on success
 }
 

@@ -87,3 +87,14 @@ bool keyValue(const string& str, string& key, string& value){
     ltrim(value);
     return true;
 }
+
+
+#include <iomanip>
+// print buffer using hex digits 4 + space
+void printHex(unsigned char* buff, int len){
+    for(int i = 0; i< len; ++i){
+        cout << std::setw(2) << std::setfill('0') << std::hex << (int) buff[i] << ( 1==i%2 ? " ": "");
+    }
+    cout << endl;
+    cout.flush();
+}
