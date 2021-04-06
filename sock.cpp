@@ -24,16 +24,16 @@ using namespace std;
 
 
 void initNetwork(){
-#ifdef _WIN32
     static bool initialized = false;
     if(initialized){ return; }
     initialized = true;
+#ifdef _WIN32
     WSADATA wsaData;
-    if(WSAStartup(0x0202,&wsaData)){
+    if(WSAStartup(0x0202, &wsaData)){
         cerr << "Error upon WSAStartup()" << endl;
     }
 #else // TODO: use sigaction()?  set a handler and log received signals?
-    signal(SIGPIPE, SIG_IGN); // ignore SIGPIPE signal which can occur on write() or send()
+    signal(SIGPIPE, SIG_IGN); // ignore SIGPIPE signal which occurs in send()
 #endif
 }
 
@@ -56,7 +56,7 @@ int Sock::setRWtimeout(int seconds){
 #ifdef _WIN32
 	DWORD tv = seconds*1000; // milliseconds // fucking MSFT
 #else
-	struct timeval tv = { seconds,0 }; // tv.tv_sec = seconds; tv.tv_usec = 0;
+	struct timeval tv = { seconds, seconds }; // tv.tv_sec = seconds; tv.tv_usec = 0;
 #endif
 	if( setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, (char*)&tv, sizeof(tv) ) ){ // RCV
 	    return err("setting read timeout: "); // errno returns positive numbers
@@ -70,15 +70,9 @@ int Sock::setRWtimeout(int seconds){
 
 // ip has to be in the network byte order!!!
 int Sock::connect(uint32_t ipaddr, uint16_t port){
- 	s=socket(AF_INET,SOCK_STREAM,0);
-	if(s==INVALID_SOCKET){
-		cerr << "Error creating socket." << endl;
-		return -3;
-	}
-
 	ip.sin_family      = AF_INET;
-	ip.sin_port        = htons(port);
 	ip.sin_addr.s_addr = ipaddr;
+	ip.sin_port        = htons(port);
 
 	if( ::connect(s, (sockaddr*)&ip, sizeof(ip) ) ){
 		return err("connecting to remote host via TCP: ");
@@ -115,12 +109,6 @@ SOCKET Sock::accept(Sock& conn){
 
 
 int Sock::listen(uint16_t port){
- 	s = socket(AF_INET, SOCK_STREAM, 0);
-	if(s==INVALID_SOCKET){
-		err("creating socket: ");
-		return -1;
-	}
-
     int reuse = 1; // allow binding to a port if previous socket is lingering
     if ( 0 > setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char*)&reuse, sizeof(reuse)) ){
         err("in setsockopt(SO_REUSEADDR): ");
@@ -150,14 +138,17 @@ int Sock::listen(uint16_t port){
 }
 
 
-Sock::Sock(): s(INVALID_SOCKET) {
+Sock::Sock() {
+	initNetwork();
 	memset(&ip,0,sizeof(ip));
-    initNetwork();
+	s = socket(AF_INET, SOCK_STREAM, 0);
+	if(s==INVALID_SOCKET){
+		err("creating socket: ");
+	}
 }
 
 
 Sock::Sock(SOCKET socket): s(socket) {
-	initNetwork();
 	socklen_t size = sizeof(ip);
 	if( -1 == getpeername(socket, (sockaddr*)&ip, &size) ){ // if it fails, just clear ip
 	    memset( &ip, 0,sizeof(ip) ); // getsockname() instead ???

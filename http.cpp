@@ -106,7 +106,7 @@ void Response::writeDebug(Sock& conn, uint32_t select, std::vector<array<string,
     for(auto f: filters){
         ss << f[0] << "_" << f[1] << "_" << f[2] << "<br>";
     }
-    ss << "</body> </html>";
+    ss << "</body></html>";
 
     stringstream ssh; // ss header
     ssh << "HTTP/1.1 200 OK\r\n"; // second "\r\n" separates headers from html
