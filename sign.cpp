@@ -81,15 +81,11 @@ bool Signature::generate(PubSign& pubSign){
 
 
 bool Signature::verify(const PubSign& sign, const PubKey& pubKey) {
-    unsigned char* start = (unsigned char*) buff.get();
+    unsigned char* start = (unsigned char*) buff.get(); // pointer to the beginning of the buffer
     memcpy(start, sign.sign, sizeof(sign)); // prepend signature to the beginning of the buffer
-    unsigned long long len = buff.size();
-    vector<unsigned char> m2(len); // do not worry about extra SIGNATURE_SIZE bytes
-    if(-1 == crypto_sign_open(&m2[0], &len, start, len, (unsigned char*) pubKey.key) ){ // returns 0 on success
-        cout << "Signature failed verification!" << endl;
-        return false;
-    }
-    return true;
+    unsigned long long len = buff.size();   // len will be read twice & written to
+    vector<unsigned char> m2(len);          // do not worry about extra SIGNATURE_SIZE bytes
+    return !crypto_sign_open(&m2[0], &len, start, len, (unsigned char*) pubKey.key); // returns 0 on success
 }
 
 
