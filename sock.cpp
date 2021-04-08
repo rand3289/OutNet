@@ -23,18 +23,20 @@ using namespace std;
 #endif
 
 
-void initNetwork(){
+bool initNetwork(){
     static bool initialized = false;
-    if(initialized){ return; }
-    initialized = true;
+    if(initialized){ return true; }
 #ifdef _WIN32
     WSADATA wsaData;
     if(WSAStartup(0x0202, &wsaData)){
-        cerr << "Error upon WSAStartup()" << endl;
+        cerr << "ERROR: WSAStartup() failed!" << endl;
+        return false;
     }
 #else // TODO: use sigaction()?  set a handler and log received signals?
     signal(SIGPIPE, SIG_IGN); // ignore SIGPIPE signal which occurs in send()
 #endif
+    initialized = true;
+    return true;
 }
 
 
@@ -56,7 +58,7 @@ int Sock::setRWtimeout(int seconds){
 #ifdef _WIN32
 	DWORD tv = seconds*1000; // milliseconds // fucking MSFT
 #else
-	struct timeval tv = { seconds, seconds }; // tv.tv_sec = seconds; tv.tv_usec = 0;
+	timeval tv = { seconds, 0 }; // tv.tv_sec = seconds; tv.tv_usec = 0;
 #endif
 	if( setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, (char*)&tv, sizeof(tv) ) ){ // RCV
 	    return err("setting read timeout: "); // errno returns positive numbers

@@ -15,7 +15,7 @@
 // typedef uint32_t IPADDR; // but sockaddr_in::sin_addr.s_addr is defined as "unsigned long"
 // typedef uint16_t IPPORT;
 
-void initNetwork(); // calls WSAStartup() on windows or ignores SIGPIPE on unix
+bool initNetwork(); // calls WSAStartup() on windows or ignores SIGPIPE on unix
 
 class Sock { // TCP socket
 	SOCKET s;

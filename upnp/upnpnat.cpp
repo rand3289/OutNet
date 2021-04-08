@@ -148,7 +148,10 @@ bool UPNPNAT::initNetwork()
     WORD wVersionRequested = MAKEWORD (2, 2);
     WSADATA wsaData;
     int err = WSAStartup (wVersionRequested, &wsaData);
-	if(err != 0) return false;
+	if(err != 0){
+		cerr << "ERROR: WSAStartup() failed" << endl;
+		return false;
+	}
 #else
 	signal(SIGPIPE, SIG_IGN); // ignore SIGPIPE signal which can occur in write() or send()
 #endif
@@ -164,7 +167,7 @@ bool UPNPNAT::tcp_connect(int& sock, const char * host,unsigned short int port)
 	#ifdef _WIN32
 		DWORD tv = 5*1000; // milliseconds // fucking MSFT
 	#else
-		struct timeval tv = {5,0}; // 5 seconds // tv.tv_sec = 5; tv.tv_usec = 0;
+		timeval tv = {5,0}; // 5 seconds // tv.tv_sec = 5; tv.tv_usec = 0;
 	#endif
 	if ( setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&tv, sizeof(tv) ) ) { // rcve() timeout
 		closesocket(sock);

@@ -60,6 +60,7 @@ Since one does not want to expose ALL available local services on the internet, 
 Most features are implemented and currently being tested.  Project does not have ANY external dependencies.  Everything is built-in (source code available from ONE git repository).  
 It compiles using g++ 10.2 under linux, MinGW-w64 from msys2.org on windows and Visual Studio.  Apple requires an Apple ID to download Command Line Tools.  Apple ID registration requires submission of your phone number.  This project has not been ported to macOS for this reason.
 To compile on linux type "make" or "make tests".  To compile on Windows type "make -f makefile.mingw64" or "make -f makefile.mingw64 tests".
+There is a bug in signature verification.  Visual Studio build is currently broken. Windows network code fails to rcve() as a result router code and protocol code are broken.
 
 
 Reading further requires understanding of the following concepts:  

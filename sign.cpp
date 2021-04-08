@@ -98,7 +98,7 @@ bool Signature::verify(const PubSign& sign, const PubKey& pubKey) {
     vector<unsigned char> m2(len);          // do not worry about extra SIGNATURE_SIZE bytes
     cout << "Received signed message:" << endl;
     printHex( (unsigned char*) buff.get(), len);
-    cout << "Remote's public key:";
+    cout << "Remote's public key: ";
     printHex(pubKey.key, sizeof(pubKey));
     return !crypto_sign_open(&m2[0], &len, start, len, (unsigned char*) pubKey.key); // returns 0 on success
 }

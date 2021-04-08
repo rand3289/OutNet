@@ -33,12 +33,14 @@ std::string selectStr(uint32_t sel){
 // Three threads: main one serves requests, second (crawler) collects info, 
 // third thread subscribes services & loads black lists.
 int main(int argc, char* argv[]){
-    cout << "OutNet service version 0.1" << endl;
-    // LocalData, RemoteData  and BWLists are shared among threads.  They all have internal mutexes.
+    cout << "OutNet service version 0.1 (" << __DATE__ << ")" << endl;
+    // LocalData, RemoteData and BlackLists are shared among threads.  They all have internal mutexes.
     LocalData ldata;  // info about local services and local public key
     RemoteData rdata; // information gathered about remote services
     BlackList blist;  // Black and White lists
-    initNetwork(); // WSAStartup() on windows or ignore SIGPIPE on unix
+    if( !initNetwork() ){ // WSAStartup() on windows or set ignore SIGPIPE on unix
+        return 4;
+    }
 
     if(3 == argc){ // parse command line parameters IP and port
         uint32_t ip = Sock::stringToIP(argv[1]);
@@ -85,14 +87,16 @@ int main(int argc, char* argv[]){
         cerr << "If you have a NAT router, forward port " << port << " to local host manually!" << endl;
     }
 
-    // create a thread that watches files for service and BWList updates
-    std::thread watch( &Config::watch, &config);
-
-    // create the information collector thread here (there could be many in the future)
-    // it searches and fills rdata while honoring BWLists
     Crawler crawler(ldata, rdata, blist);
     crawler.loadRemoteDataFromDisk(); // load rdata
+    cout << "============================================================" << endl << endl; // starting threads
+
+    // create the information collector thread here (there could be many in the future)
+    // it searches and fills rdata while honoring BlackLists
     std::thread search( &Crawler::run, &crawler);
+
+    // create a thread that watches files for service and BWList updates
+    std::thread watch( &Config::watch, &config);
 
     // unordered_map::operator[] crashes.  Switching to map for now.
     // unordered_map<uint32_t, system_clock::time_point> connTime; // keep track of when someone connects to us
