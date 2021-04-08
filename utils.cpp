@@ -89,12 +89,12 @@ bool keyValue(const string& str, string& key, string& value){
 }
 
 
-#include <iomanip>
+#include <iomanip> // std::hex, std::dec
 // print buffer using hex digits 4 + space
-void printHex(unsigned char* buff, int len){
+void printHex(const unsigned char* buff, int len){
     for(int i = 0; i< len; ++i){
         cout << std::setw(2) << std::setfill('0') << std::hex << (int) buff[i] << ( 1==i%2 ? " ": "");
     }
-    cout << endl;
+    cout << std::setw(1) << std::dec << endl; // reset back to decimal
     cout.flush();
 }

@@ -61,6 +61,8 @@ int main(int argc, char* argv[]){
         cerr << "ERROR loading keys.  Exiting." << endl;
         return 2;
     }
+    cout << "My public key is: ";
+    printHex( ldata.localPubKey.key, sizeof(ldata.localPubKey) );
 
     // create the server returning all queries
     // first time it starts running on a random port (ANY_PORT)

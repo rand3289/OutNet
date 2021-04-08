@@ -16,7 +16,7 @@ struct PrivateKey { unsigned char  key[SECRETKEY_SIZE]; };
 struct PubKey {
     unsigned char  key[PUBKEY_SIZE];
     bool operator==(const PubKey& rhs){ return 0==memcmp( &key, &rhs.key, sizeof(key) ); }
-    PubKey& operator=(const PubKey& rhs){ memcpy(key, rhs.key, sizeof(key)); return *this; }
+//    PubKey& operator=(const PubKey& rhs){ memcpy(key, rhs.key, sizeof(key)); return *this; }
 //    PubKey(const PubKey& rhs){ memcpy(key, rhs.key, sizeof(key)); }
 };
 

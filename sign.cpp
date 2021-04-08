@@ -29,9 +29,13 @@ bool Signature::loadKeys(PubKey& pubKey){ // static
 
     if( pubkey.good() && seckey.good() ){ // both files are there
         pubkey.read( (char*) publicKey.key, sizeof(publicKey) );
-        if( pubkey.good() ){
+        if( pubkey.good() ){ // read public key successfuly
+            memcpy(pubKey.key, publicKey.key, sizeof(publicKey)); // return it to caller
             seckey.read( (char*) privateKey.key, sizeof(privateKey) );
-            if(seckey.good() ){ return true; }
+            if(seckey.good() ){
+                keysLoaded = true;
+                return true;
+            }
         }
         rename(privateKeyFile.c_str(), (privateKeyFile+".old").c_str() );
         rename(pubKeyFile.c_str(), (pubKeyFile+".old").c_str() );
@@ -56,7 +60,10 @@ bool Signature::loadKeys(PubKey& pubKey){ // static
     ofstream seck(privateKeyFile, std::ios::binary);
     pubk.write( (char*) publicKey.key, sizeof(publicKey) );
     seck.write( (char*) privateKey.key, sizeof(privateKey) );
-    // TODO: check that the write succeeded
+    if(!pubk || !seck){ // check that the writes succeeded
+        cerr << "ERROR saving keys.  Do you have write permissions?  Fix it and run OutNet again." << endl;
+        return false;
+    }
 
     keysLoaded = true;
     return true;
@@ -72,11 +79,13 @@ int Signature::init(){ // prepare to sign data written via write()
 
 bool Signature::generate(PubSign& pubSign){
     unsigned char* start = (unsigned char*) buff.get() + SIGNATURE_SIZE;
-    unsigned long long len = buff.size();// buff always has extra SIGNATURE_SIZE bytes
+    unsigned long long len = buff.size();// buff had SIGNATURE_SIZE bytes reserved in init()
     vector<unsigned char> m2(len);
     crypto_sign(&m2[0], &len, start, len-SIGNATURE_SIZE, privateKey.key);
     memcpy(pubSign.sign, &m2[0], SIGNATURE_SIZE); // first crypto_sign_BYTES is the signature
-    cout << "Generated signed message:" << endl;
+    cout << "Signing " << buff.size() - SIGNATURE_SIZE << " bytes:" << endl;
+    printHex (start, buff.size() - SIGNATURE_SIZE);
+    cout << "Generated " << len << " bytes signed message:" << endl;
     printHex( &m2[0], len);
     return true;
 }
@@ -89,6 +98,8 @@ bool Signature::verify(const PubSign& sign, const PubKey& pubKey) {
     vector<unsigned char> m2(len);          // do not worry about extra SIGNATURE_SIZE bytes
     cout << "Received signed message:" << endl;
     printHex( (unsigned char*) buff.get(), len);
+    cout << "Remote's public key:";
+    printHex(pubKey.key, sizeof(pubKey));
     return !crypto_sign_open(&m2[0], &len, start, len, (unsigned char*) pubKey.key); // returns 0 on success
 }
 

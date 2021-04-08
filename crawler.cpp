@@ -76,7 +76,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
     char buff[256];
     int rdsize = sock.readLine(buff, sizeof(buff) );
     if( rdsize < 8 || nullptr == strstr(buff,"200") ) {
-        cerr << "ERROR in queryRemoteService() while parsing: " << buff << endl;
+        cerr << "ERROR in queryRemoteService() while parsing " << rdsize << " bytes: " << buff << endl;
         return 0;
     }
     while( sock.readLine(buff, sizeof(buff) ) > 0 ) {} // skip till empty line is read (HTTP protocol)

@@ -91,18 +91,7 @@ int Config::loadServiceFiles(){
 int Config::loadBlackListFiles(){ return 0; }
 
 
-// a member of type "const std::string" cannot have an in-class initializerC/C++(1591)
-static const string configName = "settings.cfg";
-
-// load port and refresh rate from config file
-void Config::init(LocalData& lData, BlackList& bList){
-    cout << "Loading configuration data." << endl;
-    ldata = &lData;
-    blist = &bList;
-
-    loadServiceFiles();
-    loadBlackListFiles();
-
+int Config::findIPs(){
     cout << "Looking for your NAT router..." << endl;
     if ( upnp.discovery(3) ){
         cout << "Retrieving this host's IP and WAN IP from the router..." << endl;
@@ -121,7 +110,22 @@ void Config::init(LocalData& lData, BlackList& bList){
         cerr << "Failed to find a NAT router.  ERROR: " << upnp.get_last_error() << endl;
         // TODO: fill ldata->myIP and ldata->localIP without using router's help
     }
+    return 0;
+}
 
+
+// a member of type "const std::string" cannot have an in-class initializerC/C++(1591)
+static const string configName = "settings.cfg";
+
+// load port and refresh rate from config file
+void Config::init(LocalData& lData, BlackList& bList){
+    ldata = &lData;
+    blist = &bList;
+    loadServiceFiles();
+    loadBlackListFiles();
+    findIPs();
+
+    cout << "Loading configuration data." << endl;
     ldata->myPort = Sock::ANY_PORT; // default port for OutNet to listen on
 
     ifstream config (configName);

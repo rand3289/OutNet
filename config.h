@@ -12,6 +12,7 @@ class Config {
 
     int loadBlackListFiles();
     int loadServiceFiles();
+    int findIPs();
 public:
     void init(LocalData& ldata, BlackList& blist);
     bool forwardLocalPort(uint16_t port);

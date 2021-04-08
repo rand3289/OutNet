@@ -24,7 +24,7 @@ void parseLines(std::istream& stream, std::vector<std::string>& lines);
 // Return true if str is a key=value pair.
 bool keyValue(const std::string& str, std::string& key, std::string& value);
 
-void printHex(unsigned char* buff, int len); // print buffer using hex digits 4 + space
+void printHex(const unsigned char* buff, int len); // print buffer using hex digits 4 + space
 
 
 template <typename SIZET> // uint32_t or uint64_t
