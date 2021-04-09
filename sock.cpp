@@ -168,9 +168,9 @@ Sock::~Sock(){
 
 
 int Sock::closeSock(void){
-	if( shutdown(s, SHUT_RDWR) ){
-		err("shutting down socket: ");
-	}
+//	if( shutdown(s, SHUT_RDWR) ){
+//		err("shutting down socket: ");
+//	}
 	if(::close(s)){
 		err("closing socket: ");
 	}
@@ -278,7 +278,8 @@ int Sock::readString(void* buff, size_t buffSize){ // make sure buff is at least
 
 
 // https://en.wikipedia.org/wiki/Private_network
-bool Sock::isRoutable(uint32_t ip){ // is it routable or non-routable IP ?
+// is it routable or non-routable IP ?
+bool Sock::isRoutable(uint32_t ip){ // static
     unsigned char* ipc = (unsigned char*) &ip;
     if( 10 == ipc[0] ){ return false; }
     if( 192 == ipc[0] && 168 == ipc[1] ){ return false; }
