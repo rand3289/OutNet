@@ -18,4 +18,4 @@ tests: $(TESTOBJ)
 	$(CC) -o $@ $^ -lpthread
 
 clean:
-	/bin/rm -f *.o upnp/*.o sign/*.o
+	/bin/rm -f *.o upnp/*.o sign/*.o tests outnet

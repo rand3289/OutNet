@@ -51,6 +51,10 @@ int main(int argc, char* argv[]) {
     cin.ignore();
 
     for(int32_t select = 1; select < 32*1024; ++select){
+        // avoid combinations that request a signature without requesting a key
+        if( (select & SELECTION::SIGN) ){
+            select = select | SELECTION::LKEY;
+        }
         queryService(crawl, service, select);
     }
 }

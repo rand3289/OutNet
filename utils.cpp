@@ -98,3 +98,15 @@ void printHex(const unsigned char* buff, int len){
     cout << std::setw(1) << std::dec << endl; // reset back to decimal
     cout.flush();
 }
+
+
+void printAscii(const unsigned char* buff, int len){
+    for(int i = 0; i< len; ++i){
+        unsigned char val = buff[i];
+        val = ( val > 32 && val< 127 ) ? val : '.';
+        cout <<  val;
+    }
+    cout << endl;
+    cout.flush();
+}
+

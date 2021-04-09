@@ -8,7 +8,7 @@
 using namespace std;
 
 
-HostInfo::HostInfo(): host(0), port(0), signatureVerified(false), offlineCount(0),
+HostInfo::HostInfo(): host(0), port(0), key(), services(), signatureVerified(false), offlineCount(0),
         rating(DEFAULT_RATING), referIP(0), referPort(0) {
     met = seen = missed = system_clock::from_time_t(0); // time_point::min() is broken (overflows) !!!
 }
@@ -245,7 +245,6 @@ int RemoteData::send(Sock& sock, uint32_t select, vector<array<string,3>>& filte
             age = htons(age);
             bytes+= sock.write( &age, sizeof(age) );
             if(sign){ signer.write(&age, sizeof(age) ); }
-
         }
         if( select & SELECTION::RKEY ){
             unsigned char keyCount = hi->key ? 1 : 0;
@@ -254,7 +253,7 @@ int RemoteData::send(Sock& sock, uint32_t select, vector<array<string,3>>& filte
 
             if(hi->key){
                 bytes+= sock.write( &*hi->key, sizeof(PubKey) );
-                if(sign){ signer.write(&hi->key, sizeof(PubKey)); }
+                if(sign){ signer.write( &*hi->key, sizeof(PubKey)); }
             }
         }
         // TODO: send hi->signatureVerified ??? (of interest to local services)

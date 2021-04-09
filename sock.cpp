@@ -166,6 +166,9 @@ Sock::~Sock(){
 
 
 int Sock::closeSock(void){
+	if( shutdown(s,SHUT_RDWR) ){
+		err("shutting down socket: ");
+	}
 	if(::close(s)){
 		err("closing socket: ");
 	}

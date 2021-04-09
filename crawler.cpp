@@ -165,7 +165,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
         hil.met = system_clock::now();
         bool discard = false; // if record is bad, continue reading but discard it at the end
 
-        if( selectRet & SELECTION::IP ){ // do not use Sock::read32() - IP does not need ntohl()
+        if( selectRet & SELECTION::IP ){ // IP does not need ntohl()
             rdsize = sock.read( &hil.host, sizeof(hil.host));
             if(rdsize != sizeof(hil.host)){
                 return ERR("reading IP.");
@@ -204,9 +204,9 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
         }
 
         if( selectRet & SELECTION::RKEY ){
-            char keyCount = 0;
+            unsigned char keyCount = 0;
             rdsize = sock.read( &keyCount, sizeof(keyCount) );
-            if( sizeof(keyCount) != rdsize ){
+            if( rdsize != sizeof(keyCount) ){
                 return ERR("reading key count.");
             }
             if(sign){ signer.write(&keyCount, sizeof(keyCount)); }
