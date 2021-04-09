@@ -12,6 +12,7 @@ using namespace std;
     #ifndef sockaddr
         typedef SOCKADDR sockaddr;
     #endif
+	#define SHUT_RDWR SD_BOTH // shutdown(socket, how) 
 #else // posix
     #include <signal.h> // signal() 
     #include <unistd.h> // close()

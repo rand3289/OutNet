@@ -149,7 +149,7 @@ bool UPNPNAT::initNetwork()
     WSADATA wsaData;
     int err = WSAStartup (wVersionRequested, &wsaData);
 	if(err != 0){
-		cerr << "ERROR: WSAStartup() failed" << endl;
+		std::cerr << "ERROR: WSAStartup() failed" << std::endl;
 		return false;
 	}
 #else

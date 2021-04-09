@@ -16,4 +16,4 @@ tests: $(TESTOBJ)
 	$(CC) -o $@ $^ -lpthread -lwsock32 -static
 
 clean:
-	/bin/rm -f *.o upnp/*.o sign/*.o
+	/bin/rm -f *.o upnp/*.o sign/*.o outnet.exe tests.exe
