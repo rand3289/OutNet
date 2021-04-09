@@ -5,23 +5,37 @@
 using namespace std;
 
 #ifdef _WIN32
-    #include <ws2tcpip.h> // socklen_t //    typedef int socklen_t;
+    #include <ws2tcpip.h> //    typedef int socklen_t;
     #define close(s) closesocket(s)
-    #undef errno // do not use stdlib version in this file
-    #define errno WSAGetLastError()
-    #ifndef sockaddr
-        typedef SOCKADDR sockaddr;
-    #endif
 	#define SHUT_RDWR SD_BOTH // shutdown(socket, how) 
+    #define MSG_NOSIGNAL 0    // send() param
 #else // posix
     #include <signal.h> // signal() 
     #include <unistd.h> // close()
-    #include <netdb.h> // gethostbyname()
+    #include <netdb.h>  // gethostbyname()
     #include <sys/types.h>
     #include <sys/socket.h>
     #include <arpa/inet.h> // inet_ntop()
     #define SOCKET_ERROR   (-1)
 #endif
+
+
+int err(const string& msg) { // display error on cerr
+#ifdef _WIN32
+	int error = WSAGetLastError();
+#else
+	int error = errno;
+#endif
+
+#ifdef _MSC_VER // Visual Studio only. MinGW-w64 has a different strerror_s() definition
+	char buff[128];
+	strerror_s(buff, error);
+	cerr << "ERROR " << msg << buff << " (" << error << ")" << endl;
+#else
+	cerr << "ERROR " << msg << strerror(error) << " (" << error << ")" << endl;
+#endif
+	return error; // errno returns positive numbers
+}
 
 
 bool initNetwork(){
@@ -30,7 +44,7 @@ bool initNetwork(){
 #ifdef _WIN32
     WSADATA wsaData;
     if(WSAStartup(0x0202, &wsaData)){
-        cerr << "ERROR: WSAStartup() failed!" << endl;
+        err("WSAStartup() failed: ");
         return false;
     }
 #else // TODO: use sigaction()?  set a handler and log received signals?
@@ -38,19 +52,6 @@ bool initNetwork(){
 #endif
     initialized = true;
     return true;
-}
-
-
-int err(const string& msg) { // errno returns positive numbers
-	int error = errno;
-#ifdef _MSC_VER // Visual Studio only. MinGW-w64 has a different strerror_s() definition
-	char buff[128];
-	strerror_s(buff, error);
-	cerr << "ERROR " << msg << buff << " (" << error << ")" << endl;
-#else
-	cerr << "ERROR " << msg << strerror(error) << " (" << error << ")" << endl;
-#endif
-	return error;
 }
 
 
@@ -153,8 +154,8 @@ Sock::Sock() {
 
 Sock::Sock(SOCKET socket): s(socket) {
 	socklen_t size = sizeof(ip);
-	if( -1 == getpeername(socket, (sockaddr*)&ip, &size) ){ // if it fails, just clear ip
-	    memset( &ip, 0,sizeof(ip) ); // getsockname() instead ???
+	if( SOCKET_ERROR == getpeername(socket, (sockaddr*)&ip, &size) ){ // if it fails, just clear ip
+	    memset( &ip, 0, sizeof(ip) ); // TODO: getsockname() instead ???
 	}
 }
 
@@ -167,7 +168,7 @@ Sock::~Sock(){
 
 
 int Sock::closeSock(void){
-	if( shutdown(s,SHUT_RDWR) ){
+	if( shutdown(s, SHUT_RDWR) ){
 		err("shutting down socket: ");
 	}
 	if(::close(s)){
@@ -177,19 +178,19 @@ int Sock::closeSock(void){
 	return 0;
 }
 
-#ifndef MSG_NOSIGNAL // windows does not define it
-#define MSG_NOSIGNAL 0
-#endif
 
 int Sock::write(const void* buff, size_t size){
 //	cout << "WRITE: " << size << endl; // DEBUGGING!!!
 	return send(s, (char*) buff, size, MSG_NOSIGNAL);
 }
 
-
+//#include "utils.h"
 int Sock::read(void* buff, size_t size){
-//	cout << "READ: " << size << endl; // DEBUGGING!!!
-	return recv(s, (char*) buff, size, 0); //	return recv(s, buff, size, MSG_DONTWAIT);
+	int ret = recv(s, (char*) buff, size, 0); //	return recv(s, buff, size, MSG_DONTWAIT);
+//	int wserr = WSAGetLastError();
+//	cout << "ERRNO: " << wserr << " READ: " << ret << " bytes: "; // DEBUGGING!!!
+//	printHex( (const unsigned char*)buff, ret); // 10060=WSAETIMEDOUT
+	return ret;
 }
 
 

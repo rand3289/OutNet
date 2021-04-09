@@ -52,7 +52,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
 
     cout << "Crawler connecting to " << Sock::ipToString(hiHost) << ":" << hiPort << endl;
     Sock sock;
-    sock.setRWtimeout(5); // seconds read/write timeout // TODO: add value to config???
+    sock.setRWtimeout(10); // seconds read/write timeout // TODO: add value to config???
 
     if( sock.connect(hiHost, hiPort) ){
         cerr  << "ERROR connecting to " << Sock::ipToString(hiHost) << ":" << hiPort << endl;

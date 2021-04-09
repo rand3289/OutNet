@@ -105,7 +105,7 @@ int main(int argc, char* argv[]){
     while(true){
         Sock conn;
         if( INVALID_SOCKET == server.accept(conn) ){ continue; }
-        conn.setRWtimeout(5); // seconds read/write timeout // TODO: add it to config???
+        conn.setRWtimeout(10); // seconds read/write timeout // TODO: add it to config???
 
         uint32_t ip = conn.getIP();
         if( blist.isBanned(ip) ){
@@ -115,13 +115,14 @@ int main(int argc, char* argv[]){
         }
 
         // prevent abuse if host connects too often but allow local IPs repeated queries
+        auto now = system_clock::now();
         auto& time = connTime[ip];
-        if( time > system_clock::now() - minutes(10) && Sock::isRoutable(ip) ){
+        if( time > now - minutes(10) && Sock::isRoutable(ip) ){
             cout << "Denying REQUEST from " << Sock::ipToString(ip) << " (connects too often)" << endl;
             Response::writeDenied(conn, "DENIED");
             continue;
         }
-        time = system_clock::now();
+        time = now;
 
         // parse remote server port, "SELECT field bitmap" and filters from remote's "HTTP get" query
         vector<array<string,3>> filters; // function + parameter pairs

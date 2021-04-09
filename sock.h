@@ -5,7 +5,8 @@
 #ifdef _WIN32
     #define _WINSOCK_DEPRECATED_NO_WARNINGS 1 // gethostbyname() is deprecated in windows. TODO: use getaddrinfo() instead
     #include <winsock2.h>
-    typedef SOCKADDR_IN sockaddr_in;
+//    typedef SOCKADDR sockaddr; // needed on old windows
+//    typedef SOCKADDR_IN sockaddr_in;
 #else // posix
     #include <netinet/in.h> // sockaddr_in
     #define INVALID_SOCKET (-1)
