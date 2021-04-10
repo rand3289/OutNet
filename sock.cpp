@@ -45,8 +45,7 @@ bool initNetwork(){
 #ifdef _WIN32
     WSADATA wsaData;
     if(WSAStartup(0x0202, &wsaData)){
-        err("WSAStartup() failed: ");
-        return false;
+        return err("WSAStartup() failed: ");
     }
 #else // TODO: use sigaction()?  set a handler and log received signals?
     signal(SIGPIPE, SIG_IGN); // ignore SIGPIPE signal which occurs in send()
@@ -80,8 +79,12 @@ int Sock::setNoDelay(bool state){
 
 
 int Sock::setCork(bool state){
+#ifdef _WIN32
+	return 0; // no TCP_CORK on windblows
+#else
 	int onoff = state ? 1 : 0;
 	return setsockopt(s, SOL_SOCKET, TCP_CORK, (char*) &onoff, sizeof(onoff) );
+#endif
 }
 
 
