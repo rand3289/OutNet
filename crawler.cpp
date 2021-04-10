@@ -52,7 +52,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
 
     cout << "Crawler connecting to " << Sock::ipToString(hiHost) << ":" << hiPort << endl;
     Sock sock;
-    sock.setRWtimeout(10); // seconds read/write timeout // TODO: add value to config???
+    sock.setRWtimeout(10); // seconds read/write timeout // TODO: add timeout value to config???
     sock.setNoDelay(true); // request is one write()
 
     if( sock.connect(hiHost, hiPort) ){
@@ -381,7 +381,7 @@ int Crawler::run(){
 
         int count = merge(newData);
         if( count<=0 ){ this_thread::sleep_for( seconds( (rand()%10) +60 ) ); }
-        else { saveRemoteDataToDisk(); } // found new services // TODO: save only modified/new records
+        else { saveRemoteDataToDisk(); } // found new services
     } // while(true)
     return 0;
 }
@@ -397,6 +397,7 @@ int Crawler::loadRemoteDataFromDisk(){
 
 int Crawler::saveRemoteDataToDisk(){ // save data to disk
     cout << "Saving remote data to disk. (TODO)" << endl;
+    // have to save everything overwriting old data since old data could be modified by merge()
     shared_lock slock(rdata.mutx);
     return 0; // TODO:
 }

@@ -64,9 +64,9 @@ int Config::loadServiceFiles(){
 //        ldata->services.erase( remove( begin(ldata->services), end(ldata->services), serv ) );
 //    } // TODO: if services are allowed to register with OutNet service directly, this has to change!
 
-    // TODO: config should keep a list of ports forwarded on a router with their lease times
-    // extend the lease times every hour if a service accepts a TCP connection 
-    // or swallows a 0 size UDP packet
+    // TODO: config could keep a list of ports forwarded on a router with their lease times
+    // if a service no longer accepts a connection or "rejects" a 0 size UDP packet, close the port
+    // also remove the service from the list
 
     // insert new services and prepare to open ports for them
     for(const string& serv: newServices){
@@ -78,8 +78,8 @@ int Config::loadServiceFiles(){
 
     for(auto& ipPort: portsToOpen){  // open router ports using UPnP protocol for new services
         string ip = Sock::ipToString(ipPort.first);
-        upnp.add_port_mapping("OutNet", ip.c_str(), ipPort.second, ipPort.second, "TCP"); // TODO: UDP?
-    }
+        upnp.add_port_mapping("OutNet", ip.c_str(), ipPort.second, ipPort.second, "TCP");
+    } // TODO: UDP? - tcp/udp could come from service description
 
 //    for(auto& old: oldServices){ // close ports for old services
 //        upnp.closePort(old.ip, old.port);

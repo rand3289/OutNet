@@ -323,10 +323,11 @@ uint32_t Sock::stringToIP(const char* addr){ // static
 }
 
 
+// turn ip address into a string.  ip has to be in network byte order
 string Sock::ipToString(uint32_t ip){ // static
 #ifdef _WIN32
     unsigned char* ipc = (unsigned char*) &ip;
-    stringstream ss; // TODO: is ip in network byte order?
+    stringstream ss;
     ss << (int)ipc[0] << "." << (int)ipc[1] << "." << (int)ipc[2] << "." << (int)ipc[3];
     return ss.str();
 #else
