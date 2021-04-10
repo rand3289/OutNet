@@ -15,7 +15,8 @@ using namespace std;
     #include <netdb.h>  // gethostbyname()
     #include <sys/types.h>
     #include <sys/socket.h>
-    #include <arpa/inet.h> // inet_ntop()
+    #include <arpa/inet.h>   // inet_ntop()
+    #include <netinet/tcp.h> // TCP_CORK, TCP_NODELAY
     #define SOCKET_ERROR   (-1)
 #endif
 
@@ -69,6 +70,18 @@ int Sock::setRWtimeout(int seconds){
 		return err("setting write timeout: "); // errno returns positive numbers
     }
 	return 0;
+}
+
+
+int Sock::setNoDelay(bool state){
+	int onoff = state ? 1 : 0;
+	return setsockopt(s, SOL_SOCKET, TCP_NODELAY, (char*) &onoff, sizeof(onoff) );
+}
+
+
+int Sock::setCork(bool state){
+	int onoff = state ? 1 : 0;
+	return setsockopt(s, SOL_SOCKET, TCP_CORK, (char*) &onoff, sizeof(onoff) );
 }
 
 
@@ -154,8 +167,8 @@ Sock::Sock() {
 
 Sock::Sock(SOCKET socket): s(socket) {
 	socklen_t size = sizeof(ip);
-	if( SOCKET_ERROR == getpeername(socket, (sockaddr*)&ip, &size) ){ // if it fails, just clear ip
-	    memset( &ip, 0, sizeof(ip) ); // TODO: getsockname() instead ???
+	if( SOCKET_ERROR == getpeername(socket, (sockaddr*)&ip, &size) ){
+		memset( &ip, 0, sizeof(ip) ); // if getpeername() fails, just clear ip
 	}
 }
 
@@ -168,6 +181,7 @@ Sock::~Sock(){
 
 
 int Sock::closeSock(void){
+	shutdown(s, SHUT_RDWR);
 //	if( shutdown(s, SHUT_RDWR) ){
 //		err("shutting down socket: ");
 //	}
@@ -184,7 +198,7 @@ int Sock::write(const void* buff, size_t size){
 	return send(s, (char*) buff, size, MSG_NOSIGNAL);
 }
 
-//#include "utils.h"
+//#include "utils.h"  // printHex()
 int Sock::read(void* buff, size_t size){
 	int ret = recv(s, (char*) buff, size, 0); //	return recv(s, buff, size, MSG_DONTWAIT);
 //	int wserr = WSAGetLastError();

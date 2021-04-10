@@ -140,5 +140,7 @@ int main(int argc, char* argv[]){
             cout << "Debug REQUEST from " << Sock::ipToString(ip) << endl;
             Response::writeDebug(conn, select, filters);
         }
+
+        this_thread::sleep_for(seconds(2)); // windblows freaks out in recv() if you don't
     } // while()
 } // main()

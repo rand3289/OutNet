@@ -57,6 +57,8 @@ public:
 	// remote IP after connect() or after object was returned by accept()
 	uint32_t getIP() const { return ip.sin_addr.s_addr; } 
 	SOCKET getSocketFD() const { return s; }
+	int setNoDelay(bool state); // set socket option TCP_NODELAY
+	int setCork(bool state);    // set socket option TCP_CORK
 
 	static uint32_t stringToIP(const char* addr);
 	static std::string ipToString(uint32_t ip);

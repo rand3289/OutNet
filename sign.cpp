@@ -116,7 +116,7 @@ int Signature::writeString(const string& str){
     unsigned char size = (unsigned char) str.length();
     write(&size, sizeof(size));
     write(str.c_str(), size);
-    return size;
+    return size+1;
 }
 
 
