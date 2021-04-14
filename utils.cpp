@@ -39,10 +39,15 @@ bool tokenize( char*& buffer, const char* bufferEnd, char*& token, const string&
 }
 
 
-
 // toLower() is a complete hack as it modifies the string through iterators
 string& toLower(string& s){ // convert string to lower case in place
     std::transform(begin(s), end(s), begin(s), [](char c){ return std::tolower(c); } );
+    return s;
+}
+
+
+string& toUpper(string& s){ // convert string to lower case in place
+    std::transform(begin(s), end(s), begin(s), [](char c){ return std::toupper(c); } );
     return s;
 }
 

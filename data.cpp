@@ -54,6 +54,11 @@ Service* Service::parse(const string& servStr, uint32_t myIP){
     } else { return nullptr; }
 
     if( tokenize(start, end, token, ":") ){
+        tcpudp = token; // TODO: make it "t" or "u" to save 2 bytes???
+        if(tcpudp.length() != 3){ return nullptr; }
+    } else { return nullptr; }
+
+    if( tokenize(start, end, token, ":") ){
         protocol = token; // TODO: enforce max len ???
         if(protocol.length() < 1){ return nullptr; }
     } else { return nullptr; }

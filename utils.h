@@ -13,6 +13,8 @@ bool tokenize( char*& buffer, const char* bufferEnd, char*& token, const std::st
 
 std::string& toLower(std::string& s); // convert string to lower case in place
 
+std::string& toUpper(std::string& s); // convert string to upper case in place
+
 std::string& ltrim(std::string& s); // trim white spaces on the left in place
 
 std::string& rtrim(std::string& s); // trim white spaces on the right in place

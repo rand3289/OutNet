@@ -18,6 +18,7 @@ struct Service {
     std::string fullDescription;     // should have external routable IP (this is what we send)
     std::string originalDescription; // original (this is what we get from files)
     std::string service;             // general type of service
+    std::string tcpudp;              // tcp or udp - important for port forwarding
     std::string protocol;            // service protocol such as http, ftp etc...
     uint32_t ip;                // real IP (local/non-routable IP) from originalDescription
     uint16_t port;              // port number for this service

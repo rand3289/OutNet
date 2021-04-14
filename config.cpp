@@ -29,6 +29,14 @@ struct ServiceString: public string {
 }; // This class provides operator<(Service&) for string.  Use it with stl algorithms
 
 
+struct IpPortProt {
+    uint32_t ip;
+    uint16_t port;
+    uint8_t  prot;
+    IpPortProt(uint32_t ip1, uint16_t port1, uint8_t prot1): ip(ip1), port(port1), prot(prot1) {}
+};
+
+
 // look for *.service in current directory and load their contents into LocalData::services
 int Config::loadServiceFiles(){
     static const string extension = ".service";
@@ -50,7 +58,7 @@ int Config::loadServiceFiles(){
 
     vector<string> newServices;
     vector<Service> oldServices;
-    vector<pair<uint32_t,uint16_t>> portsToOpen;
+    vector<IpPortProt> portsToOpen;
 
     unique_lock ulock(ldata->mutx);
     sort( begin(ldata->services), end(ldata->services) ); // set_difference needs sorted data
@@ -64,7 +72,7 @@ int Config::loadServiceFiles(){
 //        ldata->services.erase( remove( begin(ldata->services), end(ldata->services), serv ) );
 //    } // TODO: if services are allowed to register with OutNet service directly, this has to change!
 
-    // TODO: config could keep a list of ports forwarded on a router with their lease times
+    // TODO: config could keep a list of ports forwarded on a router (with their lease times)
     // if a service no longer accepts a connection or "rejects" a 0 size UDP packet, close the port
     // also remove the service from the list
 
@@ -72,14 +80,15 @@ int Config::loadServiceFiles(){
     for(const string& serv: newServices){
         auto s = ldata->addService(serv);
         if(!s) { continue; } // did it parse correctly?
-        portsToOpen.emplace_back(s->ip, s->port);
+        portsToOpen.emplace_back(s->ip, s->port, s->tcpudp[0]); // tcp/udp comes from service description
     }
     ulock.unlock(); // after unlocking we can open and close ports which can take a while
 
     for(auto& ipPort: portsToOpen){  // open router ports using UPnP protocol for new services
-        string ip = Sock::ipToString(ipPort.first);
-        upnp.add_port_mapping("OutNet", ip.c_str(), ipPort.second, ipPort.second, "TCP");
-    } // TODO: UDP? - tcp/udp could come from service description
+        string ip = Sock::ipToString(ipPort.ip);
+        const char* protocol = ('t'==ipPort.prot) ? "TCP" : "UDP"; // u == UDP
+        upnp.add_port_mapping("OutNet", ip.c_str(), ipPort.port, ipPort.port, protocol);
+    }
 
 //    for(auto& old: oldServices){ // close ports for old services
 //        upnp.closePort(old.ip, old.port);

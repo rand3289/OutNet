@@ -47,6 +47,11 @@ int main(int argc, char* argv[]) {
     // we want local services, remote IP:PORT and services
     uint32_t sel = SELECTION::LSVC | SELECTION::IP | SELECTION::PORT | SELECTION::RSVC;
     queryService(crawl, service, sel);
+    for(auto& h: rdata.hosts){
+        for( auto& s: h.second.services){
+            cout << "    >" << s.fullDescription << endl;
+        }
+    }
     cout << "press enter to continue..." << endl;
     cin.ignore();
 
