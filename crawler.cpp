@@ -9,6 +9,7 @@
 #include <shared_mutex> // since C++17
 #include <thread>
 #include <iostream>
+#include <fstream> // ofstream
 #include <sstream>
 #include <cstring>
 using namespace std;
@@ -387,17 +388,120 @@ int Crawler::run(){
 }
 
 
-// Data is periodically saved.  When service is restarted, it is loaded back up
-// RemoteData does not have to be locked here
-int Crawler::loadRemoteDataFromDisk(){
-    cout << "Loading remote data from disk. (TODO)" << endl;
-    return 0; // TODO:
+int writeString(ofstream& file, const string& str){
+    unsigned char size = (unsigned char) str.length();
+    file.write( (char*) &size, sizeof(size));
+    file.write(str.c_str(), size);
+    return size+1;
 }
 
 
+string readString(ifstream& file){ // TODO: move it and writeString to utils.cpp
+    unsigned char size; // since size is an unsigned char it can not be illegal
+    file.read( (char*) &size, sizeof(size) );
+    if( !file ){ return ""; } // ERROR
+    string str((int)size,' ');
+    file.read( &str[0], size);
+    if( !file ){ return ""; } // ERROR
+    return str;
+}
+
+
+string RDFile = "remoteData.save";
+string tempRDFile = "remoteData.tmp";
+
+
+// Data is periodically saved.  When service is restarted, it is loaded back up
+// RemoteData does not have to be locked here
+int Crawler::loadRemoteDataFromDisk(){
+    cout << "Loading remote data from disk." << endl;
+    ifstream file(RDFile, std::ios::binary);
+    if(!file.good()){
+        cout << "Could not find remote data restore point " << RDFile << endl;
+        return 0;
+    }
+    uint32_t size;
+    file.read( (char*) &size, sizeof(size) );
+    if(!file){
+        cerr << "Could not read data from " << RDFile << endl;
+        return -1;
+    }
+
+    std::unordered_multimap<IPADDR, HostInfo> hosts;
+    for(uint32_t i = 0; i < size; ++i){ // read "size" HostInfo structures
+        HostInfo hi;
+        file.read((char*) &hi.host, sizeof(hi.host) );
+        file.read( (char*) &*hi.key,         sizeof(PubKey) );
+        file.read( (char*) &hi.met,          sizeof(hi.met) );
+        file.read( (char*) &hi.missed,       sizeof(hi.missed) );
+        file.read( (char*) &hi.seen,         sizeof(hi.seen) );
+        file.read( (char*) &hi.offlineCount, sizeof(hi.offlineCount) );
+        file.read( (char*) &hi.port,         sizeof(hi.port) );
+        file.read( (char*) &hi.rating,       sizeof(hi.rating) );
+        file.read( (char*) &hi.referIP,      sizeof(hi.referIP) );
+        file.read( (char*) &hi.referPort,    sizeof(hi.referPort) );
+        unsigned char sigVer;
+        file.read( (char*) &sigVer,          sizeof(sigVer) );
+        hi.signatureVerified  = sigVer; // bool to uchar
+
+        uint32_t ss;
+        file.read( (char*) &ss, sizeof(ss) );
+        for(uint32_t i=0; i < ss; ++i){
+            string service = readString(file);
+            hi.addService(service);
+        }
+        hosts.emplace( hi.host, move(hi) );
+    } // for
+
+    unique_lock ulock(rdata.mutx);
+    rdata.hosts.swap(hosts);
+    return 0;
+}
+
+
+// have to save everything overwriting old data since old data could be modified by merge()
 int Crawler::saveRemoteDataToDisk(){ // save data to disk
-    cout << "Saving remote data to disk. (TODO)" << endl;
-    // have to save everything overwriting old data since old data could be modified by merge()
+    cout << "Saving remote data to disk." << endl;
+    ofstream file(tempRDFile, std::ios::binary);
     shared_lock slock(rdata.mutx);
-    return 0; // TODO:
+    uint32_t hs = rdata.hosts.size();
+    file.write( (char*) &hs, sizeof(hs) );
+    if(!file){ // check that the writes succeeded
+        cerr << "ERROR saving remote data to disk.  Do you have write permissions?" << endl;
+        return -1;
+    }
+
+    for(auto& hip: rdata.hosts){
+        HostInfo& hi = hip.second;
+        file.write( (char*) &hi.host,         sizeof(hi.host) );
+        file.write( (char*) &*hi.key,         sizeof(PubKey) );
+        file.write( (char*) &hi.met,          sizeof(hi.met) );
+        file.write( (char*) &hi.missed,       sizeof(hi.missed) );
+        file.write( (char*) &hi.seen,         sizeof(hi.seen) );
+        file.write( (char*) &hi.offlineCount, sizeof(hi.offlineCount) );
+        file.write( (char*) &hi.port,         sizeof(hi.port) );
+        file.write( (char*) &hi.rating,       sizeof(hi.rating) );
+        file.write( (char*) &hi.referIP,      sizeof(hi.referIP) );
+        file.write( (char*) &hi.referPort,    sizeof(hi.referPort) );
+        unsigned char sigVer = hi.signatureVerified; // bool to uchar
+        file.write( (char*) &sigVer,          sizeof(sigVer) );
+        uint32_t ss = hi.services.size();
+        file.write( (char*) &ss, sizeof(ss) );
+
+        for(auto& serv: hi.services){
+            writeString(file, serv.originalDescription);
+        }
+    }
+
+    slock.unlock();
+    if(!file){ 
+        cerr << "ERROR saving remote data to disk." << endl;
+        return -2;
+    }
+    file.close();
+    string fold = RDFile+".old";
+    remove(fold.c_str());
+    rename(RDFile.c_str(), fold.c_str() );
+    rename(tempRDFile.c_str(), RDFile.c_str() );
+    return 0;
 }
