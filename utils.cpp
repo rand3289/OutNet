@@ -1,6 +1,7 @@
 #include "utils.h"
 #include <algorithm>
 #include <iostream>
+#include <fstream>
 using namespace std;
 
 
@@ -115,3 +116,21 @@ void printAscii(const unsigned char* buff, int len){
     cout.flush();
 }
 
+
+int writeString(ofstream& file, const string& str){
+    unsigned char size = (unsigned char) str.length();
+    file.write( (char*) &size, sizeof(size));
+    file.write(str.c_str(), size);
+    return size+1;
+}
+
+
+string readString(ifstream& file){
+    unsigned char size; // since size is an unsigned char it can not be illegal
+    file.read( (char*) &size, sizeof(size) );
+    if( !file ){ return ""; } // ERROR
+    string str((int)size,' ');
+    file.read( &str[0], size);
+    if( !file ){ return ""; } // ERROR
+    return str;
+}

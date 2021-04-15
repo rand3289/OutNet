@@ -353,6 +353,10 @@ int Crawler::run(){
     portCopy = ldata.myPort;
     slock.unlock();
 
+    uint32_t select = 0b11111111111; // see SELECTION in http.h
+    turnBitsOff(select, SELECTION::ISCHK); // signatureVerified is of interest to local services only
+    turnBitsOff(select, SELECTION::RSVCF); // do not filter out remote services by protocol
+
     while(true){
         vector<HostInfo> newData;
         vector<HostInfo*> callList;
@@ -375,7 +379,6 @@ int Crawler::run(){
         slock.unlock(); // remote data
 
         // iterate over data, connect to each remote service, get the data and place into newData
-        const uint32_t select = 0b11111111111; // see SELECTION in http.h
         for(HostInfo* hi: callList){
             queryRemoteService(*hi, newData, select);
         }
@@ -388,27 +391,8 @@ int Crawler::run(){
 }
 
 
-int writeString(ofstream& file, const string& str){
-    unsigned char size = (unsigned char) str.length();
-    file.write( (char*) &size, sizeof(size));
-    file.write(str.c_str(), size);
-    return size+1;
-}
-
-
-string readString(ifstream& file){ // TODO: move it and writeString to utils.cpp
-    unsigned char size; // since size is an unsigned char it can not be illegal
-    file.read( (char*) &size, sizeof(size) );
-    if( !file ){ return ""; } // ERROR
-    string str((int)size,' ');
-    file.read( &str[0], size);
-    if( !file ){ return ""; } // ERROR
-    return str;
-}
-
-
-string RDFile = "remoteData.save";
-string tempRDFile = "remoteData.tmp";
+const string RDFile = "remoteData.save";
+const string tempRDFile = "remoteData.tmp";
 
 
 // Data is periodically saved.  When service is restarted, it is loaded back up

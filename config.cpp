@@ -1,5 +1,5 @@
 #include "config.h"
-#include "sock.h" // Sock::ANY_PORT
+#include "sock.h" // Sock::ANY_PORT, Sock::stringToIP()
 #include "utils.h"
 #include <algorithm>
 #include <vector>
@@ -22,6 +22,24 @@ int Config::watch() {
         loadBlackListFiles();
     }
 }
+// TODO: config could keep a list of ports forwarded on a router (with their lease times)
+// if a service no longer accepts a connection or "rejects" a 0 size UDP packet,
+// close the port and remove the service from the list
+
+
+int parseFilesIntoLines(const string& extension, vector<string>& lines){
+    // ~path() destructor crashes on some systems // path cwd = current_path();
+    int fCount = 0;
+    for(auto& p: directory_iterator(".") ){
+        if(p.path().extension() != extension){ continue; }
+        cout << p.path() << " ";
+        ifstream listf (p.path());
+        if( !listf ){ continue; }
+        parseLines(listf, lines);
+        ++fCount;
+    }
+    return fCount;
+}
 
 
 struct ServiceString: public string {
@@ -39,42 +57,25 @@ struct IpPortProt {
 
 // look for *.service in current directory and load their contents into LocalData::services
 int Config::loadServiceFiles(){
+    cout << "Loading service files: ";
     static const string extension = ".service";
     vector<string> lines;
-    cout << "Loading service files: ";
-
-    // ~path() destructor crashes on some systems // path cwd = current_path();
-    int fCount = 0;
-    for(auto& p: directory_iterator(".") ){
-        if(p.path().extension() != extension){ continue; }
-        cout << p.path() << " ";
-        ifstream listf (p.path());
-        if( !listf ){ continue; }
-        parseLines(listf, lines);
-        ++fCount;
-    }
+    int fCount = parseFilesIntoLines(extension, lines);
     cout << "(" << fCount << " found)" << endl;
     std::sort( begin(lines), end(lines) ); // set_difference needs sorted data
 
-    vector<string> newServices;
-    vector<Service> oldServices;
+    vector<string> newServices; // newServices(not in ldata->services)
     vector<IpPortProt> portsToOpen;
-
     unique_lock ulock(ldata->mutx);
     sort( begin(ldata->services), end(ldata->services) ); // set_difference needs sorted data
-
-    // find newServices(not in ldata->services) and oldServices(not in "lines")
-    vector<ServiceString>& s = * reinterpret_cast<vector<ServiceString>*>( &lines ); // provides operator<(Service&)
+    vector<ServiceString>& s = * reinterpret_cast<vector<ServiceString>*>( &lines ); // provides string::operator<(Service&)
     set_difference( begin(s), end(s), begin(ldata->services), end(ldata->services), back_inserter(newServices));
-    set_difference( begin(ldata->services), end(ldata->services), begin(s), end(s), back_inserter(oldServices));
 
+//    vector<Service> oldServices; // oldServices(not in "lines")
+//    set_difference( begin(ldata->services), end(ldata->services), begin(s), end(s), back_inserter(oldServices));
 //    for(Service& serv: oldServices){ // delete old services
 //        ldata->services.erase( remove( begin(ldata->services), end(ldata->services), serv ) );
-//    } // TODO: if services are allowed to register with OutNet service directly, this has to change!
-
-    // TODO: config could keep a list of ports forwarded on a router (with their lease times)
-    // if a service no longer accepts a connection or "rejects" a 0 size UDP packet, close the port
-    // also remove the service from the list
+//    }
 
     // insert new services and prepare to open ports for them
     for(const string& serv: newServices){
@@ -97,7 +98,42 @@ int Config::loadServiceFiles(){
 }
 
 
-int Config::loadBlackListFiles(){ return 0; }
+int Config::loadBlackListFiles(){ // load *.badkey and *.badip files
+    static const string ext1 = ".badip";
+    vector<string> lines;
+    cout << "Loading IP blacklist files: ";
+    int fCount = parseFilesIntoLines(ext1, lines);
+    cout << "(" << fCount << " found)" << endl;
+
+    static const string ext2 = ".badkey";
+    vector<string> lines2;
+    cout << "Loading KEY blacklist files: ";
+    fCount = parseFilesIntoLines(ext2, lines2);
+    cout << "(" << fCount << " found)" << endl;
+
+    unique_lock ulock(blist->mutx);
+
+    for(string& l: lines){ // load lines into blist->badHosts
+        uint32_t ip = Sock::stringToIP( l.c_str() );
+        if(ip > 0){
+            blist->badHosts.push_back(ip);
+        }
+    }
+
+    for(string& l: lines2){ // load lines2 into blist->badKeys
+        if(l.length() == 2*PUBKEY_SIZE){ // each byte is 2 hex digits long
+            PubKey& pk = blist->badKeys.emplace_back();
+            for(int i=0; i < PUBKEY_SIZE; ++i){ // convert hex string to bytes
+                string sub = l.substr(i*2, 2);  // each byte is 2 hex digits long
+                pk.key[i] = strtol(sub.c_str(), nullptr, 16);
+            }
+        }
+    }
+
+    sort( blist->badHosts.begin(), blist->badHosts.end() ); // sort to make search faster
+    sort( blist->badKeys.begin(),  blist->badKeys.end()  );
+    return 0;
+}
 
 
 int Config::findIPs(){
@@ -111,14 +147,15 @@ int Config::findIPs(){
             ldata->myIP = Sock::stringToIP( ipStr.c_str() );
             if( ldata->myIP > 0 ){
                 cout << "WAN IP: " << ipStr << endl;
-            } else { // TODO: this is an indication there is no NAT taking place.
-                cerr << "Error retrieving IPs from the router." << endl;
+                return 0;
             }
-        }
+        } // this is an indication there is no NAT taking place.
+        cerr << "Error retrieving IPs from the router." << endl;
     } else {
         cerr << "Failed to find a NAT router.  ERROR: " << upnp.get_last_error() << endl;
-        // TODO: fill ldata->myIP and ldata->localIP without using router's help
     }
+    // TODO: fill ldata->myIP and ldata->localIP without using router's help
+    // connecto to something and get local IP that way.
     return 0;
 }
 

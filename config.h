@@ -3,7 +3,7 @@
 #include "data.h"
 #include "upnpnat.h"
 
-// loads refresh rate, port, local services, black & white lists from disk, stores port
+// loads refresh rate, port, local services, blacklists from disk, stores port
 class Config {
     UPNPNAT upnp;
     LocalData* ldata;

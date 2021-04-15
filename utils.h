@@ -29,6 +29,9 @@ bool keyValue(const std::string& str, std::string& key, std::string& value);
 void printHex(const unsigned char* buff, int len); // print buffer using hex digits (4 + space)
 void printAscii(const unsigned char* buff, int len); // ascii printable chars or "."
 
+int writeString(std::ofstream& file, const std::string& str); // write string to file. format: size+string
+std::string readString(std::ifstream& file);             // read string from file written by writeString()
+
 
 template <typename SIZET> // uint32_t or uint64_t
 class Buffer {

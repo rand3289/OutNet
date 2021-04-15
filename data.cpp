@@ -261,7 +261,12 @@ int RemoteData::send(Sock& sock, uint32_t select, vector<array<string,3>>& filte
                 if(sign){ signer.write( &*hi->key, sizeof(PubKey)); }
             }
         }
-        // TODO: send hi->signatureVerified ??? (of interest to local services)
+        if( select & SELECTION::ISCHK ){ // is key checked (verified) ?
+            unsigned char c = hi->signatureVerified;
+            bytes+= sock.write(&c, sizeof(c) );
+            if(sign){ signer.write(&c, sizeof(c) ); }
+        } // hi->signatureVerified is of interest to local services querying OutNet
+
         if( select & SELECTION::RSVC ){
             bool includeAllServices = !(select & SELECTION::RSVCF);
             vector<Service*> svc;
@@ -285,8 +290,12 @@ int RemoteData::send(Sock& sock, uint32_t select, vector<array<string,3>>& filte
 
 
 // is this ip in our black list
-bool BlackList::isBanned(IPADDR host){ return false; } // TODO:
+bool BlackList::isBanned(IPADDR host){
+    return !binary_search(badHosts.begin(), badHosts.end(), host);
+}
 
 
 // is this public key in our black list
-bool BlackList::isBanned(PubKey& key){ return false; } // TODO:
+bool BlackList::isBanned(PubKey& key){ 
+    return !binary_search(badKeys.begin(), badKeys.end(), key);
+}

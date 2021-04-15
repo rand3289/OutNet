@@ -24,8 +24,9 @@ enum SELECTION {
     AGE    = (1<<6),  // age - how long ago (minutes) was remote service successfuly contacted 
     RKEY   = (1<<7),  // remote public key
     RSVC   = (1<<8),  // remote service list
+    ISCHK  = (1<<9),  // return signatureVerified flag
 
-    RSVCF  = (1<<9), // FILTER remote service list by protocol or send all?
+    RSVCF  = (1<<10), // FILTER remote service list by protocol or send all?
 }; // if records are filtered by service, we can still send all services for that record.
 
 

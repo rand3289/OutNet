@@ -141,6 +141,7 @@ int main(int argc, char* argv[]){
             Response::writeDebug(conn, select, filters);
         }
 
+        // TODO: add seconds count to config
         this_thread::sleep_for(seconds(2)); // windblows freaks out in recv() if you don't
     } // while()
 } // main()
