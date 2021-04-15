@@ -89,7 +89,7 @@ int main(int argc, char* argv[]){
 
     Crawler crawler(ldata, rdata, blist);
     crawler.loadRemoteDataFromDisk(); // load rdata
-    cout << "============================================================" << endl << endl; // starting threads
+    cout << "============================================================" << endl; // starting threads
 
     // create the information collector thread here (there could be many in the future)
     // it searches and fills rdata while honoring BlackLists
@@ -105,7 +105,7 @@ int main(int argc, char* argv[]){
     while(true){
         Sock conn;
         if( INVALID_SOCKET == server.accept(conn) ){ continue; }
-        conn.setRWtimeout(10); // seconds read/write timeout // TODO: add it to config???
+        conn.setRWtimeout(ldata.timeoutServer); // seconds read/write timeout
 
         uint32_t ip = conn.getIP();
         if( blist.isBanned(ip) ){
@@ -141,7 +141,6 @@ int main(int argc, char* argv[]){
             Response::writeDebug(conn, select, filters);
         }
 
-        // TODO: add seconds count to config
-        this_thread::sleep_for(seconds(2)); // windblows freaks out in recv() if you don't
+        this_thread::sleep_for(seconds(ldata.sleepServer)); // windblows freaks out in recv() if you don't
     } // while()
 } // main()

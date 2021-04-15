@@ -27,21 +27,6 @@ int Config::watch() {
 // close the port and remove the service from the list
 
 
-int parseFilesIntoLines(const string& extension, vector<string>& lines){
-    // ~path() destructor crashes on some systems // path cwd = current_path();
-    int fCount = 0;
-    for(auto& p: directory_iterator(".") ){
-        if(p.path().extension() != extension){ continue; }
-        cout << p.path() << " ";
-        ifstream listf (p.path());
-        if( !listf ){ continue; }
-        parseLines(listf, lines);
-        ++fCount;
-    }
-    return fCount;
-}
-
-
 struct ServiceString: public string {
     bool operator<(const Service& serv) const { return compare(serv.originalDescription) < 0; }
 }; // This class provides operator<(Service&) for string.  Use it with stl algorithms
@@ -183,22 +168,30 @@ void Config::init(LocalData& lData, BlackList& bList){
     vector<string> lines;
     parseLines(config, lines);
     config.close();
-    bool foundPort = false;
 
     for(string& line: lines){
         string key, value;
         if( keyValue(line, key, value)){
             toLower(key);
-            if( key == "configrefresh" ){
+            if( key == "sleepconfig" ){
                 refreshRate = strtol(value.c_str(), nullptr, 10); // base 10
+            } else if (key == "sleepserver"){
+                ldata->sleepServer = strtol(value.c_str(), nullptr, 10); // base 10
+            } else if (key == "sleepcrawler"){
+                ldata->sleepCrawler = strtol(value.c_str(), nullptr, 10); // base 10
+            } else if (key == "timeoutserver"){
+                ldata->timeoutServer = strtol(value.c_str(), nullptr, 10); // base 10
+            } else if (key == "timeoutcrawler"){
+                ldata->timeoutCrawler = strtol(value.c_str(), nullptr, 10); // base 10
+            } else if (key == "timeoutupnp"){
+                ldata->timeoutUPNP = strtol(value.c_str(), nullptr, 10); // base 10
             } else if (key == "serverport"){
                 ldata->myPort = strtol(value.c_str(), nullptr, 10); // base 10
-                foundPort = true;
             }
         }
     }
 
-    if( foundPort) {
+    if( ldata->myPort != Sock::ANY_PORT ) {
         cout << "Configuration data loaded successfuly." << endl;
     }else {
         cout << "Config file is corrupted.  It will be regenerated." << endl;
@@ -208,13 +201,22 @@ void Config::init(LocalData& lData, BlackList& bList){
 
 int Config::saveToDisk(){
     cout << "Saving configuration data to disk." << endl;
-    string msg1 = "# Configuration file for OutNet service https://github.com/rand3289/OutNet";
-    string msg2 = "# If this file is deleted or corrupted it will be regenerated.";
     ofstream config(configName);
-    config << msg1 << endl << msg2 << endl;
-    config << "ConfigRefresh=" << refreshRate << " # how often do I look for new or updated files (seconds)" <<  endl;
+    string msg1 = "# Configuration file for OutNet service https://github.com/rand3289/OutNet";
+    string msg2 = "# If this file is deleted or corrupted it will be regenerated with default values.";
+    string msg3 = "# SleepZZZ and TimeoutZZZ are in seconds.";
+    config << msg1 << endl << msg2 << endl << msg3 << endl << endl;
+
     shared_lock slock(ldata->mutx);
-    config << "ServerPort=" << ldata->myPort << " # server will accept connections on this port" << endl;
+    config << "SleepConfig="   << refreshRate << "\t# how often do I look for new or updated files" <<  endl;
+    config << "SleepServer="   << ldata->sleepServer << "\t# how long do I wait for client to close connection" <<  endl;
+    config << "SleepCrawler="  << ldata->sleepCrawler << "\t# wait time between scanning other OutNet services" <<  endl;
+    config << endl;
+    config << "TimeoutServer="  << ldata->timeoutServer << "\t# server network read / write timeout" << endl;
+    config << "TimeoutCrawler=" << ldata->timeoutCrawler << "\t# crawler network read / write timeout" << endl;
+    config << "TimeoutUPNP="    << ldata->timeoutUPNP << "  \t# UPNP client network read / write timeout" << endl;
+    config << endl;
+    config << "ServerPort="    << ldata->myPort << "\t# server accepts connections on this port" << endl;
     return 0;
 }
 

@@ -2,7 +2,9 @@
 #include <algorithm>
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 using namespace std;
+using namespace std::filesystem; // directory_iterator()
 
 
 void turnBitsOff(uint32_t& mask, uint32_t bits){
@@ -79,6 +81,21 @@ void parseLines(istream& stream, vector<string>& lines){
             lines.push_back( move(line) );
         }
     }
+}
+
+
+int parseFilesIntoLines(const string& extension, vector<string>& lines){
+    // ~path() destructor crashes on some systems // path cwd = current_path();
+    int fCount = 0;
+    for(auto& p: directory_iterator(".") ){
+        if(p.path().extension() != extension){ continue; }
+        cout << p.path() << " ";
+        ifstream listf (p.path());
+        if( !listf ){ continue; }
+        parseLines(listf, lines);
+        ++fCount;
+    }
+    return fCount;
 }
 
 

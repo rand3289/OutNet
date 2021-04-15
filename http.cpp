@@ -67,7 +67,7 @@ int Request::parse(Sock& conn, vector<array<string,3>>& filters, uint16_t& port)
 
 
 int Response::write(Sock& conn, uint32_t select, vector<array<string,3>>& filters, LocalData& ldata, RemoteData& rdata){
-    static const string header =  "HTTP/1.1 200 OK\r\n\r\n"; // TODO: need full header???
+    static const string header =  "HTTP/1.1 200 OK\r\n\r\n"; // TODO: need full header to bypass firewalls/proxies?
     int bytes = conn.write(header.c_str(), header.size() ); // no need to sign the header
 
     bool sign = select & SELECTION::SIGN;

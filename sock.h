@@ -3,7 +3,7 @@
 
 #include <string>
 #ifdef _WIN32
-    #define _WINSOCK_DEPRECATED_NO_WARNINGS 1 // gethostbyname() is deprecated in windows. TODO: use getaddrinfo() instead
+    #define _WINSOCK_DEPRECATED_NO_WARNINGS 1 // gethostbyname() is deprecated in windows. TODO: use getaddrinfo()?
     #include <winsock2.h>
 //    typedef SOCKADDR sockaddr; // needed on old windows
 //    typedef SOCKADDR_IN sockaddr_in;

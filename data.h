@@ -42,6 +42,11 @@ struct LocalData {
     uint32_t myPort;    // local service is running on this port
     PubKey localPubKey; // local service public key
     std::vector<Service> services; // a list of local services we are "advertising"
+    int sleepServer = 2;  // all of these various sleep and timeouts are time in seconds
+    int sleepCrawler = 60; // trottle crawler connections to avoid network saturation
+    int timeoutServer = 10;
+    int timeoutCrawler = 10;
+    int timeoutUPNP = 10;
 
     int send(Sock& sock, uint32_t select, std::vector<std::array<std::string,3>>& filters, Signature& signer);
     Service* addService(const std::string& service);

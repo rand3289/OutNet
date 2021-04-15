@@ -295,7 +295,7 @@ int Sock::readString(void* buff, size_t buffSize){ // make sure buff is at least
 
 
 // https://en.wikipedia.org/wiki/Private_network
-// is it routable or non-routable IP ?
+// is it a routable or a non-routable IP ?
 bool Sock::isRoutable(uint32_t ip){ // static
     unsigned char* ipc = (unsigned char*) &ip;
     if( 10 == ipc[0] ){ return false; }

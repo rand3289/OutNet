@@ -159,11 +159,11 @@ bool UPNPNAT::initNetwork()
 }
 
 
-bool UPNPNAT::tcp_connect(int& sock, const char * host,unsigned short int port)
+bool UPNPNAT::tcp_connect(int& sock, const char * host, unsigned short int port)
 {
 	sock=socket(AF_INET,SOCK_STREAM,0);
 
-	// set recv() timeout
+	// set recv() timeout // TODO: get seconds from LocalData::timeoutUPNP
 	#ifdef _WIN32
 		DWORD tv = 5*1000; // milliseconds // fucking MSFT
 	#else
@@ -575,7 +575,7 @@ bool UPNPNAT::getExternalIP(std::string& IpOut, uint32_t& localIP){
 		}
         XMLResults result;
 		XMLNode envelope=XMLNode::parseString(&response[index], "s:Envelope", &result);
-		XMLNode body = envelope.getChildNode(); // TODO: iterate to find needed node?
+		XMLNode body = envelope.getChildNode(); // TODO: iterate to find NewExternalIPAddress node?
 		XMLNode resp = body.getChildNode();
 		XMLNode ipNode = resp.getChildNode("NewExternalIPAddress");
 	    if(ipNode.isEmpty())

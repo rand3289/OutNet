@@ -22,6 +22,9 @@ std::string& rtrim(std::string& s); // trim white spaces on the right in place
 // read lines from a stream and put them in a vector
 void parseLines(std::istream& stream, std::vector<std::string>& lines);
 
+// run parseLines() on all files with specific extension
+int parseFilesIntoLines(const std::string& extension, std::vector<std::string>& lines);
+
 // Determine if str is a key=value pair and parse it into key and value parameters.
 // Return true if str is a key=value pair.
 bool keyValue(const std::string& str, std::string& key, std::string& value);
