@@ -15,7 +15,7 @@ void queryService(Crawler& crawl, HostInfo& service, uint32_t select){
     vector<HostInfo> newData; // results will be returned here
     vector<string> filters; // = {"AGE_LT_600"}; // = {"RPROT=ftp"}; // for FTP servers
     crawl.queryRemoteService(service, newData, select, &filters);
-    // TODO: copy queryRemoteService() into client.cpp and make it independent from Crawler class
+    //1 TODO: copy queryRemoteService() into client.cpp and make it independent from Crawler class
     // move tests.cpp & client.cpp into newly created client directory
 
     for(auto& s: service.services){

@@ -163,7 +163,7 @@ bool UPNPNAT::tcp_connect(int& sock, const char * host, unsigned short int port)
 {
 	sock=socket(AF_INET,SOCK_STREAM,0);
 
-	// set recv() timeout // TODO: get seconds from LocalData::timeoutUPNP
+	// set recv() timeout //1 TODO: get seconds from LocalData::timeoutUPNP
 	#ifdef _WIN32
 		DWORD tv = 5*1000; // milliseconds // fucking MSFT
 	#else

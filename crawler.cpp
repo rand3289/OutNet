@@ -95,7 +95,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
     if(sign){ signer.write(&selectRet, sizeof(selectRet)); } // signer gets data in network byte order
     selectRet = ntohl(selectRet);
 
-// TODO: allow local services to add themselves by connecting to outnet with SPORT= set to their port
+//1 TODO: allow local services to add themselves by connecting to outnet with SPORT= set to their port
 // when outnet connects to it, allow replies without signing the response. (sign=false;)
 // when local (non-routable) address is detected, do not enter it as a remote service but local.
 
@@ -256,7 +256,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
         // If signature can not be verified, discard the data and reduce hi.rating below 0
         if( !signer.verify(signature, *locPubKey) ){
             unique_lock ulock2(rdata.mutx); // release lock after each connection for other parts to work
-// TODO: if keys are different, these are different hosts with the same IP !!!
+//1 TODO: if keys are different, these are different hosts with the same IP !!!
             hi.signatureVerified = false;
             hi.key.reset(); // delete stored public key since signature verification failed
             hi.rating = hi.rating < 0 ? hi.rating-1 : -1;
@@ -272,7 +272,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
     // release the lock after each connection to allow other threads to work
     unique_lock ulock2(rdata.mutx);
     if(sign) {
-// TODO: if signatures are different, it's a different service!!!  Create a new HostInfo.
+//1 TODO: if signatures are different, it's a different service!!!  Create a new HostInfo.
         if( !hi.signatureVerified && locPubKey ){ // (selectRet&SELECTION::LKEY) && !hi.key
             hi.key = locPubKey;
         }

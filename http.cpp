@@ -80,7 +80,7 @@ int Response::write(Sock& conn, uint32_t select, vector<array<string,3>>& filter
     bytes+= ldata.send(conn, select, filters, signer);
     bytes+= rdata.send(conn, select, filters, signer);
 
-// TODO: write signer's buffer to Sock in one go instead of writing parts or Sock::setCork()
+//1 TODO: write signer's buffer to Sock in one go instead of writing parts or Sock::setCork()
     if(sign){
         PubSign psign;
         signer.generate(psign);

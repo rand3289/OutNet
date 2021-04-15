@@ -123,7 +123,7 @@ int Config::loadBlackListFiles(){ // load *.badkey and *.badip files
 
 int Config::findIPs(){
     cout << "Looking for your NAT router..." << endl;
-    if ( upnp.discovery(3) ){
+    if ( upnp.discovery() ){
         cout << "Retrieving this host's IP and WAN IP from the router..." << endl;
         string ipStr;
         upnp.getExternalIP(ipStr, ldata->localIP);
@@ -139,7 +139,7 @@ int Config::findIPs(){
     } else {
         cerr << "Failed to find a NAT router.  ERROR: " << upnp.get_last_error() << endl;
     }
-    // TODO: fill ldata->myIP and ldata->localIP without using router's help
+    //1 TODO: fill ldata->myIP and ldata->localIP without using router's help
     // connecto to something and get local IP that way.
     return 0;
 }

@@ -229,8 +229,8 @@ Small world network properties can be used to find relatively small semi-isolate
 ## Securing agains Botnets
 Health and stability of the internet should be every user's goal.  A botnet client can masquerade as a regular OutNet client.  To prevent any botnets from using this service, it is the responsibility of each user to add IP filters as problems come up.  OutNet has built in blacklist support for IPs and keys.
 
-## TODO:
-* Ipmplement/fix all TODO: in source code
+## TODO
+* Ipmplement/fix all TODO in source code
 * Figure out the best way to run outnet as a system service (OS dependent).  Write wrappers and leave console apps as is?
 * Write OutNetMsg as a browser accessible local service or using QT UI framework?
 * How to associate metadata with file hashes in OutNetX?  Metadata can be subject or related hashes.
