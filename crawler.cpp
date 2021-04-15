@@ -263,6 +263,9 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
             hi.offlineCount = 0;
             hi.seen = system_clock::now();
             return ERR("verifying signature");
+        } else {
+            cout << "Remote's public key: ";
+            printHex(locPubKey->key, sizeof(PubKey));
         }
     }
 

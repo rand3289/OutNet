@@ -1,12 +1,8 @@
 #include "client.h"
 #include "sock.h"
-#include "sign.h"
+#include <cstring>  // strstr()
 #include <iostream>
 #include <sstream>
-#include <memory>
-#include <vector>
-#include <string>
-#include <cstring> // strstr()
 using namespace std;
 
 
@@ -15,46 +11,33 @@ static bool ERR(const string& msg){ // makes error handling code a bit shorter
     return false;
 }
 
-static void turnBitsOff(uint32_t& mask, uint32_t bits){
-    mask = mask & (0xFFFFFFFF^bits); // TODO: return a new mask instead of taking a reference???
+static void turnOffBit(uint32_t& mask, uint32_t bits){
+    mask = mask & (0xFFFFFFFF^bits);
 }
 
 
-// local services add themselves by connecting to outnet with SPORT= set to their server port.
-// when outnet connects to it, reply without signing the response.
-// when OutNet detects local (non-routable) address, it adds services as its own local services.
-bool queryService(uint32_t host, uint16_t port, uint32_t select, vector<string> services, vector<HostInfo>& peers,
-        shared_ptr<PubKey>& pubKey, uint16_t serverPort=0, int rwTimeout=10, vector<string>* filters = nullptr){
-// select contains what you want OutNet to return in your query
-// server has to have host, port and optionally key filled in before the call
-// upon return server contains local services, local key and signatureVerified flag.
-// upon return peers contains a list of peers for your service to connect to
-// myPort is used for registering your local service with OutNet service
-// rwTimeout is a Read/Write time out in seconds for send() and recv() network operations
-// filters is a list of filters you want OutNet to apply before returning the results
-//int queryService(uint32_t select, HostInfo& server, vector<HostInfo>& peers, uint16_t myPort=0, int rwTimeout=10, vector<string>* filters = nullptr){
-
-    if( pubKey ){ // if we have remote's public key, do not request it
-        turnBitsOff(select, SELECTION::LKEY);
+int queryOutNet(uint32_t select, HostInfo& outnet, vector<HostInfo>& peers, uint16_t myPort, int rwTimeout, vector<string>* filters ){
+    if( outnet.key ){ // if we have remote's public key, do not request it
+        turnOffBit(select, SELECTION::LKEY);
     }
 
     stringstream ss;
     ss << "GET /?QUERY=" << select;
-    if(serverPort>0){ // ad own server port for remote to connect back to
-        ss << "&SPORT=" << serverPort;
+    if(myPort>0){ // ad own server port for remote to connect back to
+        ss << "&SPORT=" << myPort;
     }
     if(filters){ // did the caller include any query parameters?
         for(string& f: *filters){ ss << "&" << f; }
     }
     ss << " HTTP/1.1\r\n\r\n";
 
-    cout << "Connecting to " << Sock::ipToString(host) << ":" << port << endl;
+    cout << "Connecting to " << Sock::ipToString(outnet.host) << ":" << outnet.port << endl;
     Sock sock;
     sock.setRWtimeout(rwTimeout); // seconds read/write timeout
     sock.setNoDelay(true); // request is one write()
 
-    if( sock.connect(host, port) ){
-        cerr  << "ERROR connecting to " << Sock::ipToString(host) << ":" << port << endl;
+    if( sock.connect(outnet.host, outnet.port) ){
+        cerr  << "ERROR connecting to " << Sock::ipToString(outnet.host) << ":" << outnet.port << endl;
         return 0;
     }
 
@@ -91,12 +74,12 @@ bool queryService(uint32_t host, uint16_t port, uint32_t select, vector<string> 
     }
 
     if(selectRet & SELECTION::LKEY){
-        pubKey = make_shared<PubKey>();
-        rdsize = sock.read(&*pubKey, sizeof(PubKey));
+        outnet.key = make_shared<PubKey>();
+        rdsize = sock.read(&*outnet.key, sizeof(PubKey));
         if( rdsize != sizeof(PubKey) ){
             return ERR("reading remote public key");
         }
-        if(sign){ signer.write(&*pubKey, sizeof(PubKey)); }
+        if(sign){ signer.write(&*outnet.key, sizeof(PubKey)); }
     }
 
     if(selectRet & SELECTION::TIME){
@@ -128,12 +111,12 @@ bool queryService(uint32_t host, uint16_t port, uint32_t select, vector<string> 
             if(rdsize <=0){
                 return ERR("reading remote serices.");
             }
-            services.push_back(buff);
+            outnet.services.push_back(buff);
             if(sign){ signer.writeString(buff); }
         }
     }
 
-    // remote data
+/******************** remote data *************************/
     uint32_t count;
     rdsize = sock.read(&count, sizeof(count) ); // count is always there even if data is not
     if(rdsize != sizeof(count) ){
@@ -218,14 +201,13 @@ bool queryService(uint32_t host, uint16_t port, uint32_t select, vector<string> 
         }
     } // for (adding HostInfo)
 
-    if(sign){
+    if(sign){ // If signature can not be verified, discard the data
         PubSign signature;
         if( sizeof(signature) != sock.read( &signature, sizeof(signature) ) ) {
             return ERR("reading signature from remote host");
         }
 
-        // If signature can not be verified, discard the data
-        if( !signer.verify(signature, *pubKey) ){
+        if( !signer.verify(signature, *outnet.key) ){
             return ERR("verifying signature");
         }
     }

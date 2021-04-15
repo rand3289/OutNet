@@ -1,6 +1,9 @@
 #ifndef INCLUDED_CLIENT_H
 #define INCLUDED_CLIENT_H
 #include "sign.h" // PubKey
+#include <vector>
+#include <string>
+#include <memory>
 
 struct HostInfo{
     uint32_t host;                     // IPv4 address
@@ -12,7 +15,7 @@ struct HostInfo{
 };
 
 // These are query flags.  Some are "fileds" which can be selected by a query.
-// Field names should be abbreviations up to 5 char long.  This way filters can use the same strings.
+// Field names are abbreviations up to 5 char long.  Filters use the same strings. Ex: AGE_LT_60
 enum SELECTION {
     LKEY   = (1<<0),  // local public key
     TIME   = (1<<1),  // current local datetime (to be used with signatures to avoid replay attack)
@@ -28,5 +31,20 @@ enum SELECTION {
 
     RSVCF  = (1<<10), // FILTER remote service list by protocol or send all?
 }; // if records are filtered by service, we can still send all services for that record.
+
+
+// local services add themselves by connecting to outnet with SPORT= set to their server port.
+// when outnet connects to it, reply without signing the response.
+// when OutNet detects local (non-routable) address, it adds services as its own local services.
+
+// select contains what you want OutNet to return in your query
+// outnet has to have host, port and optionally key filled in before the call
+// upon return outnet.services contains local services, local key and signatureVerified flag.
+// upon return peers contains a list of peers for your service to connect to
+// myPort is used for registering your local service with OutNet service
+// rwTimeout is a Read/Write time out in seconds for send() and recv() network operations
+// filters is a list of filters you want OutNet to apply before returning the results
+int queryOutNet(uint32_t select, HostInfo& outnet, std::vector<HostInfo>& peers, uint16_t myPort=0, int rwTimeout=10, std::vector<std::string>* filters = {} );
+
 
 #endif // INCLUDED_CLIENT_H

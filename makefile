@@ -4,18 +4,17 @@ CC = g++  # notice CFLAGS contains -g which will compile everything in debug mod
 CFLAGS = -g --std=c++20 -Wall -Wextra -Wno-unused-parameter -Iupnp -Isign -pthread
 DEPS = config.h crawler.h data.h http.h sign.h sock.h utils.h upnp/upnpnat.h upnp/xmlParser.h sign/tweetnacl.h
 OBJ = main.o sock.o data.o crawler.o config.o http.o utils.o sign.o upnp/upnpnat.o upnp/xmlParser.o sign/tweetnacl.o
-TESTOBJ =  tests.o sock.o crawler.o data.o sign.o utils.o sign/tweetnacl.o # for building tests
+ifdef OS # windows defines this environment variable
+	FORWINDOWS = -lwsock32 -static
+endif
 
 %.o: %.cpp $(DEPS)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 outnet: $(OBJ)
-	$(CC) -o $@ $^ -lpthread
-# -static
-# warning: Using 'gethostbyname' in statically linked applications requires at runtime the shared libraries from the glibc version used for linking
-
-tests: $(TESTOBJ)
-	$(CC) -o $@ $^ -lpthread
+	$(CC) -o $@ $^ -lpthread $(FORWINDOWS)
+# Linux generates a warning when using -static
+# Using 'gethostbyname' in statically linked applications requires at runtime the shared libraries from the glibc version used for linking
 
 clean:
-	/bin/rm -f *.o upnp/*.o sign/*.o tests outnet
+	/bin/rm -f *.o upnp/*.o sign/*.o outnet outnet.exe
