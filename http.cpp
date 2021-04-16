@@ -82,7 +82,7 @@ bool Request::registerServices(Sock& conn, LocalData& ldata){
                 cout << "Registered new local service: " << serv << endl;
             }
         } else if( strncmp(buff,"Unregister:", 11)==0 ){
-//            ldata.removeService(buff+11); // TODO:
+//            ldata.removeService(buff+11); //1 TODO:
         }
     }
 }
@@ -90,7 +90,7 @@ bool Request::registerServices(Sock& conn, LocalData& ldata){
 
 int Response::write(Sock& conn, uint32_t select, vector<array<string,3>>& filters, LocalData& ldata, RemoteData& rdata){
     static const string header =  "HTTP/1.1 200 OK\r\n\r\n"; // TODO: need full header to bypass firewalls/proxies?
-    int bytes = conn.write(header.c_str(), header.size() ); // no need to sign the header
+    int bytes = conn.write(header.c_str(), header.size() );  // no need to sign the header
 
     bool sign = select & SELECTION::SIGN;
     if(sign){ signer.init(); }

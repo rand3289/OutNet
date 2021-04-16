@@ -4,7 +4,6 @@
 #include "sock.h"
 #include "http.h"
 #include <vector>
-#include <array>
 #include <map> // #include <unordered_map>
 #include <string>
 #include <sstream>

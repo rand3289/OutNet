@@ -1,43 +1,10 @@
-// this is a stand alone utility. it queries the OutNet service.
-// to compile on linux/windows type "make"
+// this is a stand alone utility. it queries the OutNet service.  To compile on linux/windows type "make".
 #include "client.h"
 #include "sock.h"
 #include <iostream>
 #include <sstream>
 using namespace std;
 
-/*
-// To register with OutNet, your service has to query it fist "queryOutNet()"
-// By doing so you advertise your intent to register the service with OutNet.
-// OutNet will connect back to your service and ask you for your service description
-void registerWithOutNet(HostInfo& outNet){ // outNet host/port should be filled
-    Sock sock;                             // this is a server socket
-    sock.listen(Sock::ANY_PORT);           // create a TCP server on any port
-    uint16_t serverPort = sock.getPort();  // which port did the server pick?
-
-    uint32_t select = SELECTION::LSVC | SELECTION::LKEY; // pick the fields you want
-    vector<HostInfo> newData;          // dont really need it
-    queryOutNet(select, outNet, newData, serverPort);
-    // in case you want it, outNet now contains local services and local public key
-    // check if your service is there - maybe it is already registered?
-    cout << "Query sent to OutNet.  Waiting for callback." <<endl;
-
-    Sock conn;             // connection from OutNet to your service
-    sock.accept(conn);     // server socket "sock" will accept a new connection into "conn"
-    conn.setRWtimeout(10); // optional: set read/write timeouts
-
-    // Prepare fields to send.  All numbers have to be in network byte order
-    const char* header = "HTTP/1.1 200 OK\r\n\r\n"; // required HTTP header
-    uint32_t fields = htonl(SELECTION::LSVC);       // your reply will contain local service descriptions ONLY
-    uint16_t count  = htons(1);                     // one service
-    string servInfo = "web:tcp:http:127.0.0.1:80:/index.html"; // your service description
-
-    conn.write(header, strlen(header) );
-    conn.write(&fields, sizeof(fields) );
-    conn.write(&count, sizeof(count) );
-    conn.writeString(servInfo);
-}
-*/
 
 void registerMyService(uint32_t outNetIP, uint16_t outNetPort, const string& servInfo){
     stringstream ss;
@@ -96,5 +63,6 @@ int main(int argc, char* argv[]) {
             select = select | SELECTION::LKEY;
         }
         queryService(select, service);
+        // TODO: sleep()
     }
 }
