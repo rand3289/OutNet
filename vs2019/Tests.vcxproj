@@ -118,7 +118,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\upnp\;$(ProjectDir)..\sign\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\upnp\;$(ProjectDir)..\sign\;$(ProjectDir)..\</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
@@ -144,22 +144,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\crawler.cpp" />
-    <ClCompile Include="..\data.cpp" />
     <ClCompile Include="..\sign.cpp" />
     <ClCompile Include="..\sign\tweetnacl.c" />
     <ClCompile Include="..\sock.cpp" />
-    <ClCompile Include="..\tests.cpp" />
-    <ClCompile Include="..\utils.cpp" />
+    <ClCompile Include="..\test\client.cpp" />
+    <ClCompile Include="..\test\tests.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\crawler.h" />
-    <ClInclude Include="..\data.h" />
-    <ClInclude Include="..\http.h" />
     <ClInclude Include="..\sign.h" />
     <ClInclude Include="..\sign\tweetnacl.h" />
     <ClInclude Include="..\sock.h" />
-    <ClInclude Include="..\utils.h" />
+    <ClInclude Include="..\test\client.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

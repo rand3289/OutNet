@@ -40,6 +40,7 @@ int main(int argc, char* argv[]) {
         cerr << "Usage: " << argv[0] << " host port" << endl;
         return -1;
     }
+    initNetwork();
 
     HostInfo service; // connect to this OutNet service
     service.host = Sock::stringToIP(argv[1]);
