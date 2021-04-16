@@ -58,12 +58,14 @@ int main(int argc, char* argv[]) {
     cout << "press enter to run tests..." << endl;
     cin.ignore();
 
-    for(int32_t select = 1; select < 32*1024; ++select){
+    for(int i=1; i <= 2048; ++i){
+        int select = i;
         // avoid combinations that request a signature without requesting a key
-        if( (select & SELECTION::SIGN) ){
+        if( select & SELECTION::SIGN ){
             select = select | SELECTION::LKEY;
         }
         service.services.clear(); // clear results of previous queries
+        cout << "[" << select << "] ";
         queryService(select, service);
         // TODO: sleep()
     }

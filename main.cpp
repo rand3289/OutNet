@@ -15,16 +15,16 @@ using namespace std;
 std::string selectStr(uint32_t sel){
     std::stringstream ss;
     ss << sel << ": ";
-    if(sel & LKEY){ ss << "LKEY "; }
-    if(sel & TIME){ ss << "TIME "; }
-    if(sel & SIGN){ ss << "SIGN "; }
-    if(sel & LSVC){ ss << "LSVC "; }
-    if(sel & IP  ){ ss << "IP "; }
-    if(sel & PORT){ ss << "PORT "; }
-    if(sel & AGE ){ ss << "AGE "; }
-    if(sel & RKEY){ ss << "RKEY "; }
-    if(sel & RSVC){ ss << "RSVC "; }
-    if(sel & RSVCF){ss << "RSVCF "; }
+    if(sel & SELECTION::LKEY){ ss << "LKEY "; }
+    if(sel & SELECTION::TIME){ ss << "TIME "; }
+    if(sel & SELECTION::SIGN){ ss << "SIGN "; }
+    if(sel & SELECTION::LSVC){ ss << "LSVC "; }
+    if(sel & SELECTION::IP  ){ ss << "IP ";   }
+    if(sel & SELECTION::PORT){ ss << "PORT "; }
+    if(sel & SELECTION::AGE ){ ss << "AGE ";  }
+    if(sel & SELECTION::RKEY){ ss << "RKEY "; }
+    if(sel & SELECTION::RSVC){ ss << "RSVC "; }
+    if(sel & SELECTION::RSVCF){ss << "RSVCF ";}
     return ss.str();
 }
 
