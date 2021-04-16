@@ -38,7 +38,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
     ss << "GET /?QUERY=" << select;
     // add "filter by time" if remote was contacted before. Get new data only.
     if( 0 == hi.offlineCount && hi.seen > system_clock::from_time_t(0) ){
-        int ageMinutes = (int) duration_cast<seconds>(system_clock::now() - hi.seen).count();
+        int ageMinutes = (int) duration_cast<minutes>(system_clock::now() - hi.seen).count();
         ss << "&AGE_LT_" << ageMinutes;
     }
     slock.unlock(); // this is the last place where we read hi.blah
@@ -112,18 +112,18 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
     }
 
     if(selectRet & SELECTION::TIME){
-        uint32_t timeRemote;
+        int32_t timeRemote;
         rdsize = sock.read(&timeRemote, sizeof(timeRemote) );
         if(rdsize != sizeof(timeRemote) ){
             return ERR("reading remote's time.");
         }
         if(sign){ signer.write(&timeRemote, sizeof(timeRemote)); }
         timeRemote = ntohl(timeRemote);
+
         // check that timestamp is not too long in the past, otherwise it can be a replay attack
-        uint32_t now = (uint32_t) time(nullptr); // unix time does not depend on a timezone
-        uint32_t minOld = (now - timeRemote )/ 60;  // minutes
-        if( minOld > 10 ){
-            return ERR("remote time stamp is " + to_string(minOld) + " minutes old!  Discarding data.");
+        int32_t minOld = timeMinutes() - timeRemote; // does not depend on a timezone
+        if( abs(minOld) > 5 ){
+            return ERR("Remote time difference is " + to_string(minOld) + " minutes.  Discarding data.");
         }
     }
 

@@ -151,3 +151,11 @@ string readString(ifstream& file){
     if( !file ){ return ""; } // ERROR
     return str;
 }
+
+
+#include <chrono>
+using namespace std::chrono;
+int32_t timeMinutes(){
+    static auto epoch = system_clock::from_time_t(0);
+    return duration_cast<minutes>(system_clock::now() - epoch).count();
+}

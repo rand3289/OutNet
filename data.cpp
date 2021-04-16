@@ -183,16 +183,15 @@ int LocalData::send(Sock& sock, uint32_t select, vector<array<string,3>>& filter
         if(sign){ signer.write(&localPubKey, sizeof(localPubKey) ); }
     }
 
-    // I wanted time to be a binary field and I want to use hton?() on it so uint32_t it is.
-    // after 2038 there could be a glitch, but the field will stay 32 bit.
+    // I wanted time to be a binary field and I want to use htonl() on it so int32_t it is.
     // timestamp is important to avoid a replay attack
     if(select & SELECTION::TIME){
-        uint32_t now = htonl( (uint32_t) time(nullptr));
+        int32_t now = htonl( timeMinutes() ); // in MINUTES !!!
         bytes += sock.write( &now, sizeof(now));
         if(sign){ signer.write(&now, sizeof(now)); }
     }
 
-    if( !(select & SELECTION::LSVC) ){ return bytes; } // service list not requiested
+    if( !(select & SELECTION::LSVC) ){ return bytes; } // service list was not requested
 
     // filter service list (toSend). get the count.  write the count.  write list.
     vector<Service*> toSend;

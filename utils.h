@@ -8,6 +8,8 @@
 
 void turnBitsOff(uint32_t& mask, uint32_t bits); // turn bits off in a mask
 
+int32_t timeMinutes(); // get time in minutes since Jan 1, 1970
+
 // break string into tokens
 bool tokenize( char*& buffer, const char* bufferEnd, char*& token, const std::string& separators );
 
