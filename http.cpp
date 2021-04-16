@@ -66,6 +66,28 @@ int Request::parse(Sock& conn, vector<array<string,3>>& filters, uint16_t& port)
 }
 
 
+// look for "Register:" or "Unregister:" HTTP request fields
+bool Request::registerServices(Sock& conn, LocalData& ldata){
+    char buff[2048];
+    while(true){
+        int rd = conn.readLine(buff, sizeof(buff));
+        if(rd <= 0){ return false; } // error reading more data (connection closed/timed out)
+        int len = strlen(buff);
+        if(0==len){ return true; } // header was parsed till the end
+        if(len < 25){ continue; }  // too short to be a field of interest
+        if( strncmp(buff,"Register:", 9)==0 ){
+            string serv = buff+9;
+            rtrim(ltrim(serv));
+            if( ldata.addService(serv) ){
+                cout << "Registered new local service: " << serv << endl;
+            }
+        } else if( strncmp(buff,"Unregister:", 11)==0 ){
+//            ldata.removeService(buff+11); // TODO:
+        }
+    }
+}
+
+
 int Response::write(Sock& conn, uint32_t select, vector<array<string,3>>& filters, LocalData& ldata, RemoteData& rdata){
     static const string header =  "HTTP/1.1 200 OK\r\n\r\n"; // TODO: need full header to bypass firewalls/proxies?
     int bytes = conn.write(header.c_str(), header.size() ); // no need to sign the header

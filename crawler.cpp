@@ -93,12 +93,8 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
         return ERR("reading 'select'");
     }
     if(sign){ signer.write(&selectRet, sizeof(selectRet)); } // signer gets data in network byte order
+
     selectRet = ntohl(selectRet);
-
-//1 TODO: allow local services to add themselves by connecting to outnet with SPORT= set to their port
-// when outnet connects to it, allow replies without signing the response. (sign=false;)
-// when local (non-routable) address is detected, do not enter it as a remote service but local.
-
     if( sign && !(selectRet & SELECTION::SIGN) ){ // we requested a signature but it was not returned
         return ERR("remote refused to sign response"); // this is a security problem
     }

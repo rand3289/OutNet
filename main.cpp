@@ -115,9 +115,10 @@ int main(int argc, char* argv[]){
         }
 
         // prevent abuse if host connects too often but allow local IPs repeated queries
+        bool routable = Sock::isRoutable(ip);
         auto now = system_clock::now();
         auto& time = connTime[ip];
-        if( time > now - minutes(10) && Sock::isRoutable(ip) ){
+        if( time > now - minutes(10) && routable ){
             cout << "Denying REQUEST from " << Sock::ipToString(ip) << " (connects too often)" << endl;
             Response::writeDenied(conn, "DENIED");
             continue;
@@ -128,6 +129,10 @@ int main(int argc, char* argv[]){
         vector<array<string,3>> filters; // function + parameter pairs
         uint16_t port = 0;
         int select = Request::parse(conn, filters, port);
+
+        if(!routable){ // local services can ask to register themselves in HTTP request when querying
+            Request::registerServices(conn, ldata);
+        }
 
         if(port > 0){ // remote sent us its server port.  Add accepted connection to RemoteData
             rdata.addContact(conn.getIP(), port );

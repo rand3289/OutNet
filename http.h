@@ -33,7 +33,8 @@ enum SELECTION {
 class Request{ // parse() returns QUERY bit field
     static bool parseFilter(char* filter, std::array<std::string,3>& funcOperVal);
 public:
-    static int parse(Sock & conn, std::vector<std::array<std::string,3>>& filters, uint16_t& port);
+    static int parse(Sock& conn, std::vector<std::array<std::string,3>>& filters, uint16_t& port);
+    static bool registerServices(Sock& conn, LocalData& ldata);
 };
 
 
