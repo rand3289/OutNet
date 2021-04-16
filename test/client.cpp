@@ -179,8 +179,8 @@ int queryOutNet(uint32_t select, HostInfo& outnet, vector<HostInfo>& peers, uint
 
         if(selectRet & SELECTION::ISCHK){
             unsigned char chk;
-            sock.read(&chk, sizeof(chk) );
-            if(rdsize != sizeof(PubKey) ){
+            rdsize = sock.read(&chk, sizeof(chk) );
+            if( rdsize != sizeof(chk) || chk>1 ){ // chk should be 0 or 1
                 return ERR("reading signatureVerified.");
             }
             hil.signatureVerified = chk;
