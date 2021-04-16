@@ -57,8 +57,8 @@ Since one does not want to expose ALL available local services on the internet, 
 
 
 ## Project status
-Project does not have ANY external dependencies.  Everything is built-in (source code available from ONE git repository).  Most features are implemented and currently being tested.  
-It compiles using g++ 10.2 under linux, MinGW-w64 from msys2.org on windows and Visual Studio.  To compile on linux type "make" or "make tests".  To compile on Windows type "make -f makefile.mingw64" or "make -f makefile.mingw64 tests".  Visual Studio build is currently broken.
+OutNet is written in C++ 20. Project does not have ANY external dependencies.  Everything is built-in (source code available from ONE git repository).  Most features are implemented and currently being tested.  
+It compiles using g++ 10.2 under linux, MinGW-w64 from msys2.org on windows and Visual Studio.  Visual Studio build is currently broken.  To compile type "make" in OutNet directory.  To compile tests, type "make" in OutNet/test directory.  "test" directory contains sample code for querying the OutNet service.
 
 Apple requires an Apple ID to download Command Line Tools.  Apple ID registration requires submission of your phone number.  This project has not been ported to macOS for this reason.
 
@@ -159,9 +159,9 @@ https://en.wikipedia.org/wiki/Multicast_DNS
 https://en.wikipedia.org/wiki/Bonjour_(software)  
 
 ## Describing services
-OutNet can be based on existing standards.  For example, list of services can be based on modified service description format of DNS-SD (section 4.1.2 of rfc6763), SLP (section 4.1 of rfc2608), WS-Discovery, SSDP, NIS, mDNS, Bonjour.  Service description has to contain at least the following fields: type of service (ex: printer), actual protocol (ex:ipp), IP, port number, user defined name/description/path/attribute.  
+OutNet can be based on existing standards.  For example, list of services can be based on modified service description format of DNS-SD (section 4.1.2 of rfc6763), SLP (section 4.1 of rfc2608), WS-Discovery, SSDP, NIS, mDNS, Bonjour.  Service description has to contain at least the following fields: type of service (ex: printer), internet protocol (tcp/udp), actual protocol (ex:ipp), IP, port number, user defined name/description/path/attribute.  
 
-Other possible fields: version, internet protocol (tcp / udp / multicast etc...), piority[0-9] or type of data (service/device/block/stream/file/messages/image/audio/video/conference/game/ xml/json/yaml/soap/rpc/wsdl/feed(structured data)/list/key-value/url/ binary/text/unicode/ascii/base64/uuencoded/ printer/speaker/display/ blockchain/cryptocurrency/geolocation/weather/virtualreality/time).  
+Other possible fields: version, piority[0-9], type of data (service/device/block/stream/file/messages/image/audio/video/conference/game/ xml/json/yaml/soap/rpc/wsdl/feed(structured data)/list/key-value/url/ binary/text/unicode/ascii/base64/uuencoded/ printer/speaker/display/ blockchain/cryptocurrency/geolocation/weather/virtualreality/time).  
 
 Proposed maximum field lengths: priority(char[1]), service class(char[16]), protocol(char[16]), ipproto(char[3]), IP(char[15]), port(char[5]), description or path(char[32]).  Maximum service description length in the range of 96 - 128 bytes.  (DNS-SD limits service names to 15 characters.  Key-value pairs are described in rfc6763 section 6.)
 

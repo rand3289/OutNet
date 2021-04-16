@@ -80,7 +80,7 @@ Service* Service::parse(const string& servStr, uint32_t myIP){
     // Translate local to NAT (router) IP
     uint32_t routableIP = Sock::isRoutable(ip) ? ip : myIP;
     stringstream ss;
-    ss << service << ":" << protocol << ":" << Sock::ipToString(routableIP) << ":" << port << ":" << other;
+    ss << service << ":" << tcpudp << ":" << protocol << ":" << Sock::ipToString(routableIP) << ":" << port << ":" << other;
     fullDescription = ss.str();
     return this;
 }
@@ -291,11 +291,11 @@ int RemoteData::send(Sock& sock, uint32_t select, vector<array<string,3>>& filte
 
 // is this ip in our black list
 bool BlackList::isBanned(IPADDR host){
-    return !binary_search(badHosts.begin(), badHosts.end(), host);
+    return binary_search(badHosts.begin(), badHosts.end(), host);
 }
 
 
 // is this public key in our black list
 bool BlackList::isBanned(PubKey& key){ 
-    return !binary_search(badKeys.begin(), badKeys.end(), key);
+    return binary_search(badKeys.begin(), badKeys.end(), key);
 }
