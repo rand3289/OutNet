@@ -13,7 +13,7 @@ void registerMyService(uint32_t outNetIP, uint16_t outNetPort, const string& ser
 
     Sock sock;
     sock.connect(outNetIP, outNetPort);
-    sock.writeString( ss.str() );
+    sock.write( ss.str().c_str(), ss.str().length() );
 }
 
 

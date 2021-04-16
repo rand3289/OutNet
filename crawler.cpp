@@ -121,8 +121,9 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
         timeRemote = ntohl(timeRemote);
         // check that timestamp is not too long in the past, otherwise it can be a replay attack
         uint32_t now = (uint32_t) time(nullptr); // unix time does not depend on a timezone
-        if( now - timeRemote > 10*60 ){
-            return ERR("remote time stamp is older than 10 minutes!  Discarding data.");
+        uint32_t minOld = (now - timeRemote )/ 60;  // minutes
+        if( minOld > 10 ){
+            return ERR("remote time stamp is " + to_string(minOld) + " minutes old!  Discarding data.");
         }
     }
 

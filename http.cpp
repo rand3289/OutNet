@@ -76,10 +76,10 @@ bool Request::registerServices(Sock& conn, LocalData& ldata){
         if(0==len){ return true; } // header was parsed till the end
         if(len < 25){ continue; }  // too short to be a field of interest
         if( strncmp(buff,"Register:", 9)==0 ){
-            string serv = buff+9;
-            rtrim(ltrim(serv));
+            string serv = buff+9; // serv gets destroyed during parsing
+            rtrim(ltrim(serv));   // TODO: move ltrim()/rtrim() into addService()
             if( ldata.addService(serv) ){
-                cout << "Registered new local service: " << serv << endl;
+                cout << "Registered new local service: " << buff+9 << endl;
             }
         } else if( strncmp(buff,"Unregister:", 11)==0 ){
 //            ldata.removeService(buff+11); //1 TODO:
