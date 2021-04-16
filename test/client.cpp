@@ -4,6 +4,8 @@
 #include <iostream>
 #include <sstream>
 using namespace std;
+#include <chrono>
+using namespace std::chrono;
 
 
 static bool ERR(const string& msg){ // makes error handling code a bit shorter
@@ -92,7 +94,9 @@ int queryOutNet(uint32_t select, HostInfo& outnet, vector<HostInfo>& peers, uint
         timeRemote = ntohl(timeRemote);
 
         // check that timestamp is not too long in the past, otherwise it can be a replay attack
-        int32_t minOld = timeMinutes() - timeRemote; // does not depend on a timezone
+        static auto epoch = system_clock::from_time_t(0);
+        int32_t timeMinutes = duration_cast<minutes>(system_clock::now() - epoch).count();
+        int32_t minOld = timeMinutes - timeRemote; // does not depend on a timezone
         if( abs(minOld) > 5 ){
             return ERR("Remote time difference is " + to_string(minOld) + " minutes.  Discarding data.");
         }
