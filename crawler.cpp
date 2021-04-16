@@ -147,7 +147,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
         }
     }
 
-    // remote data
+/******************** remote data *************************/
     uint32_t count;
     rdsize = sock.read(&count, sizeof(count) ); // count is always there even if data is not
     if(rdsize != sizeof(count) ){

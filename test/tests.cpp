@@ -63,6 +63,7 @@ int main(int argc, char* argv[]) {
         if( (select & SELECTION::SIGN) ){
             select = select | SELECTION::LKEY;
         }
+        service.services.clear(); // clear results of previous queries
         queryService(select, service);
         // TODO: sleep()
     }

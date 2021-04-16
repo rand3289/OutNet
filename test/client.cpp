@@ -83,17 +83,18 @@ int queryOutNet(uint32_t select, HostInfo& outnet, vector<HostInfo>& peers, uint
     }
 
     if(selectRet & SELECTION::TIME){
-        uint32_t timeRemote;
+        int32_t timeRemote;
         rdsize = sock.read(&timeRemote, sizeof(timeRemote) );
         if(rdsize != sizeof(timeRemote) ){
             return ERR("reading remote's time.");
         }
         if(sign){ signer.write(&timeRemote, sizeof(timeRemote)); }
         timeRemote = ntohl(timeRemote);
+
         // check that timestamp is not too long in the past, otherwise it can be a replay attack
-        uint32_t now = (uint32_t) time(nullptr); // unix time does not depend on a timezone
-        if( now - timeRemote > 10*60 ){
-            return ERR("remote time stamp is older than 10 minutes!  Discarding data.");
+        int32_t minOld = timeMinutes() - timeRemote; // does not depend on a timezone
+        if( abs(minOld) > 5 ){
+            return ERR("Remote time difference is " + to_string(minOld) + " minutes.  Discarding data.");
         }
     }
 
