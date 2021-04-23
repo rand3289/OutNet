@@ -126,7 +126,7 @@ void printHex(const unsigned char* buff, int len){
 void printAscii(const unsigned char* buff, int len){
     for(int i = 0; i< len; ++i){
         unsigned char val = buff[i];
-        val = ( val > 32 && val< 127 ) ? val : '.';
+        val = ( val >= 32 && val< 127 ) ? val : '.';
         cout <<  val;
     }
     cout << endl;

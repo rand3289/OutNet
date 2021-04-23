@@ -3,7 +3,7 @@
 #include <cstring> // size_t, memset(), memcpy(), memcmp()
 #include <string>
 #include "tweetnacl.h"
-#include "utils.h"
+#include "buffer.h"
 
 #define SIGNATURE_SIZE (crypto_sign_BYTES)
 #define PUBKEY_SIZE    (crypto_sign_PUBLICKEYBYTES)

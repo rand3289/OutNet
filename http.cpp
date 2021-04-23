@@ -37,8 +37,8 @@ int Request::parse(Sock& conn, vector<array<string,3>>& filters, uint16_t& port)
     char buff[2048];
     int rd = conn.readLine(buff, sizeof(buff));
     if(rd < 0){ return -1; } // error reading more data (connection closed/timed out)
+    printAscii((const unsigned char*)buff, rd);
     if( strncmp(buff,"GET",3) ){ // not an http GET query
-        cout << buff << endl; // DEBUGGING ONLY!!!
         return -1;
     }
     string line = buff; // save it for debugging

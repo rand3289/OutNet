@@ -5,6 +5,8 @@ CFLAGS = -g --std=c++20 -Wall -Wextra -Wno-unused-parameter -Iupnp -Isign -pthre
 DEPS = config.h crawler.h data.h http.h sign.h sock.h utils.h upnp/upnpnat.h upnp/xmlParser.h sign/tweetnacl.h
 OBJ = main.o sock.o data.o crawler.o config.o http.o utils.o sign.o upnp/upnpnat.o upnp/xmlParser.o sign/tweetnacl.o
 
+# Linux generates a warning when using -static
+# Using 'gethostbyname' in statically linked applications requires at runtime the shared libraries from the glibc version used for linking
 ifdef OS # windows defines this environment variable
 	LDFLAGS = -lwsock32 -static
 endif
@@ -14,8 +16,6 @@ endif
 
 outnet: $(OBJ)
 	$(CC) -o $@ $^ -lpthread $(LDFLAGS)
-# Linux generates a warning when using -static
-# Using 'gethostbyname' in statically linked applications requires at runtime the shared libraries from the glibc version used for linking
 
 clean:
 	/bin/rm -f $(OBJ) outnet outnet.exe

@@ -43,6 +43,7 @@ int queryOutNet(uint32_t select, HostInfo& outnet, vector<HostInfo>& peers, uint
         return 0;
     }
 
+    cout << ss.str() << endl;
     int len = (int) ss.str().length();
     if(len != sock.write(ss.str().c_str(), len ) ){
         return ERR("sending HTTP request");

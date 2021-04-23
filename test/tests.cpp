@@ -36,7 +36,7 @@ void queryService(uint32_t select, HostInfo& service){
 
 
 int main(int argc, char* argv[]) {
-    if(argc!=3){
+    if( argc<3 || argc > 4){
         cerr << "Usage: " << argv[0] << " host port" << endl;
         return -1;
     }
@@ -58,7 +58,8 @@ int main(int argc, char* argv[]) {
     cout << "press enter to run tests..." << endl;
     cin.ignore();
 
-    for(int i=1; i <= 2048; ++i){
+    int i = argc==4 ? strtol(argv[3], nullptr, 10) : 1;
+    for(; i <= 2048; ++i){
         int select = i;
         // avoid combinations that request a signature without requesting a key
         if( select & SELECTION::SIGN ){
