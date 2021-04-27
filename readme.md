@@ -77,7 +77,8 @@ https://en.wikipedia.org/wiki/Information_retrieval
 https://en.wikipedia.org/wiki/Wide_area_network  
 
 
-* OutNet runs as a REST service over HTTP to bypass some firewalls and network restrictions.  It can run on different port numbers that can change over time.  Your other services do not have to run over HTTP or TCP.
+* OutNet runs as a REST service over HTTP to bypass some firewalls and network restrictions.  It can run on different port numbers that can change over time.  Your other services do not have to run over HTTP or TCP.  The advantages of using http interfaces and presenting user interfaces as web applications however is that they ALL can be linked into one eco system.  Any of your services built on top of OutNet know about other services by querying OutNet service.  Any service can send messages to OutNetMsg or post notifications to OutNetTray.  Browser based OutNetMsg will provide links to all registered OutNet services that serve /favicon.ico via HTTP GET request.
+
 * Your public local services can find their peers by querying a local OutNet instance.
 * OutNet is capable of "opening a port in your router" via UPnP in order to be accessible from outside of your network (WAN side).
 * It can "open" additional ports for your distributed services to accept connections.
