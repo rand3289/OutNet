@@ -62,6 +62,10 @@ It compiles using g++ 10.2 under linux, MinGW-w64 from msys2.org on windows and 
 
 Apple requires an Apple ID to download Command Line Tools.  Apple ID registration requires submission of your phone number.  This project has not been ported to macOS for this reason.
 
+OutNet's home is https://github.com/rand3289/OutNetMsg  
+Other OutNet based services currently being implemented are available here:  
+https://github.com/rand3289/OutNetMsg  
+
 
 Reading further requires understanding of the following concepts:  
 https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol  
