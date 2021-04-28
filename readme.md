@@ -34,7 +34,18 @@ https://en.wikipedia.org/wiki/GNUnet
 OutNet is an alternative to "private/regulated/controlled" discovery protocols like Kazaa or domain names.  OutNet is a free and open source distributed service directory network protocol (peer discovery).  It is designed to find conventional or distributed (P2P) services on the internet.  Services such as web pages, game servers, ftp servers, messengers, forums, video conferences, P2P and distributed services.  Another goals of OutNet is to decentralize the internet making it resistant to control and sensorship.  OutNet provides anonymity.  Instead of a domain or a user name, a public key is used to identify you, your services and services provided by others.  Public key is generated locally.  Your real name is no longer needed to provide or consume services on the internet.  Your IP address however will be visible to the world unless used in conjunction with a VPN.  OutNet is similar to the DNS system which allows finding services by name, however instead it allows finding services on the internet by a network protocol name, a service type or a public key.  OutNet is different from a blockchain and much simpler. Peers can have a partial view of the information.  There is similarity with GNUnet since OutNet provides peer discovery and authentication.  However unlike GNUnet OutNet does not provide any encryption or privacy.  The upside is there are NO dependencies on external components.
 
 
-## Proposed implementation
+## Project status
+OutNet is written in C++ 20. Project does not have ANY external dependencies.  Everything is built-in (source code available from ONE git repository).  Most features are implemented and currently being tested.  OutNet was started in February 2020 by a single developer.  Its most recent version is 0.1
+It compiles using g++ 10.2 under linux, MinGW-w64 from msys2.org on windows and Visual Studio.  Visual Studio build is currently broken.  To compile type "make" in OutNet directory.  To compile tests, type "make" in OutNet/test directory.  "test" directory contains sample code for querying the OutNet service.
+
+Apple requires an Apple ID to download Command Line Tools.  Apple ID registration requires submission of your phone number.  This project has not been ported to macOS for this reason.
+
+OutNet's home is https://github.com/rand3289/OutNetMsg  
+Other OutNet based services currently being implemented are available here:  
+https://github.com/rand3289/OutNetMsg  
+
+
+## Implementation
 OutNet is implemented by a service with the same name that runs on your machine.  It gathers and provides a list of IPv4 addresses, corresponding port numbers and ages of nodes participating in the OutNet.  In addition, OutNet lists the types of remote services and local services you run such as your web sites, game servers and P2P services.
 
 When OutNet starts, it tries to contact some of the known remote OutNet severs. It collects their information such as public keys and lists of services they advertise.  Local services can query OutNet to find a list of peers.  Querying OutNet returns a response that contains it's public key, a list of local services OutNet is advertising, a list of remote OutNet services it knows and services they advertise.  Response is signed by the private key.
@@ -54,17 +65,6 @@ https://en.wikipedia.org/wiki/Repository_(version_control)
 
 
 Since one does not want to expose ALL available local services on the internet, OutNet does not discover local services.  Local services can register with OutNet or be added via configuration files.  Service descriptions visible to the world have to contain routable (public/external) IP addresses instead of host names.  If OutNet determines your service is behind a NAT router and IP is a non-routable IP, it will replace your non-routable IP with it's own external routable IP when listing your service.  In addition, OutNet will open a port in the router via UPnP protocol that will allow your service to accept connections.
-
-
-## Project status
-OutNet is written in C++ 20. Project does not have ANY external dependencies.  Everything is built-in (source code available from ONE git repository).  Most features are implemented and currently being tested.  OutNet was started in February 2020 by a single developer.  Its most recent version is 0.1
-It compiles using g++ 10.2 under linux, MinGW-w64 from msys2.org on windows and Visual Studio.  Visual Studio build is currently broken.  To compile type "make" in OutNet directory.  To compile tests, type "make" in OutNet/test directory.  "test" directory contains sample code for querying the OutNet service.
-
-Apple requires an Apple ID to download Command Line Tools.  Apple ID registration requires submission of your phone number.  This project has not been ported to macOS for this reason.
-
-OutNet's home is https://github.com/rand3289/OutNetMsg  
-Other OutNet based services currently being implemented are available here:  
-https://github.com/rand3289/OutNetMsg  
 
 
 Reading further requires understanding of the following concepts:  
@@ -120,7 +120,7 @@ https://en.wikipedia.org/wiki/E-commerce
 
 
 * There is a need for OutNet notification service.  E-mail is not shared by the OutNet service to prevent network-wide spam.  OutNetMsg receives messages addressed to your public key.  If it is from some one you trust (their public key is on your white list), it tries to open the message using the protocol/mime specified in the message.  OutNetMsg can display the message, offer to open/save the message or file, forward it to one of the services running on your system (for example, by acting as a TCP wrapper) or suggest you install a corresponding protocol handler / service.  For example it can open a Zoom conference.
-It has to be able to manage other's public keys to be able to put them on your contact list.  It should be possible to create "groups" of public keys. It should be able to share public keys and public key lists with others and notify of updates to the list.  It should be able to send a message or a file to the list.  There should be a mechanism to request that your public key is added to someone's friend list or group list.  Messages from public keys not on your list will be discarded.  Only direct (non-public) messages will be handled by OutNetMsg.  Public messages or publicly shared files should be handled by other services.  OutNet service provides public key to IP:PORT mapping for OutNetMsg to find the recepients.
+It has to be able to manage other's public keys to be able to put them on your contact list.  It should be possible to create "groups" of public keys. It should be able to share public keys and public key lists with others and notify of updates to the list.  It should be able to send a message or a file to the list.  There should be a mechanism to request that your public key is added to someone's friend list or group list.  Messages from public keys not on your list will be discarded.  Only direct (non-public) messages will be handled by OutNetMsg.  Public messages or publicly shared files should be handled by other services.  OutNet service provides public key to IP:PORT mapping for OutNetMsg to find the recepients.  See https://github.com/rand3289/OutNetMsg for more info.
 
 
 * While OutNetMsg takes care of direct communication, there is a need for distributed message board service similar to twitter, reddit, facebook or newsgroups.  Public messages and files exchanged by this service OutNetExchange (alternatively OutNetX or OutNetShare) are not addressed to an individual but reach users subscribed on a particular subject or key.  Subject (thread) can have a hierarchical structure for example: local.USA.SanFrancisco.pizza  similar to a usenet group (section 3.2 in rfc977).  software.x86.linux.games.myBlaster can be used to distribute software.  Alternatively a public key could become a subject allowing subscription to an individual source.  A file hash becomes a URL where documents are hyperlinked by using their hash.  A hybrid model can be implemented where large files are distributed using BitTorrent and small files or file metadata/hashes propagate similar to usenet articles.  OutNetExchange can duplicate some usenet features while avoiding these problems:
