@@ -146,7 +146,7 @@ int Config::findIPs(){
 
 
 // a member of type "const std::string" cannot have an in-class initializerC/C++(1591)
-static const string configName = "settings.cfg";
+static const string configName = "outnet.cfg";
 
 // load port and refresh rate from config file
 void Config::init(LocalData& lData, BlackList& bList){

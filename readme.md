@@ -237,5 +237,5 @@ Health and stability of the internet should be every user's goal.  A botnet clie
 ## TODO
 * Ipmplement/fix all TODO in source code
 * Figure out the best way to run outnet as a system service (OS dependent).  Write wrappers and leave console apps as is?
-* Write OutNetMsg as a browser accessible local service or using QT UI framework?
+
 * How to associate metadata with file hashes in OutNetX?  Metadata can be subject or related hashes.
