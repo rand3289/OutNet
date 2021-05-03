@@ -237,5 +237,6 @@ Health and stability of the internet should be every user's goal.  A botnet clie
 ## TODO
 * Ipmplement/fix all TODO in source code
 * Figure out the best way to run outnet as a system service (OS dependent).  Write wrappers and leave console apps as is?
+* Add IPv4 SSDP capability so that other services can find OutNet.  This way services do not need to be configured with OutNet IP:port
 
 * How to associate metadata with file hashes in OutNetX?  Metadata can be subject or related hashes.
