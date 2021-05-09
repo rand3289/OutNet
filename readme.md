@@ -239,6 +239,7 @@ Health and stability of the internet should be every user's goal.  A botnet clie
 * Figure out the best way to run outnet as a system service (OS dependent).  Write wrappers and leave console apps as is?
 * Add origin.url file support that contains remote OutNet ip:port to start local service crawling
 * Change test/tests.cpp into list utility to list information from OutNet service  (argv: local, protocolName)
+* Figure out if OutNet is behind several routers and warn user to open all ports manually
 * Add IPv4 SSDP capability so that other services can find OutNet.  This way services do not need to be configured with OutNet IP:port
 
 * How to associate metadata with file hashes in OutNetX?  Metadata can be subject or related hashes.
