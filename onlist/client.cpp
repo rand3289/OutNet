@@ -13,16 +13,8 @@ static bool ERR(const string& msg){ // makes error handling code a bit shorter
     return false;
 }
 
-static void turnOffBit(uint32_t& mask, uint32_t bits){
-    mask = mask & (0xFFFFFFFF^bits);
-}
-
 
 int queryOutNet(uint32_t select, HostInfo& outnet, vector<HostInfo>& peers, uint16_t myPort, int rwTimeout, vector<string>* filters ){
-    if( outnet.key ){ // if we have remote's public key, do not request it
-        turnOffBit(select, SELECTION::LKEY);
-    }
-
     stringstream ss;
     ss << "GET /?QUERY=" << select;
     if(myPort>0){ // ad own server port for remote to connect back to
@@ -33,7 +25,6 @@ int queryOutNet(uint32_t select, HostInfo& outnet, vector<HostInfo>& peers, uint
     }
     ss << " HTTP/1.1\r\n\r\n";
 
-    cout << "Connecting to " << Sock::ipToString(outnet.host) << ":" << outnet.port << endl;
     Sock sock;
     sock.setRWtimeout(rwTimeout); // seconds read/write timeout
     sock.setNoDelay(true); // request is one write()
@@ -43,7 +34,6 @@ int queryOutNet(uint32_t select, HostInfo& outnet, vector<HostInfo>& peers, uint
         return 0;
     }
 
-    cout << ss.str() << endl;
     int len = (int) ss.str().length();
     if(len != sock.write(ss.str().c_str(), len ) ){
         return ERR("sending HTTP request");
@@ -61,7 +51,7 @@ int queryOutNet(uint32_t select, HostInfo& outnet, vector<HostInfo>& peers, uint
 
 /************ Everything read below this line is signed *************/
     Signature signer;
-    const bool sign = select & SELECTION::SIGN; // is signature requested?
+    const bool sign = select & SELECT::SIGN; // is signature requested?
     if(sign){ signer.init(); }
 
     uint32_t selectRet; // SELECT is always received
@@ -72,11 +62,11 @@ int queryOutNet(uint32_t select, HostInfo& outnet, vector<HostInfo>& peers, uint
     if(sign){ signer.write(&selectRet, sizeof(selectRet)); } // signer gets data in network byte order
     selectRet = ntohl(selectRet);
 
-    if( sign && !(selectRet & SELECTION::SIGN) ){ // we requested a signature but it was not returned
+    if( sign && !(selectRet & SELECT::SIGN) ){ // we requested a signature but it was not returned
         return ERR("remote refused to sign response"); // this is a security problem
     }
 
-    if(selectRet & SELECTION::LKEY){
+    if(selectRet & SELECT::LKEY){
         outnet.key = make_shared<PubKey>();
         rdsize = sock.read(&*outnet.key, sizeof(PubKey));
         if( rdsize != sizeof(PubKey) ){
@@ -85,7 +75,7 @@ int queryOutNet(uint32_t select, HostInfo& outnet, vector<HostInfo>& peers, uint
         if(sign){ signer.write(&*outnet.key, sizeof(PubKey)); }
     }
 
-    if(selectRet & SELECTION::TIME){
+    if(selectRet & SELECT::TIME){
         int32_t timeRemote;
         rdsize = sock.read(&timeRemote, sizeof(timeRemote) );
         if(rdsize != sizeof(timeRemote) ){
@@ -103,7 +93,7 @@ int queryOutNet(uint32_t select, HostInfo& outnet, vector<HostInfo>& peers, uint
         }
     }
 
-    if( selectRet & SELECTION::LSVC ){
+    if( selectRet & SELECT::LSVC ){
         uint16_t count;
         rdsize = sock.read(&count, sizeof(count));
         if(rdsize != sizeof(count) ){
@@ -134,7 +124,7 @@ int queryOutNet(uint32_t select, HostInfo& outnet, vector<HostInfo>& peers, uint
     for(uint32_t i=0; i< count; ++i){
         HostInfo& hil = peers.emplace_back();
 
-        if( selectRet & SELECTION::IP ){ // IP does not need ntohl()
+        if( selectRet & SELECT::IP ){ // IP does not need ntohl()
             rdsize = sock.read( &hil.host, sizeof(hil.host));
             if(rdsize != sizeof(hil.host)){
                 return ERR("reading IP.");
@@ -142,7 +132,7 @@ int queryOutNet(uint32_t select, HostInfo& outnet, vector<HostInfo>& peers, uint
             if(sign){ signer.write(&hil.host, sizeof(hil.host) ); }
         }
 
-        if( selectRet & SELECTION::PORT ){
+        if( selectRet & SELECT::PORT ){
             rdsize = sock.read(&hil.port, sizeof(hil.port) );
             if(rdsize != sizeof(hil.port) ){
                 return ERR("reading port.");
@@ -151,7 +141,7 @@ int queryOutNet(uint32_t select, HostInfo& outnet, vector<HostInfo>& peers, uint
             hil.port = ntohs(hil.port);
         }
 
-        if( selectRet & SELECTION::AGE ){
+        if( selectRet & SELECT::AGE ){
             uint16_t age;
             rdsize = sock.read(&age, sizeof(age) );
             if(rdsize != sizeof(age) ){
@@ -161,7 +151,7 @@ int queryOutNet(uint32_t select, HostInfo& outnet, vector<HostInfo>& peers, uint
             hil.age = ntohs(age);
         }
 
-        if( selectRet & SELECTION::RKEY ){
+        if( selectRet & SELECT::RKEY ){
             unsigned char keyCount = 0;
             rdsize = sock.read( &keyCount, sizeof(keyCount) );
             if( rdsize != sizeof(keyCount) ){
@@ -178,7 +168,7 @@ int queryOutNet(uint32_t select, HostInfo& outnet, vector<HostInfo>& peers, uint
             }
         }
 
-        if(selectRet & SELECTION::ISCHK){
+        if(selectRet & SELECT::ISCHK){
             unsigned char chk;
             rdsize = sock.read(&chk, sizeof(chk) );
             if( rdsize != sizeof(chk) || chk>1 ){ // chk should be 0 or 1
@@ -187,7 +177,7 @@ int queryOutNet(uint32_t select, HostInfo& outnet, vector<HostInfo>& peers, uint
             hil.signatureVerified = chk;
         }
 
-        if( selectRet & SELECTION::RSVC ){
+        if( selectRet & SELECT::RSVC ){
             uint16_t cnt;
             rdsize = sock.read(&cnt, sizeof(cnt) );
             if(rdsize != sizeof(cnt) ){

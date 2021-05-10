@@ -2,7 +2,27 @@
 #include "client.h"
 #include "sock.h"
 #include <iostream>
+#include <sstream>
+#include <iomanip>
 using namespace std;
+
+
+std::string toString(const PubKey& key) {
+    stringstream ss;
+    for(unsigned int i = 0; i< sizeof(key.key); ++i){
+        ss << std::setw(2) << std::setfill('0') << std::hex << (int) key.key[i];
+    }
+    return ss.str();
+}
+
+
+void printInfo(HostInfo& hi) {
+    string key = hi.key ? toString(*hi.key) : "";
+    cout << Sock::ipToString(hi.host) << ":" << hi.port << "\t" << key << endl;
+    for(string& s: hi.services){
+        cout << "\t" << s << endl;
+    }
+}
 
 
 int main(int argc, char* argv[]) {
@@ -16,22 +36,15 @@ int main(int argc, char* argv[]) {
     service.host = Sock::stringToIP(argv[1]);
     service.port = (uint16_t) strtol(argv[2], nullptr, 10); // base 10
 
-    // we want local services, remote IP:PORT and services
-    uint32_t select = SELECTION::LSVC | SELECTION::IP | SELECTION::PORT | SELECTION::RSVC;
+    // we want local services, remote IP:PORT and services + all public keys
+    uint32_t select = SELECT::LSVC | SELECT::LKEY | SELECT::IP | SELECT::PORT | SELECT::RSVC | SELECT::RKEY;
 
     vector<HostInfo> newData; // results will be returned here
     vector<string> filters; // = {"AGE_LT_600"}; // = {"RPROT=ftp"}; // for FTP servers
     queryOutNet(select, service, newData, 0, 10, &filters);
 
-    cout << argv[1] << ":" << argv[2] << endl; // TODO: print public key after every host
-    for(string& s: service.services){
-        cout << "\t" << s << endl;
-    }
-
+    printInfo(service);
     for(HostInfo& hi: newData){
-        cout << Sock::ipToString(hi.host) << ":" << hi.port << endl;
-        for(string& s: hi.services){
-            cout << "\t" << s << endl;
-        }
+        printInfo(hi);
     }
 }

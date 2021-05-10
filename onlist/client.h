@@ -16,7 +16,7 @@ struct HostInfo{
 
 // These are query flags.  Some are "fileds" which can be selected by a query.
 // Field names are abbreviations up to 5 char long.  Filters use the same strings. Ex: AGE_LT_60
-enum SELECTION {
+enum SELECT {
     LKEY   = (1<<0),  // local public key
     TIME   = (1<<1),  // current local datetime (to be used with signatures to avoid replay attack)
     SIGN   = (1<<2),  // signature (sign the whole message)

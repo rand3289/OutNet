@@ -116,7 +116,9 @@ https://en.wikipedia.org/wiki/E-commerce
 
 ##  Future Base Services
 
-* OutNet should be treated as a piece of an eco system.  It is the backbone on top of which all other services are built.  "onlist" utility that comes with OutNet is the simplest application one can write based on OutNet.  It is a text mode query tool to list registered local and remote services (peers).  For example a query tool can get a list of servers for your favorite game or a list of zoom personal meeting rooms ready to chat.
+* OutNet should be treated as a piece of an eco system.  It is the backbone on top of which all other services are built.  "onlist" utility that comes with OutNet is the simplest application one can write based on OutNet.  It is a text mode query tool to list registered local and remote services (peers).  For example a query tool can get a list of servers for your favorite game or a list of zoom personal meeting rooms ready to chat.  For example, here we se an OutNet service's IP:PORT followed by public key and OutNetMsg service on the next line that starts with a tab:  
+192.168.0.190:2222	44235ce17e199806c11fd6a2f0dbf75f4df47174e023e9938fd7ebd2a65ac441  
+	http:tcp:outnetmsg:69.117.38.100:2345:/index.html
 
 
 * There is a need for OutNet notification service.  E-mail is not shared by the OutNet service to prevent network-wide spam.  OutNetMsg receives messages addressed to your public key.  If it is from some one you trust (their public key is on your white list), it tries to open the message using the protocol/mime specified in the message.  OutNetMsg can display the message, offer to open/save the message or file, forward it to one of the services running on your system (for example, by acting as a TCP wrapper) or suggest you install a corresponding protocol handler / service.  For example it can open a Zoom conference.
@@ -142,6 +144,7 @@ Information on how governing bodies try to regulate electronic IDs can be found 
 
 * OutNetSearch service is used to index information (keys, subjects, content, file hashes) distributed by local services and EXCHANGE it with other search services or local distributed services.  You control what gets indexed.
 
+* OutNet can promote development of indie ONLINE games.  Developers do not have to host a central location for players to share their IPs (rooms/servers/etc...)  OutNet client can be built into a game, register with OutNet service and find others running games.
 
 * OutNet is a network which should be able to self-regulate.  There is a need for a security service.  Cybersecurity organizations you trust can limit detrimental activity such as botnets via releasing blacklists, ratings or software that interacts with OutNet.  If you trust a blacklist signed by a certain public key, you can include it into your collection and limit propagation of certain protocols, host information or public keys.  Blacklist mechanisms are built into OutNet. However downloading and updating black lists should be done by other programs/services for flexibility.  For example you can trust a list provided by some organization on their web site that limits content equivalent to PG-13.  This will stop propagation of certain information through your node.  Other OutNet nodes will not be affected.  If you find the list blocks your favorite content, you can add it to a white lists to override it.  Adding an item to a black list or a white list can be shared as a rating for other users.
 
