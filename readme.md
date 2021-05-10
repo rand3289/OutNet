@@ -36,7 +36,7 @@ OutNet is an alternative to "private/regulated/controlled" discovery protocols l
 
 ## Project status
 OutNet is written in C++ 20. Project does not have ANY external dependencies.  Everything is built-in (source code available from ONE git repository).  Most features are implemented and currently being tested.  OutNet was started in February 2020 by a single developer.  Its most recent version is 0.1
-It compiles using g++ 10.2 under linux, MinGW-w64 from msys2.org on windows and Visual Studio.  Visual Studio build is currently broken.  To compile type "make" in OutNet directory.  To compile tests, type "make" in OutNet/test directory.  "test" directory contains sample code for querying the OutNet service.
+It compiles using g++ 10.2 under linux, MinGW-w64 from msys2.org on windows and Visual Studio.  Visual Studio build is currently broken.  To compile type "make" in OutNet directory.  To compile "onlist" utility, type "make" in OutNet/onlist directory.  "onlist" utility queries the OutNet service.
 
 Apple requires an Apple ID to download Command Line Tools.  Apple ID registration requires submission of your phone number.  This project has not been ported to macOS for this reason.
 
@@ -116,7 +116,7 @@ https://en.wikipedia.org/wiki/E-commerce
 
 ##  Future Base Services
 
-* OutNet should be treated as a piece of an eco system.  It is the backbone on top of which all other services are built.  The simplest service one can write based on OutNet is a query tool to find certain types of services and launch a client that supports that service.  For example a query tool can get list of servers for your favorite game.  Present it to you in a GUI.  When you click a certain server it will start the game and give it a URL (ip and port) on the command line.
+* OutNet should be treated as a piece of an eco system.  It is the backbone on top of which all other services are built.  "onlist" utility that comes with OutNet is the simplest application one can write based on OutNet.  It is a text mode query tool to list registered local and remote services (peers).  For example a query tool can get a list of servers for your favorite game or a list of zoom personal meeting rooms ready to chat.
 
 
 * There is a need for OutNet notification service.  E-mail is not shared by the OutNet service to prevent network-wide spam.  OutNetMsg receives messages addressed to your public key.  If it is from some one you trust (their public key is on your white list), it tries to open the message using the protocol/mime specified in the message.  OutNetMsg can display the message, offer to open/save the message or file, forward it to one of the services running on your system (for example, by acting as a TCP wrapper) or suggest you install a corresponding protocol handler / service.  For example it can open a Zoom conference.
@@ -241,7 +241,6 @@ Health and stability of the internet should be every user's goal.  A botnet clie
 * Ipmplement/fix all TODO in source code
 * Figure out the best way to run outnet as a system service (OS dependent).  Write wrappers and leave console apps as is?
 * Add origin.url file support that contains remote OutNet ip:port to start local service crawling
-* Change test/tests.cpp into list utility to list information from OutNet service  (argv: local, protocolName)
 * Figure out if OutNet is behind several routers and warn user to open all ports manually
 * Add IPv4 SSDP capability so that other services can find OutNet.  This way services do not need to be configured with OutNet IP:port
 
