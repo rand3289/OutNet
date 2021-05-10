@@ -117,8 +117,8 @@ https://en.wikipedia.org/wiki/E-commerce
 ##  Future Base Services
 
 * OutNet should be treated as a piece of an eco system.  It is the backbone on top of which all other services are built.  "onlist" utility that comes with OutNet is the simplest application one can write based on OutNet.  It is a text mode query tool to list registered local and remote services (peers).  For example a query tool can get a list of servers for your favorite game or a list of zoom personal meeting rooms ready to chat.  For example, here we se an OutNet service's IP:PORT followed by public key and OutNetMsg service on the next line that starts with a tab:  
-192.168.0.190:2222	44235ce17e199806c11fd6a2f0dbf75f4df47174e023e9938fd7ebd2a65ac441  
-	http:tcp:outnetmsg:69.117.38.100:2345:/index.html
+192.168.0.123:2233	44235ce17e199806c14fd6a5f0dbf65f4df47774e028e9937fd7ebd0a65ac421  
+	http:tcp:outnetmsg:67.17.38.99:2345:/index.html
 
 
 * There is a need for OutNet notification service.  E-mail is not shared by the OutNet service to prevent network-wide spam.  OutNetMsg receives messages addressed to your public key.  If it is from some one you trust (their public key is on your white list), it tries to open the message using the protocol/mime specified in the message.  OutNetMsg can display the message, offer to open/save the message or file, forward it to one of the services running on your system (for example, by acting as a TCP wrapper) or suggest you install a corresponding protocol handler / service.  For example it can open a Zoom conference.
@@ -244,7 +244,6 @@ Health and stability of the internet should be every user's goal.  A botnet clie
 * Ipmplement/fix all TODO in source code
 * Figure out the best way to run outnet as a system service (OS dependent).  Write wrappers and leave console apps as is?
 * Add origin.url file support that contains remote OutNet ip:port to start local service crawling
-* Figure out if OutNet is behind several routers and warn user to open all ports manually
 * Add IPv4 SSDP capability so that other services can find OutNet.  This way services do not need to be configured with OutNet IP:port
 
 * How to associate metadata with file hashes in OutNetX?  Metadata can be subject or related hashes.

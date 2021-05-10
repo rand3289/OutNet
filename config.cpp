@@ -128,10 +128,20 @@ int Config::findIPs(){
         string ipStr;
         upnp.getExternalIP(ipStr, ldata->localIP);
         cout << "Local IP: " << Sock::ipToString(ldata->localIP) << endl;
+        if( Sock::isRoutable(ldata->localIP) ) {
+            ldata->myIP = ldata->localIP;
+            cout << "Local IP is not private (routable)." << endl;
+            return 0;
+        }
         if( ipStr.length() > 6){ // at least x.x.x.x
             ldata->myIP = Sock::stringToIP( ipStr.c_str() );
             if( ldata->myIP > 0 ){
                 cout << "WAN IP: " << ipStr << endl;
+                if( !Sock::isRoutable(ldata->myIP) ){
+                    cout << "# WARNING: router's WAN IP is not routable.  You are behind multiple NAT devices." << endl;
+                    cout << "# Manually configure your other NAT devices to forward ports to " << ipStr << endl;
+                    cout << "# Otherwise no one can connect TO YOU from the internet." << endl;
+                }
                 return 0;
             }
         } // this is an indication there is no NAT taking place.

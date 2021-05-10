@@ -81,10 +81,13 @@ int main(int argc, char* argv[]){
         config.saveToDisk();          // this will overwrite the whole config file!
     }
     cout << "Running OutNet service on port " << port << endl;
-    if( config.forwardLocalPort(port) ){
-        cout << "Opened port " << port << " on the router (enabled port forwarding)." << endl;
-    } else {
-        cerr << "If you have a NAT router, forward port " << port << " to local host manually!" << endl;
+
+    if( !Sock::isRoutable(ldata.localIP) ){ // could have a non-private (routable) IP
+        if( config.forwardLocalPort(port) ){
+            cout << "Opened port " << port << " on the router (enabled port forwarding)." << endl;
+        } else {
+            cerr << "If you have a NAT router, forward port " << port << " to local host manually!" << endl;
+        }
     }
 
     Crawler crawler(ldata, rdata, blist);
