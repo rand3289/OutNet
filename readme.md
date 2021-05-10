@@ -175,7 +175,7 @@ Service description encoding can be limited to printable ASCII characters.  User
 Examples: "printer:tcp:lpr:8.8.8.8:54321:2nd floor printer"  
 Same device, different protocol:  "printer:tcp:ipp:8.8.8.8:12345:2nd floor printer"  
 
-This is an example of how OutNetMsg service registers with Outnet:
+This is an example of how OutNetMsg service registers with Outnet:  
 http:tcp:outnetmsg:127.0.0.1:2345:/index.html
 
 
