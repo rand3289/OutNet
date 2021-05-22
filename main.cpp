@@ -9,6 +9,7 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <fstream>
 #include <thread>
 using namespace std;
 
@@ -30,6 +31,35 @@ std::string selectStr(uint32_t sel){
 }
 
 
+bool startUp(RemoteData& rdata){
+    const string filename = "start.url";
+    ifstream urlf (filename);
+    if( !urlf ){ return false; }
+
+    vector<string> lines;
+    parseLines(urlf, lines); // line format is IP:PORT
+    int added = 0;
+
+    for(string& line: lines){
+        auto col = line.find(":");
+        if(string::npos == col) { continue; }
+
+        string ips = line.substr(0,col);
+        string ports = line.substr(col+1);
+        uint32_t ip = Sock::stringToIP(ips.c_str());
+        uint16_t portInt = (uint16_t) strtol(ports.c_str(), nullptr, 10); // base 10
+
+        if( 0!=ip && 0!=portInt ){
+            cout << "Adding " << Sock::ipToString(ip) << ":" << portInt << " to list of IPs to scan." << endl;
+            rdata.addContact(ip, portInt);
+            ++added;
+        }
+    }
+
+    return added > 0;
+}
+
+
 // Three threads: main one serves requests, second (crawler) collects info, 
 // third thread subscribes services & loads black lists.
 int main(int argc, char* argv[]){
@@ -39,23 +69,11 @@ int main(int argc, char* argv[]){
     RemoteData rdata; // information gathered about remote services
     BlackList blist;  // Black and White lists
     if( !initNetwork() ){ // WSAStartup() on windows or set ignore SIGPIPE on unix
+        cerr << "Error initializing network." << endl;
         return 4;
     }
 
-    if(3 == argc){ // parse command line parameters IP and port
-        uint32_t ip = Sock::stringToIP(argv[1]);
-        uint16_t portInt = (uint16_t) strtol(argv[2], nullptr, 10); // base 10
-        if( 0!=ip && 0!=portInt ){
-            cout << "Adding " << Sock::ipToString(ip) << ":" << portInt << " to list of IPs to scan." << endl;
-            rdata.addContact(ip, portInt);
-        }
-    } else if(1 != argc){
-        cerr << "ERROR parsing command line parameters.  ";
-        cerr << "usage: " << argv[0] << " IP port" << endl;
-        return 1;
-    }
-
-
+    startUp(rdata); // load remote outnet service location to initialize from
     Config config; // config is aware of service port, LocalData and BWLists
     config.init(ldata, blist); // load ldata,bwlists
 

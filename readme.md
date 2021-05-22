@@ -64,7 +64,7 @@ https://en.wikipedia.org/wiki/Mingw-w64
 https://en.wikipedia.org/wiki/Repository_(version_control)
 
 
-Since one does not want to expose ALL available local services on the internet, OutNet does not discover local services.  Local services can register with OutNet or be added via configuration files.  Service descriptions visible to the world have to contain routable (public/external) IP addresses instead of host names.  If OutNet determines your service is behind a NAT router and IP is a non-routable IP, it will replace your non-routable IP with it's own external routable IP when listing your service.  In addition, OutNet will open a port in the router via UPnP protocol that will allow your service to accept connections.
+Since one does not want to expose ALL available local services on the internet, OutNet does not discover local services.  Local services can register with OutNet or be added via configuration files.  Service descriptions visible to the world have to contain routable (public/external) IP addresses instead of host names.  If OutNet determines your service is behind a NAT router and IP is a non-routable IP, it will replace your non-routable IP with it's own external routable IP when listing your service.  In addition, OutNet will open a port in the router via UPnP protocol that will allow your service to accept connections.  Upon startup OutNet looks for start.url file that contains remote OutNet addresses (one ip:port per line) to start looking for peers.
 
 
 Reading further requires understanding of the following concepts:  
@@ -243,7 +243,4 @@ Health and stability of the internet should be every user's goal.  A botnet clie
 ## TODO
 * Ipmplement/fix all TODO in source code
 * Figure out the best way to run outnet as a system service (OS dependent).  Write wrappers and leave console apps as is?
-* Add origin.url file support that contains remote OutNet ip:port to start local service crawling
 * Add IPv4 SSDP capability so that other services can find OutNet.  This way services do not need to be configured with OutNet IP:port
-
-* How to associate metadata with file hashes in OutNetX?  Metadata can be subject or related hashes.
