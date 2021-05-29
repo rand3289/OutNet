@@ -54,7 +54,7 @@ Service* Service::parse(const string& servStr, uint32_t myIP){
     } else { return nullptr; }
 
     if( tokenize(start, end, token, ":") ){
-        tcpudp = token; // TODO: make it "t" or "u" to save 2 bytes???
+        tcpudp = token; // TODO: enforce max len ???
         if(tcpudp.length() != 3){ return nullptr; }
     } else { return nullptr; }
 
@@ -74,7 +74,7 @@ Service* Service::parse(const string& servStr, uint32_t myIP){
     } else { return nullptr; }
 
     if( tokenize(start, end, token, ":") ){
-        other = token;
+        other = token; // TODO: take UTF8 into account???
     } else { return nullptr; }
 
     // Translate local to NAT (router) IP
