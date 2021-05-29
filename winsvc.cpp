@@ -7,26 +7,22 @@ using namespace std;
 
 
 extern bool globalStopAll; // defined in main.cpp
+extern void run();         // defined in main.cpp
 
 
-static SERVICE_STATUS_HANDLE serviceStatusHandle = 0;
 static SERVICE_STATUS serviceStatus;
+static SERVICE_STATUS_HANDLE serviceStatusHandle = 0;
+static char serviceName[] = "OutNet";
+
 
 void status(DWORD status){
-    serviceStatus = status;
+    serviceStatus.dwCurrentState = status;
     SetServiceStatus(serviceStatusHandle, & serviceStatus);
 }
 
-DWORD ServiceMain( DWORD dwControl, DWORD dwEventType, LPVOID lpEventData, LPVOID lpContext){
-    switch(dwControl){
-        case SERVICE_CONTROL_CONTINUE:
-            status(SERVICE_START_PENDING);
-            globalStopAll = false;
-            // TODO: start up all threads
-            status(SERVICE_RUNNING);
-        break;
 
-        case SERVICE_CONTROL_PAUSE: // fall through
+DWORD ServiceHandler( DWORD dwControl, DWORD dwEventType, LPVOID lpEventData, LPVOID lpContext){
+    switch(dwControl){
         case SERVICE_CONTROL_STOP:  // fall through
         case SERVICE_CONTROL_SHUTDOWN:
             globalStopAll = true;
@@ -43,22 +39,30 @@ DWORD ServiceMain( DWORD dwControl, DWORD dwEventType, LPVOID lpEventData, LPVOI
 }
 
 
+void WINAPI ServiceMain(DWORD argc, LPTSTR* argv){
+    serviceStatusHandle = RegisterServiceCtrlHandlerEx(serviceName, &ServiceHandler, NULL);
+    status(SERVICE_RUNNING);
+    run();
+    status(SERVICE_STOPPED);
+}
+
+
 int registerAsWindowsService(){
     serviceStatus = {
         SERVICE_WIN32_OWN_PROCESS,
-        serviceStatus,
-        state == SERVICE_START_PENDING ? 0 : SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN,
+        SERVICE_STOPPED,
+        SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN,
         NO_ERROR,
         0,
         0,
         0,
     };
-    SERVICE_TABLE_ENTRY table[] = { {"OutNet", &ServiceMain }, { NULL, NULL } };
+    SERVICE_TABLE_ENTRY table[] = { {serviceName, &ServiceMain }, { NULL, NULL } };
 
     if ( StartServiceCtrlDispatcher(table) ){
         return 0;
     }
-    DWORD err = GetLastError(); 
+    DWORD err = GetLastError();
     if (ERROR_SERVICE_ALREADY_RUNNING == err) {
         return -1; // caller needs to exit
     }
@@ -73,6 +77,7 @@ int registerAsWindowsService(){
         cerr << "BUG in SERIVCE_TABLE_ENTRY" << endl;
         return -3;
     }
+    return -4; // what happened ???
 }
 
 
