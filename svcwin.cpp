@@ -1,18 +1,20 @@
 #ifdef _WIN32
-// This is a windows service implementation
+// This is a windows service implementation (see svclin.cpp for linux version)
+#include "svc.h"
 #include <windows.h>
 #include <winsvc.h>
 #include <iostream>
 using namespace std;
 
 
-extern bool globalStopAll; // defined in main.cpp
-extern void run();         // defined in main.cpp
-
-
 static SERVICE_STATUS serviceStatus;
 static SERVICE_STATUS_HANDLE serviceStatusHandle = 0;
 static char serviceName[] = "OutNet";
+static bool keepServicesRunning = true;
+void (*serviceRun) () = nullptr;
+
+
+bool keepRunning(){ return keepServicesRunning; }
 
 
 void status(DWORD status){
@@ -25,7 +27,7 @@ DWORD ServiceHandler( DWORD dwControl, DWORD dwEventType, LPVOID lpEventData, LP
     switch(dwControl){
         case SERVICE_CONTROL_STOP:  // fall through
         case SERVICE_CONTROL_SHUTDOWN:
-            globalStopAll = true;
+            keepServicesRunning = false;
             status(SERVICE_STOP_PENDING);
             Sleep(3);
             status(SERVICE_STOPPED);
@@ -42,12 +44,14 @@ DWORD ServiceHandler( DWORD dwControl, DWORD dwEventType, LPVOID lpEventData, LP
 void WINAPI ServiceMain(DWORD argc, LPTSTR* argv){
     serviceStatusHandle = RegisterServiceCtrlHandlerEx(serviceName, &ServiceHandler, NULL);
     status(SERVICE_RUNNING);
-    run();
+    serviceRun();
     status(SERVICE_STOPPED);
 }
 
 
-int registerAsWindowsService(){
+int registerService( void (*run)() ){
+    serviceRun = run;
+
     serviceStatus = {
         SERVICE_WIN32_OWN_PROCESS,
         SERVICE_STOPPED,
@@ -57,11 +61,12 @@ int registerAsWindowsService(){
         0,
         0,
     };
-    SERVICE_TABLE_ENTRY table[] = { {serviceName, &ServiceMain }, { NULL, NULL } };
 
+    SERVICE_TABLE_ENTRY table[] = { {serviceName, &ServiceMain }, { NULL, NULL } };
     if ( StartServiceCtrlDispatcher(table) ){
         return 0;
     }
+
     DWORD err = GetLastError();
     if (ERROR_SERVICE_ALREADY_RUNNING == err) {
         return -1; // caller needs to exit

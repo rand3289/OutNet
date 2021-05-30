@@ -1,5 +1,6 @@
 #ifndef _WIN32
-// This is a linux service implementation
+// This is a linux service implementation (see svcwin.cpp for windows version)
+#include "svc.h"
 #include <unistd.h>
 #include <errno.h>
 #include <signal.h>
@@ -27,6 +28,7 @@ int registerService( void (*run) () ){
         return -1;
     }
     run();
+    return 0;
 }
 
 

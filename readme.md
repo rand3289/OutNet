@@ -244,3 +244,4 @@ Health and stability of the internet should be every user's goal.  A botnet clie
 * Figure out the best way to run outnet as a system service (OS dependent).  Write wrappers and leave console apps as is?
 * Implement/fix all TODO in source code
 * Add IPv4 SSDP capability so that other services can find OutNet.  This way services do not need to be configured with OutNet IP:port
+* move buffer.h  log.*  sock.*  utils.*  svc*.*  to ./lib/ ???
