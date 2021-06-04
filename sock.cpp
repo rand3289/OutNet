@@ -1,4 +1,5 @@
 #include "sock.h"
+#include "log.h"
 #include <sstream>  // stringstream
 #include <iostream> // cerr
 #include <cstring>  // memset()
@@ -31,9 +32,9 @@ int err(const string& msg) { // display error on cerr
 #ifdef _MSC_VER // Visual Studio only. MinGW-w64 has a different strerror_s() definition
 	char buff[128];
 	strerror_s(buff, error);
-	cerr << "ERROR " << msg << buff << " (" << error << ")" << endl;
+	logErr() << "ERROR " << msg << buff << " (" << error << ")" << endl;
 #else
-	cerr << "ERROR " << msg << strerror(error) << " (" << error << ")" << endl;
+	logErr() << "ERROR " << msg << strerror(error) << " (" << error << ")" << endl;
 #endif
 	return error; // errno returns positive numbers
 }
@@ -197,7 +198,7 @@ int Sock::closeSock(void){
 
 
 int Sock::write(const void* buff, size_t size){
-//	cout << "WRITE: " << size << endl; // DEBUGGING!!!
+//	log() << "WRITE: " << size << endl; // DEBUGGING!!!
 	return send(s, (char*) buff, size, MSG_NOSIGNAL);
 }
 
@@ -205,7 +206,7 @@ int Sock::write(const void* buff, size_t size){
 int Sock::read(void* buff, size_t size){
 	int ret = recv(s, (char*) buff, size, 0); //	return recv(s, buff, size, MSG_DONTWAIT);
 //	int wserr = WSAGetLastError();
-//	cout << "ERRNO: " << wserr << " READ: " << ret << " bytes: "; // DEBUGGING!!!
+//	log() << "ERRNO: " << wserr << " READ: " << ret << " bytes: "; // DEBUGGING!!!
 //	printHex( (const unsigned char*)buff, ret); // 10060=WSAETIMEDOUT
 	return ret;
 }
@@ -256,7 +257,7 @@ int Sock::writeString(const string& str){
     unsigned char iclen = (unsigned char) str.length();
     if(str.length() > MAX_STR_LEN){
         iclen = MAX_STR_LEN;
-        cerr << "WARNING: writeString() truncating string: " << str << endl;
+        logErr() << "WARNING: writeString() truncating string: " << str << endl;
     }
     if( 1 != write( &iclen, 1) ){ return -1; }
     return 1 + write( str.c_str(), iclen);
@@ -285,7 +286,7 @@ int Sock::readString(void* buff, size_t buffSize){ // make sure buff is at least
     ((char*)buff)[size] = 0; // null terminate the string
 
 	if(original> size){ // if buffer is too small, read the rest from stream and discard
-		cerr << "WARNING: readString() buffer too small." << endl;
+		logErr() << "WARNING: readString() buffer too small." << endl;
 		char localBuff[256];
         rdsize = read( localBuff, original-size);
         if( rdsize!=size ){ return -3; } // ERROR

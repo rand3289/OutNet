@@ -1,5 +1,6 @@
 #include "sign.h"
 #include "tweetnacl.h"
+#include "log.h"
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -39,21 +40,21 @@ bool Signature::loadKeys(PubKey& pubKey){ // static
         }
         rename(privateKeyFile.c_str(), (privateKeyFile+".old").c_str() );
         rename(pubKeyFile.c_str(), (pubKeyFile+".old").c_str() );
-        cout << "WARNING: one of the key files could not be read." << endl;
-        cout << "Both files had to be renamed to *.old and will be regenerated." << endl;
+        log() << "WARNING: one of the key files could not be read." << endl;
+        log() << "Both files had to be renamed to *.old and will be regenerated." << endl;
     } else if( (!pubkey ^ !seckey) ){ // one of them exists instead of both.  Rename it.
         const string& exists = !pubkey ? privateKeyFile : pubKeyFile;
         rename(privateKeyFile.c_str(), (privateKeyFile+".old").c_str() );
-        cout << "WARNING: missing ONE private or public key file!" << endl; 
-        cout << "Renamed existing file "<< exists << " to " << exists << ".old" << endl;
+        log() << "WARNING: missing ONE private or public key file!" << endl; 
+        log() << "Renamed existing file "<< exists << " to " << exists << ".old" << endl;
     } else {
-        cout << "Public and private key files are missing and will be generated." << endl;
+        log() << "Public and private key files are missing and will be generated." << endl;
     }
     pubkey.close();
     seckey.close();
 
     crypto_sign_keypair(publicKey.key, privateKey.key); // Create new public and private keys
-    cout << "Generated NEW private and public keys." << endl;
+    log() << "Generated NEW private and public keys." << endl;
     memcpy(pubKey.key, publicKey.key, sizeof(publicKey));
 
     ofstream pubk(pubKeyFile, std::ios::binary);
@@ -61,7 +62,7 @@ bool Signature::loadKeys(PubKey& pubKey){ // static
     pubk.write( (char*) publicKey.key, sizeof(publicKey) );
     seck.write( (char*) privateKey.key, sizeof(privateKey) );
     if(!pubk || !seck){ // check that the writes succeeded
-        cerr << "ERROR saving keys.  Do you have write permissions?  Fix it and run OutNet again." << endl;
+        logErr() << "ERROR saving keys.  Do you have write permissions?  Fix it and run OutNet again." << endl;
         return false;
     }
 
@@ -83,9 +84,9 @@ bool Signature::generate(PubSign& pubSign){
     vector<unsigned char> m2(len);
     crypto_sign(&m2[0], &len, start, len-SIGNATURE_SIZE, privateKey.key);
     memcpy(pubSign.sign, &m2[0], SIGNATURE_SIZE); // first crypto_sign_BYTES is the signature
-//    cout << "Signing " << buff.size() - SIGNATURE_SIZE << " bytes:" << endl;
+//    log() << "Signing " << buff.size() - SIGNATURE_SIZE << " bytes:" << endl;
 //    printHex (start, buff.size() - SIGNATURE_SIZE);
-//    cout << "Generated " << len << " bytes signed message:" << endl;
+//    log() << "Generated " << len << " bytes signed message:" << endl;
 //    printHex( &m2[0], len);
 //    printAscii( &m2[0], len);
     return true;
@@ -97,10 +98,10 @@ bool Signature::verify(const PubSign& sign, const PubKey& pubKey) {
     memcpy(start, sign.sign, sizeof(sign)); // prepend signature to the beginning of the buffer
     unsigned long long len = buff.size();   // len will be read twice & written to
     vector<unsigned char> m2(len);          // do not worry about extra SIGNATURE_SIZE bytes
-//    cout << "Received "<< len << " bytes signed message:" << endl;
+//    log() << "Received "<< len << " bytes signed message:" << endl;
 //    printHex( (unsigned char*) buff.get(), len);
 //    printAscii( (unsigned char*) buff.get(), len);
-//    cout << "Remote's public key: ";
+//    log() << "Remote's public key: ";
 //    printHex(pubKey.key, sizeof(pubKey));
     return !crypto_sign_open(&m2[0], &len, start, len, (unsigned char*) pubKey.key); // returns 0 on success
 }
@@ -122,7 +123,7 @@ int Signature::writeString(const string& str){
 
 // this function is called once by tweetnacl when creating a key pair (byteCount is 32)
 void randombytes(unsigned char* bytes, unsigned long long byteCount){
-//    cout << "(" << byteCount << ") ";
+//    log() << "(" << byteCount << ") ";
     static shared_ptr<random_device> device;
     static std::once_flag onceFlag;
     call_once(onceFlag, [](){ // try intilializing a true random device during first call
@@ -131,11 +132,11 @@ void randombytes(unsigned char* bytes, unsigned long long byteCount){
             device->operator()(); // generate one random number.  This could throw.
             if(0 == device->entropy() ){ // pseudo random
                 device.reset();          // we don't want it
-                cout << "INFO: random device is not available on the system" << endl;
+                log() << "INFO: random device is not available on the system" << endl;
             }
         } catch(...){
             device.reset(); // it can throw in operator() not just constructor
-            cout << "INFO: random device is not available on the system." << endl;
+            log() << "INFO: random device is not available on the system." << endl;
         }
     });
 

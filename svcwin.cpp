@@ -1,6 +1,7 @@
 #ifdef _WIN32
 // This is a windows service implementation (see svclin.cpp for linux version)
 #include "svc.h"
+#include "log.h"
 #include <windows.h>
 #include <winsvc.h>
 #include <iostream>
@@ -72,14 +73,14 @@ int registerService( void (*run)() ){
         return -1; // caller needs to exit
     }
     if(ERROR_FAILED_SERVICE_CONTROLLER_CONNECT == err){
-        cerr << "This program is a service and should not be started from command line." << endl;
-        cerr << "Use any of the following commands to register, run, stop or delete the serivce:" << endl;
-        cerr << "sc create 'OutNet' binPath= c:\\path\\outnet.exe" << endl;
-        cerr << "sc [start/stop/delete]  'OutNet'" << endl;
+        logErr() << "This program is a service and should not be started from command line." << endl;
+        logErr() << "Use any of the following commands to register, run, stop or delete the serivce:" << endl;
+        logErr() << "sc create 'OutNet' binPath= c:\\path\\outnet.exe" << endl;
+        logErr() << "sc [start/stop/delete]  'OutNet'" << endl;
         return -2; // program running as console app
     }
     if(ERROR_INVALID_DATA == err){
-        cerr << "BUG in SERIVCE_TABLE_ENTRY" << endl;
+        logErr() << "BUG in SERIVCE_TABLE_ENTRY" << endl;
         return -3;
     }
     return -4; // what happened ???

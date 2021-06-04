@@ -31,8 +31,8 @@ int parseFilesIntoLines(const std::string& extension, std::vector<std::string>& 
 // Return true if str is a key=value pair.
 bool keyValue(const std::string& str, std::string& key, std::string& value);
 
-void printHex(const unsigned char* buff, int len); // print buffer using hex digits (4 + space)
-void printAscii(const unsigned char* buff, int len); // ascii printable chars or "."
+void printHex(std::ostream& os, const unsigned char* buff, int len); // print buffer using hex digits (4 + space)
+void printAscii(std::ostream& os, const unsigned char* buff, int len); // ascii printable chars or "."
 
 int writeString(std::ofstream& file, const std::string& str); // write string to file. format: size+string
 std::string readString(std::ifstream& file);             // read string from file written by writeString()

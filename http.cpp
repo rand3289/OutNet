@@ -2,6 +2,7 @@
 #include "http.h"
 #include "sock.h"
 #include "utils.h"
+#include "log.h"
 #include <iomanip> // put_time()
 #include <ctime> // time(), localtime()
 #include <sstream>
@@ -37,7 +38,7 @@ int Request::parse(Sock& conn, vector<array<string,3>>& filters, uint16_t& port)
     char buff[2048];
     int rd = conn.readLine(buff, sizeof(buff));
     if(rd < 0){ return -1; } // error reading more data (connection closed/timed out)
-    printAscii((const unsigned char*)buff, rd);
+    printAscii(log(), (const unsigned char*)buff, rd);
     if( strncmp(buff,"GET",3) ){ // not an http GET query
         return -1;
     }
@@ -60,7 +61,7 @@ int Request::parse(Sock& conn, vector<array<string,3>>& filters, uint16_t& port)
         }
     }
     if( query <= 0 ){
-        cout << "ERROR parsing query: " << line << endl;
+        log() << "ERROR parsing query: " << line << endl;
     }
     return query;
 }
@@ -79,7 +80,7 @@ bool Request::registerServices(Sock& conn, LocalData& ldata){
             string serv = buff+9; // serv gets destroyed during parsing
             rtrim(ltrim(serv));   // TODO: move ltrim()/rtrim() into addService()
             if( ldata.addService(serv) ){
-                cout << "Registered new local service: " << buff+9 << endl;
+                log() << "Registered new local service: " << buff+9 << endl;
             }
         } else if( strncmp(buff,"Unregister:", 11)==0 ){
 //            ldata.removeService(buff+11); //1 TODO:

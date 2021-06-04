@@ -1,12 +1,14 @@
 #include "log.h"
 #include <ctime>
 #include <fstream>
+#include <sstream>
+#include <iomanip> // std::hex, std::dec
 using namespace std;
 
 
 static ofstream devNull;
 static const int LINES_PER_FILE = 1000000;
-static LOG_LEVEL logLevel;
+static LOG_LEVEL logLevel = LOG_LEVEL::INFO;
 void setLogLevel(LOG_LEVEL level){ logLevel = level; }
 
 
@@ -18,12 +20,15 @@ string logTime(){
 bool createLogFile(ofstream& log){
     time_t now = time(0);
     tm *tmp = localtime(&now);
-    string date = to_string( 1900 + tmp->tm_year) + to_string(tmp->tm_mon) + to_string(tmp->tm_mday);
+
+    stringstream ss;
+    ss << 1900+tmp->tm_year << std::setw(2) << std::setfill('0') << tmp->tm_mon << std::setw(2) << tmp->tm_mday;
+    string date = ss.str();
 
     string fname = "outnet"+date+".log";
     log.close();
     log.open(fname);
-    log << date << " " << logTime() << endl;
+    log << "LOG date: " << date << " " << logTime() << endl;
 
     return log.good();
 }
@@ -43,17 +48,17 @@ ostream& logToFile(const string& logType){
 
 ostream& log() {
     if( logLevel < LOG_LEVEL::LOG ){ return devNull; }
-    return logToFile("ERR");
+    return logToFile("");
 }
 
 
 ostream& logErr(){
-    if( logLevel < LOG_LEVEL::ERR ){ return devNull; }
-    return logToFile("LOG");
+    if( logLevel < LOG_LEVEL::LERR ){ return devNull; }
+    return logToFile("ERR ");
 }
 
 
 ostream& logInf() {
     if( logLevel < LOG_LEVEL::INFO ){ return devNull; }
-    return logToFile("INF");
+    return logToFile("INF ");
 }

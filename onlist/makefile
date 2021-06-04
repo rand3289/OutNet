@@ -3,7 +3,7 @@
 CC = g++  # notice CFLAGS contains -g which will compile everything in debug mode!
 CFLAGS = -g --std=c++20 -Wall -Wextra -Wno-unused-parameter -I.. -I../sign
 DEPS = client.h ../sign.h ../sock.h ../sign/tweetnacl.h
-OBJ =  onlist.o client.o ../sock.o ../sign.o ../sign/tweetnacl.o
+OBJ =  onlist.o client.o ../sock.o ../sign.o ../log.o ../sign/tweetnacl.o
 
 ifdef OS # windows defines this environment variable
 	LDFLAGS = -lwsock32 -static

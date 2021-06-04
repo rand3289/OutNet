@@ -1,6 +1,7 @@
 #include "config.h"
 #include "sock.h" // Sock::ANY_PORT, Sock::stringToIP()
 #include "utils.h"
+#include "log.h"
 #include <algorithm>
 #include <vector>
 #include <thread>
@@ -42,11 +43,11 @@ struct IpPortProt {
 
 // look for *.service in current directory and load their contents into LocalData::services
 int Config::loadServiceFiles(){
-    cout << "Loading service files: ";
+    log() << "Loading service files: ";
     static const string extension = ".service";
     vector<string> lines;
     int fCount = parseFilesIntoLines(extension, lines);
-    cout << "(" << fCount << " found)" << endl;
+    log() << "(" << fCount << " found)" << endl;
     std::sort( begin(lines), end(lines) ); // set_difference needs sorted data
 
     vector<string> newServices; // newServices(not in ldata->services)
@@ -86,15 +87,15 @@ int Config::loadServiceFiles(){
 int Config::loadBlackListFiles(){ // load *.badkey and *.badip files
     static const string ext1 = ".badip";
     vector<string> lines;
-    cout << "Loading IP blacklist files: ";
+    log() << "Loading IP blacklist files: ";
     int fCount = parseFilesIntoLines(ext1, lines);
-    cout << "(" << fCount << " found)" << endl;
+    log() << "(" << fCount << " found)" << endl;
 
     static const string ext2 = ".badkey";
     vector<string> lines2;
-    cout << "Loading KEY blacklist files: ";
+    log() << "Loading KEY blacklist files: ";
     fCount = parseFilesIntoLines(ext2, lines2);
-    cout << "(" << fCount << " found)" << endl;
+    log() << "(" << fCount << " found)" << endl;
 
     unique_lock ulock(blist->mutx);
 
@@ -122,32 +123,32 @@ int Config::loadBlackListFiles(){ // load *.badkey and *.badip files
 
 
 int Config::findIPs(){
-    cout << "Looking for your NAT router..." << endl;
+    log() << "Looking for your NAT router..." << endl;
     if ( upnp.discovery() ){
-        cout << "Retrieving this host's IP and WAN IP from the router..." << endl;
+        log() << "Retrieving this host's IP and WAN IP from the router..." << endl;
         string ipStr;
         upnp.getExternalIP(ipStr, ldata->localIP);
-        cout << "Local IP: " << Sock::ipToString(ldata->localIP) << endl;
+        log() << "Local IP: " << Sock::ipToString(ldata->localIP) << endl;
         if( Sock::isRoutable(ldata->localIP) ) {
             ldata->myIP = ldata->localIP;
-            cout << "Local IP is not private (routable)." << endl;
+            log() << "Local IP is not private (routable)." << endl;
             return 0;
         }
         if( ipStr.length() > 6){ // at least x.x.x.x
             ldata->myIP = Sock::stringToIP( ipStr.c_str() );
             if( ldata->myIP > 0 ){
-                cout << "WAN IP: " << ipStr << endl;
+                log() << "WAN IP: " << ipStr << endl;
                 if( !Sock::isRoutable(ldata->myIP) ){
-                    cout << "# WARNING: router's WAN IP is not routable.  You are behind multiple NAT devices." << endl;
-                    cout << "# Manually configure your other NAT devices to forward ports to " << ipStr << endl;
-                    cout << "# Otherwise no one can connect TO YOU from the internet." << endl;
+                    log() << "# WARNING: router's WAN IP is not routable.  You are behind multiple NAT devices." << endl;
+                    log() << "# Manually configure your other NAT devices to forward ports to " << ipStr << endl;
+                    log() << "# Otherwise no one can connect TO YOU from the internet." << endl;
                 }
                 return 0;
             }
         } // this is an indication there is no NAT taking place.
-        cerr << "Error retrieving IPs from the router." << endl;
+        logErr() << "Error retrieving IPs from the router." << endl;
     } else {
-        cerr << "Failed to find a NAT router.  ERROR: " << upnp.get_last_error() << endl;
+        logErr() << "Failed to find a NAT router.  ERROR: " << upnp.get_last_error() << endl;
     }
     //1 TODO: fill ldata->myIP and ldata->localIP without using router's help
     // connecto to something and get local IP that way.
@@ -166,12 +167,12 @@ void Config::init(LocalData& lData, BlackList& bList){
     loadBlackListFiles();
     findIPs();
 
-    cout << "Loading configuration data." << endl;
+    log() << "Loading configuration data." << endl;
     ldata->myPort = Sock::ANY_PORT; // default port for OutNet to listen on
 
     ifstream config (configName);
     if( !config ){
-        cout << configName << " not found. Setting configuration data to defaults." << endl;
+        log() << configName << " not found. Setting configuration data to defaults." << endl;
         return;
     }
 
@@ -202,15 +203,15 @@ void Config::init(LocalData& lData, BlackList& bList){
     }
 
     if( ldata->myPort != Sock::ANY_PORT ) {
-        cout << "Configuration data loaded successfuly." << endl;
+        log() << "Configuration data loaded successfuly." << endl;
     }else {
-        cout << "Config file is corrupted.  It will be regenerated." << endl;
+        log() << "Config file is corrupted.  It will be regenerated." << endl;
     }
 }
 
 
 int Config::saveToDisk(){
-    cout << "Saving configuration data to disk." << endl;
+    log() << "Saving configuration data to disk." << endl;
     ofstream config(configName);
     string msg1 = "# Configuration file for OutNet service https://github.com/rand3289/OutNet";
     string msg2 = "# If this file is deleted or corrupted it will be regenerated with default values.";
@@ -233,13 +234,13 @@ int Config::saveToDisk(){
 
 bool Config::forwardLocalPort(uint16_t port){
     string localAddr = Sock::ipToString(ldata->localIP);
-    cout << "Forwarding router's WAN port " << port << " to local " << localAddr << ":" << port << endl;
+    log() << "Forwarding router's WAN port " << port << " to local " << localAddr << ":" << port << endl;
     if( 0 == ldata->localIP || port == 0){
-        cerr << "ERROR: local IP or PORT are blank! Can not forward port." << endl;
+        logErr() << "ERROR: local IP or PORT are blank! Can not forward port." << endl;
         return false;
     }
     if( !upnp.add_port_mapping("OutNet main", localAddr.c_str(), port, port, "TCP")){
-        cerr << upnp.get_last_error() << endl;
+        logErr() << upnp.get_last_error() << endl;
         return false;
     }
     return true;

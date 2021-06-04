@@ -3,7 +3,7 @@
 #include <ostream>
 
 
-enum LOG_LEVEL { NONE=0, ERR=1, LOG=2, INFO=3 };
+enum LOG_LEVEL { NONE=0, LERR=1, LOG=2, INFO=3 };
 void setLogLevel(LOG_LEVEL level);
 
 std::ostream& log();

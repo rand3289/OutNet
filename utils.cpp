@@ -1,6 +1,8 @@
 #include "utils.h"
+#include "log.h"
 #include <algorithm>
 #include <iostream>
+#include <iomanip> // std::hex, std::dec
 #include <fstream>
 #include <filesystem>
 using namespace std;
@@ -89,7 +91,7 @@ int parseFilesIntoLines(const string& extension, vector<string>& lines){
     int fCount = 0;
     for(auto& p: directory_iterator(".") ){
         if(p.path().extension() != extension){ continue; }
-        cout << p.path() << " ";
+        log() << p.path() << " ";
         ifstream listf (p.path());
         if( !listf ){ continue; }
         parseLines(listf, lines);
@@ -112,25 +114,22 @@ bool keyValue(const string& str, string& key, string& value){
 }
 
 
-#include <iomanip> // std::hex, std::dec
 // print buffer using hex digits 4 + space
-void printHex(const unsigned char* buff, int len){
+void printHex(ostream& os, const unsigned char* buff, int len){
     for(int i = 0; i< len; ++i){
-        cout << std::setw(2) << std::setfill('0') << std::hex << (int) buff[i] << ( 1==i%2 ? " ": "");
+        os << std::setw(2) << std::setfill('0') << std::hex << (int) buff[i] << ( 1==i%2 ? " ": "");
     }
-    cout << std::setw(1) << std::dec << endl; // reset back to decimal
-    cout.flush();
+    os << std::setw(0) << std::setfill(' ') << std::dec; // reset back to decimal
 }
 
 
-void printAscii(const unsigned char* buff, int len){
+void printAscii(ostream& os, const unsigned char* buff, int len){
     for(int i = 0; i< len; ++i){
         unsigned char val = buff[i];
         val = ( val >= 32 && val< 127 ) ? val : '.';
-        cout <<  val;
+        os <<  val;
     }
-    cout << endl;
-    cout.flush();
+    os << endl;
 }
 
 

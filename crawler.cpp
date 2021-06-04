@@ -2,6 +2,7 @@
 #include "sock.h"
 #include "http.h"
 #include "utils.h"
+#include "log.h"
 #include <memory>
 #include <algorithm>
 #include <unordered_map> // erase_if(unordered_multimap, predicate)
@@ -16,7 +17,7 @@ using namespace std;
 
 
 int ERR(const string& msg){ // makes error handling code a bit shorter
-    cerr << "ERROR " << msg << endl;
+    logErr() << "ERROR " << msg << endl;
     return 0;
 }
 
@@ -51,13 +52,13 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
     }
     ss << " HTTP/1.1\r\n\r\n";
 
-    cout << "Crawler connecting to " << Sock::ipToString(hiHost) << ":" << hiPort << endl;
+    log() << "Crawler connecting to " << Sock::ipToString(hiHost) << ":" << hiPort << endl;
     Sock sock;
     sock.setRWtimeout(ldata.timeoutCrawler); // seconds read/write timeout
     sock.setNoDelay(true); // request is one write()
 
     if( sock.connect(hiHost, hiPort) ){
-//        cerr  << "ERROR connecting to " << Sock::ipToString(hiHost) << ":" << hiPort << endl;
+//        logErr()  << "ERROR connecting to " << Sock::ipToString(hiHost) << ":" << hiPort << endl;
         unique_lock ulock(rdata.mutx); // release lock after each connection for other parts to work
         hi.missed = system_clock::now();
         ++hi.offlineCount;
@@ -78,7 +79,7 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
     char buff[256];
     int rdsize = sock.readLine(buff, sizeof(buff) );
     if( rdsize < 8 || nullptr == strstr(buff,"200") ) {
-        cerr << "ERROR in queryRemoteService() while parsing " << rdsize << " bytes: " << buff << endl;
+        logErr() << "ERROR in queryRemoteService() while parsing " << rdsize << " bytes: " << buff << endl;
         return 0;
     }
     while( sock.readLine(buff, sizeof(buff) ) > 0 ) {} // skip till empty line is read (HTTP protocol)
@@ -261,8 +262,9 @@ int Crawler::queryRemoteService(HostInfo& hi, vector<HostInfo>& newData, uint32_
             hi.seen = system_clock::now();
             return ERR("verifying signature");
         } else {
-            cout << "Remote's public key: ";
-            printHex(locPubKey->key, sizeof(PubKey));
+            auto& os = log();
+            os << "Remote's public key: ";
+            printHex(os, locPubKey->key, sizeof(PubKey));
         }
     }
 
@@ -398,16 +400,16 @@ const string tempRDFile = "remoteData.tmp";
 // Data is periodically saved.  When service is restarted, it is loaded back up
 // RemoteData does not have to be locked here
 int Crawler::loadRemoteDataFromDisk(){
-    cout << "Loading remote data from disk." << endl;
+    log() << "Loading remote data from disk." << endl;
     ifstream file(RDFile, std::ios::binary);
     if(!file.good()){
-        cout << "Could not find remote data restore point " << RDFile << endl;
+        log() << "Could not find remote data restore point " << RDFile << endl;
         return 0;
     }
     uint32_t size;
     file.read( (char*) &size, sizeof(size) );
     if(!file){
-        cerr << "Could not read data from " << RDFile << endl;
+        logErr() << "Could not read data from " << RDFile << endl;
         return -1;
     }
 
@@ -445,13 +447,13 @@ int Crawler::loadRemoteDataFromDisk(){
 
 // have to save everything overwriting old data since old data could be modified by merge()
 int Crawler::saveRemoteDataToDisk(){ // save data to disk
-    cout << "Saving remote data to disk." << endl;
+    log() << "Saving remote data to disk." << endl;
     ofstream file(tempRDFile, std::ios::binary);
     shared_lock slock(rdata.mutx);
     uint32_t hs = rdata.hosts.size();
     file.write( (char*) &hs, sizeof(hs) );
     if(!file){ // check that the writes succeeded
-        cerr << "ERROR saving remote data to disk.  Do you have write permissions?" << endl;
+        logErr() << "ERROR saving remote data to disk.  Do you have write permissions?" << endl;
         return -1;
     }
 
@@ -479,7 +481,7 @@ int Crawler::saveRemoteDataToDisk(){ // save data to disk
 
     slock.unlock();
     if(!file){ 
-        cerr << "ERROR saving remote data to disk." << endl;
+        logErr() << "ERROR saving remote data to disk." << endl;
         return -2;
     }
     file.close();

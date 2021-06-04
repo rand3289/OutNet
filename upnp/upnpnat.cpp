@@ -22,6 +22,7 @@
 
 #include "upnpnat.h"
 #include "xmlParser.h"
+#include "../log.h"
 
 #define MAX_BUFF_SIZE 102400
 
@@ -149,7 +150,7 @@ bool UPNPNAT::initNetwork()
     WSADATA wsaData;
     int err = WSAStartup (wVersionRequested, &wsaData);
 	if(err != 0){
-		std::cerr << "ERROR: WSAStartup() failed" << std::endl;
+		logErr() << "ERROR: WSAStartup() failed" << std::endl;
 		return false;
 	}
 #else
@@ -249,12 +250,12 @@ bool UPNPNAT::discovery(int retry)
 			continue;
 		}
 
-printf( "Got data from Describe URL: %s\n", describe_url.c_str() );
-printf("Control URL: %s\n", this->control_url.c_str() );
-printf("Service Type: %s\n", this->service_type.c_str() );
-//printf("Base URL: %s\n", this->base_url.c_str() );
-//printf("Service URL: %s\n", this->service_describe_url.c_str() );
-//printf("Description Info: %s\n",this->description_info.c_str() );
+        log() << "Got data from Describe URL: " << describe_url.c_str() << std::endl;
+        log() << "Control URL: " << this->control_url.c_str() << std::endl;
+        log() << "Service Type: " << this->service_type.c_str() << std::endl;
+        // log() << "Base URL: " << this->base_url.c_str() << std::endl;
+        // log() << "Service URL: " << this->service_describe_url.c_str() << std::endl;
+        // log() << "Description Info: " << this->description_info.c_str() << std::endl;
 
         closesocket(udp_socket);
 		return true ;

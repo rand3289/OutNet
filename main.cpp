@@ -4,6 +4,7 @@
 #include "sock.h"
 #include "http.h"
 #include "utils.h"
+#include "log.h"
 #include <vector>
 #include <map> // #include <unordered_map>
 #include <string>
@@ -50,7 +51,7 @@ bool startUp(RemoteData& rdata){
         uint16_t portInt = (uint16_t) strtol(ports.c_str(), nullptr, 10); // base 10
 
         if( 0!=ip && 0!=portInt ){
-            cout << "Adding " << Sock::ipToString(ip) << ":" << portInt << " to list of IPs to scan." << endl;
+            log() << "Adding " << Sock::ipToString(ip) << ":" << portInt << " to list of IPs to scan." << endl;
             rdata.addContact(ip, portInt);
             ++added;
         }
@@ -63,13 +64,13 @@ bool startUp(RemoteData& rdata){
 // Three threads: main one serves requests, second (crawler) collects info, 
 // third thread subscribes services & loads black lists.
 int main(int argc, char* argv[]){
-    cout << "OutNet service version 0.1 (" << __DATE__ << ")" << endl;
+    log() << "OutNet service version 0.1 (" << __DATE__ << ")" << endl;
     // LocalData, RemoteData and BlackLists are shared among threads.  They all have internal mutexes.
     LocalData ldata;  // info about local services and local public key
     RemoteData rdata; // information gathered about remote services
     BlackList blist;  // Black and White lists
     if( !initNetwork() ){ // WSAStartup() on windows or set ignore SIGPIPE on unix
-        cerr << "Error initializing network." << endl;
+        logErr() << "Error initializing network." << endl;
         return 4;
     }
 
@@ -78,18 +79,20 @@ int main(int argc, char* argv[]){
     config.init(ldata, blist); // load ldata,bwlists
 
     if( !Signature::loadKeys(ldata.localPubKey) ){ // load public key from disk into ldata
-        cerr << "ERROR loading keys.  Exiting." << endl;
+        logErr() << "ERROR loading keys.  Exiting." << endl;
         return 2;
     }
-    cout << "My public key: ";
-    printHex( ldata.localPubKey.key, sizeof(ldata.localPubKey) );
+    auto& os = log();
+    os << "My public key: ";
+    printHex(os, ldata.localPubKey.key, sizeof(ldata.localPubKey) );
+    os << endl;
 
     // create the server returning all queries
     // first time it starts running on a random port (ANY_PORT)
     // but if service ran before, reuse the port number.  It was saved by Config class.
     Sock server;
     if( server.listen(ldata.myPort) < 0 ){
-        cerr << "ERROR listening for connections on port " << ldata.myPort << ".  Exiting." << endl;
+        logErr() << "ERROR listening for connections on port " << ldata.myPort << ".  Exiting." << endl;
         return 3;
     }
 
@@ -98,19 +101,19 @@ int main(int argc, char* argv[]){
         ldata.myPort = port;          // no need to lock since only one thread is running so far
         config.saveToDisk();          // this will overwrite the whole config file!
     }
-    cout << "Running OutNet service on port " << port << endl;
+    log() << "Running OutNet service on port " << port << endl;
 
     if( !Sock::isRoutable(ldata.localIP) ){ // could have a non-private (routable) IP
         if( config.forwardLocalPort(port) ){
-            cout << "Opened port " << port << " on the router (enabled port forwarding)." << endl;
+            log() << "Opened port " << port << " on the router (enabled port forwarding)." << endl;
         } else {
-            cerr << "If you have a NAT router, forward port " << port << " to local host manually!" << endl;
+            logErr() << "If you have a NAT router, forward port " << port << " to local host manually!" << endl;
         }
     }
 
     Crawler crawler(ldata, rdata, blist);
     crawler.loadRemoteDataFromDisk(); // load rdata
-    cout << "============================================================" << endl; // starting threads
+    log() << "============================================================" << endl; // starting threads
 
     // create the information collector thread here (there could be many in the future)
     // it searches and fills rdata while honoring BlackLists
@@ -130,7 +133,7 @@ int main(int argc, char* argv[]){
 
         uint32_t ip = conn.getIP();
         if( blist.isBanned(ip) ){
-            cout << "Denying REQUEST from " << Sock::ipToString(ip) << " (BANNED)" << endl;
+            log() << "Denying REQUEST from " << Sock::ipToString(ip) << " (BANNED)" << endl;
             Response::writeDenied(conn, "BANNED");
             continue;
         }
@@ -140,7 +143,7 @@ int main(int argc, char* argv[]){
         auto now = system_clock::now();
         auto& time = connTime[ip];
         if( time > now - minutes(10) && routable ){
-            cout << "Denying REQUEST from " << Sock::ipToString(ip) << " (connects too often)" << endl;
+            log() << "Denying REQUEST from " << Sock::ipToString(ip) << " (connects too often)" << endl;
             Response::writeDenied(conn, "DENIED");
             continue;
         }
@@ -160,10 +163,10 @@ int main(int argc, char* argv[]){
         }
 
         if(select > 0){ // request parsed correctly and we have a "data selection bitmap"
-            cout << "REQUEST from " << Sock::ipToString(ip) << " (" << selectStr(select) << ")" << endl;
+            log() << "REQUEST from " << Sock::ipToString(ip) << " (" << selectStr(select) << ")" << endl;
             response.write(conn, select, filters, ldata, rdata);
         } else {
-            cout << "Debug REQUEST from " << Sock::ipToString(ip) << endl;
+            log() << "Debug REQUEST from " << Sock::ipToString(ip) << endl;
             Response::writeDebug(conn, select, filters);
         }
 
