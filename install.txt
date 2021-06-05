@@ -1,0 +1,32 @@
+#########################################################
+OutNet Windows and Linux common installation instructions
+#########################################################
+1. create start.url text file with initial url to connect to.
+
+
+##########################################################
+Installation instructions for OutNet service on MS Windows
+##########################################################
+
+1. Right click on a command prompt icon and select "Run as Administrator".  Enter admin password.
+
+2. run the following command: "sc create OutNet binPath= c:\pathToOutnet\outnet.exe"
+    At this point you should see "[SC] CreateService SUCCESS"
+
+3. run "sc start OutNet"
+    Make sure the STATE is "RUNNING"
+
+4. check outnet*.log file
+
+The following steps are optional:
+
+5. run "sc stop OutNet"
+
+6. edit outnet.cfg file to your liking
+
+7. run "sc start OutNet"
+
+8. check outnet*.log file
+
+If anything goes wrong, run "sc delete OutNet" and repeat the steps above
+If initialization fails, log file can end up in c:\windows\system32\outnet*.log

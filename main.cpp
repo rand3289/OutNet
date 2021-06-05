@@ -36,7 +36,11 @@ std::string selectStr(uint32_t sel){
 bool startUp(RemoteData& rdata){
     const string filename = "start.url";
     ifstream urlf (filename);
-    if( !urlf ){ return false; }
+    if( !urlf ){
+        log() << filename << " NOT found." << endl;
+        return false;
+    }
+    log() << "Loading " << filename << endl;
 
     vector<string> lines;
     parseLines(urlf, lines); // line format is IP:PORT
@@ -66,16 +70,16 @@ void run();
 // Three threads: main one serves requests, second (crawler) collects info, 
 // third thread subscribes services & loads black lists.
 int main(int argc, char* argv[]){
-    log() << "OutNet service version 0.1 (" << __DATE__ << ")" << endl;
     if( !initNetwork() ){ // WSAStartup() on windows or set ignore SIGPIPE on unix
         logErr() << "Error initializing network." << endl;
         return 4;
     }
-    registerService(&run);
+    return registerService(&run);
 } // main
 
 
 void run(){
+    log() << "OutNet service version 0.1 (" << __DATE__ << ")" << endl;
     // LocalData, RemoteData and BlackLists are shared among threads.  They all have internal mutexes.
     LocalData ldata;  // info about local services and local public key
     RemoteData rdata; // information gathered about remote services

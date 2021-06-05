@@ -43,6 +43,19 @@ DWORD ServiceHandler( DWORD dwControl, DWORD dwEventType, LPVOID lpEventData, LP
 
 
 void WINAPI ServiceMain(DWORD argc, LPTSTR* argv){
+    char path[MAX_PATH+1]; // +1 for null termination
+    DWORD ret = GetModuleFileName(NULL, path, sizeof(path) );
+    if(ret > 0){
+        char* slash = strrchr(path, '\\');
+        if(slash){
+            *slash = 0; // need the path to the exe
+            SetCurrentDirectory(path);
+            log() << "CWD=" << path << endl;
+        }
+    } else {
+        logErr() << "GetModuleFileName() failed.  Unable to change CWD." << endl;
+    }
+
     serviceStatusHandle = RegisterServiceCtrlHandlerEx(serviceName, &ServiceHandler, NULL);
     status(SERVICE_RUNNING);
     serviceRun();
