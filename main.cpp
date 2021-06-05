@@ -4,6 +4,7 @@
 #include "sock.h"
 #include "http.h"
 #include "utils.h"
+#include "svc.h"
 #include "log.h"
 #include <vector>
 #include <map> // #include <unordered_map>
@@ -60,27 +61,32 @@ bool startUp(RemoteData& rdata){
     return added > 0;
 }
 
+void run();
 
 // Three threads: main one serves requests, second (crawler) collects info, 
 // third thread subscribes services & loads black lists.
 int main(int argc, char* argv[]){
     log() << "OutNet service version 0.1 (" << __DATE__ << ")" << endl;
-    // LocalData, RemoteData and BlackLists are shared among threads.  They all have internal mutexes.
-    LocalData ldata;  // info about local services and local public key
-    RemoteData rdata; // information gathered about remote services
-    BlackList blist;  // Black and White lists
     if( !initNetwork() ){ // WSAStartup() on windows or set ignore SIGPIPE on unix
         logErr() << "Error initializing network." << endl;
         return 4;
     }
+    registerService(&run);
+} // main
 
+
+void run(){
+    // LocalData, RemoteData and BlackLists are shared among threads.  They all have internal mutexes.
+    LocalData ldata;  // info about local services and local public key
+    RemoteData rdata; // information gathered about remote services
+    BlackList blist;  // Black and White lists
     startUp(rdata); // load remote outnet service location to initialize from
     Config config; // config is aware of service port, LocalData and BWLists
     config.init(ldata, blist); // load ldata,bwlists
 
     if( !Signature::loadKeys(ldata.localPubKey) ){ // load public key from disk into ldata
         logErr() << "ERROR loading keys.  Exiting." << endl;
-        return 2;
+        return;
     }
     auto& os = log();
     os << "My public key: ";
@@ -93,7 +99,7 @@ int main(int argc, char* argv[]){
     Sock server;
     if( server.listen(ldata.myPort) < 0 ){
         logErr() << "ERROR listening for connections on port " << ldata.myPort << ".  Exiting." << endl;
-        return 3;
+        return;
     }
 
     uint16_t port = server.getPort(); // get bound server port number from socket
@@ -172,4 +178,4 @@ int main(int argc, char* argv[]){
 
         this_thread::sleep_for(seconds(ldata.sleepServer)); // windblows freaks out in recv() if you don't
     } // while()
-} // main()
+} // run()

@@ -1,6 +1,7 @@
 #ifndef _WIN32
 // This is a linux service implementation (see svcwin.cpp for windows version)
 #include "svc.h"
+#include "log.h"
 #include <unistd.h>
 #include <errno.h>
 #include <signal.h>
@@ -24,7 +25,7 @@ int registerService( void (*run) () ){
 
     if( daemon(true, false) ){ // Do not change CWD.  Close stdin/stdout/stderr
         int err = errno;
-        // TODO: log errno
+        logErr() << "daemon(true, false) failed with error code " << err << std::endl;
         return -1;
     }
     run();
