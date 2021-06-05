@@ -10,7 +10,7 @@ Installation instructions for OutNet service on MS Windows
 
 1. Right click on a command prompt icon and select "Run as Administrator".  Enter admin password.
 
-2. run the following command: "sc create OutNet binPath= c:\pathToOutnet\outnet.exe"
+2. run the following command: "sc create OutNet binPath= c:\pathToOutnet\outnet.exe start= auto"
     At this point you should see "[SC] CreateService SUCCESS"
 
 3. run "sc start OutNet"
