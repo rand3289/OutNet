@@ -16,7 +16,7 @@ Installation instructions for OutNet service on MS Windows
 3. run "sc start OutNet"
     Make sure the STATE is "RUNNING"
 
-4. check outnet*.log file
+4. check outnet*.log file for errors
 
 The following steps are optional:
 
@@ -30,3 +30,7 @@ The following steps are optional:
 
 If anything goes wrong, run "sc delete OutNet" and repeat the steps above
 If initialization fails, log file can end up in c:\windows\system32\outnet*.log
+Note, when outnet first runs it creates the following files: outnet.cfg outnet*.log publicOutNet.key secretOutNet.key and possibly remoteData.save
+
+User can further create *.service files with local service descriptions you want to advertise
+User can also create *.badip and *.badkey files for blacklisted IPs and Public Keys respectively.
