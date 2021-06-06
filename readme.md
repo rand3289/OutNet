@@ -96,6 +96,47 @@ https://en.wikipedia.org/wiki/Wide_area_network
 * To support your other services OutNet provides a library for signature creation and verification.  Your private key does not have to be shared with your other services.
 
 
+## OutNet installation instructions
+The first step in any installation is creating or editing start.url text file.
+It contains an initial url (IP:PORT) for OutNet to connect to. For example 127.0.0.1:12345
+This is where OutNet will connect to find peers.  The file can be deleted later.
+You should trust the initial source of the information to avoid problems.
+
+When outnet first runs, it creates the following files:  
+outnet.cfg outnet*.log publicOutNet.key secretOutNet.key and possibly remoteData.save  
+User can further create *.service files with local service descriptions you want to advertise.  
+User can also create *.badip and *.badkey files for blacklisted IPs and Public Keys respectively.
+
+
+### Installation instructions for OutNet daemon on Linux with systemd
+1. create start.url file as described above in the common instructions
+2. edit outnet_systemd.svc to set your User, WorkingDirectory and ExecStart
+    User should match "whoami"
+    WorkingDirectory should be set to the location of the executable file "outnet"
+    ExecStart should be set to the full path for the executable "outnet"
+3. run "sudo mv outnet_systemd.svc /etc/systemd/system/outnet.service" in the install dir
+4. run "sudo systemctl daemon-reload"
+5. run "sudo systemctl enable outnet.service"
+6. run "sudo systemctl start outnet.service"
+    At this point OutNet will start running and create some files.
+7. Change to OutNet directory and check outnet*.log file for errors.
+
+
+### Installation instructions for OutNet service on MS Windows
+1. create start.url file as described above in the common instructions.
+2. Right click on a command prompt icon and select "Run as Administrator".  Enter admin password.
+3. Run the following command: "sc create OutNet binPath= c:\pathToOutnet\outnet.exe start= auto"
+    Make sure to replace pathToOutNet with a full path to outnet.exe
+    At this point you should see "[SC] CreateService SUCCESS"
+4. run "sc start OutNet"
+    Make sure it shows the STATE is "RUNNING"
+    At this point OutNet will start running and create some files.
+4. Change to OutNet directory and check outnet*.log file for errors.
+
+If anything goes wrong, run "sc delete OutNet" and repeat the steps above.
+If outnet fails to start, log file can end up in c:\windows\system32\outnet*.log
+
+
 Reading further requires understanding of the following concepts:  
 https://en.wikipedia.org/wiki/Graphical_user_interface  
 https://en.wikipedia.org/wiki/Library_(computing)  
