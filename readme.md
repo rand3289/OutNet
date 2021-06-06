@@ -133,7 +133,7 @@ User can also create *.badip and *.badkey files for blacklisted IPs and Public K
     At this point OutNet will start running and create some files.
 5. Change to OutNet directory and check outnet*.log file for errors.
 
-If anything goes wrong, run "sc delete OutNet" and repeat the steps above.
+If anything goes wrong, run "sc delete OutNet" and repeat the steps above.  
 If outnet fails to start, log file can end up in c:\windows\system32\outnet*.log
 
 
@@ -287,7 +287,6 @@ Small world network properties can be used to find relatively small semi-isolate
 Health and stability of the internet should be every user's goal.  A botnet client can masquerade as a regular OutNet client.  To prevent any botnets from using this service, it is the responsibility of each user to add IP filters as problems come up.  OutNet has built in blacklist support for IPs and keys.
 
 ## TODO
-* Figure out the best way to run outnet as a system service (OS dependent).  Write wrappers and leave console apps as is?
 * Implement/fix all TODO in source code
 * Add IPv4 SSDP capability so that other services can find OutNet.  This way services do not need to be configured with OutNet IP:port
 * move buffer.h  log.*  sock.*  utils.*  svc*.*  to ./lib/ ???
