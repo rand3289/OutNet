@@ -31,7 +31,9 @@ https://en.wikipedia.org/wiki/Distributed_hash_table
 https://en.wikipedia.org/wiki/IPv4  
 https://en.wikipedia.org/wiki/GNUnet  
 
-OutNet is an alternative to "private/regulated/controlled" discovery protocols like Kazaa or domain names.  OutNet is a free and open source distributed service directory network protocol (peer discovery).  It is designed to find conventional or distributed (P2P) services on the internet.  Services such as web pages, game servers, ftp servers, messengers, forums, video conferences, P2P and distributed services.  Another goals of OutNet is to decentralize the internet making it resistant to control and sensorship.  OutNet provides anonymity.  Instead of a domain or a user name, a public key is used to identify you, your services and services provided by others.  Public key is generated locally.  Your real name is no longer needed to provide or consume services on the internet.  Your IP address however will be visible to the world unless used in conjunction with a VPN.  OutNet is similar to the DNS system which allows finding services by name, however instead it allows finding services on the internet by a network protocol name, a service type or a public key.  OutNet is different from a blockchain and much simpler. Peers can have a partial view of the information.  There is similarity with GNUnet since OutNet provides peer discovery and authentication.  However unlike GNUnet OutNet does not provide any encryption or privacy.  The upside is there are NO dependencies on external components.
+OutNet is an alternative to "private/regulated/controlled" discovery protocols like Kazaa or domain names.  OutNet is a free and open source distributed service directory network protocol (peer discovery).  It is designed to find conventional or distributed (P2P) services on the internet.  Services such as web pages, game servers, ftp servers, messengers, forums, video conferences, P2P and distributed services.  Another goals of OutNet is to decentralize the internet making it resistant to control and sensorship.  It does not matter if you run your services on a Raspberry Pi at home or in the cloud.  You make the rules!  
+
+OutNet provides anonymity.  Instead of a domain or a user name, a public key is used to identify you, your services and services provided by others.  Public key is generated locally.  Your real name is no longer needed to provide or consume services on the internet.  Your IP address however will be visible to the world unless used in conjunction with a VPN.  OutNet is similar to the DNS system which allows finding services by name, however instead it allows finding services on the internet by a network protocol name, a service type or a public key.  OutNet is different from a blockchain and much simpler. Peers can have a partial view of the information.  There is similarity with GNUnet since OutNet provides peer discovery and authentication.  However unlike GNUnet OutNet does not provide any encryption or privacy.  The upside is there are NO dependencies on external components.
 
 
 ## Project status
@@ -131,6 +133,9 @@ It has to be able to manage other's public keys to be able to put them on your c
     + Use of a SINGLE server (all articles have to be in one place).
     + Maximum article size varied among servers.
     + NNTP is a text based protocol.
+
+
+* OutNetExchange shares all types of files, however a specific video sharing service might be better in certain cases.  If you are a content provider who has a video channel, you do not need to ask a third party if you channel can be monetized.  Your content type will not influence your ability to monetize.  You decide what type of advertisements your channel will display.
 
 
 * Another significant aspect is a rating system.  Ratings is the basis of trust in a distrubuted system.  Two things things that need to be rated are data (text/images/video) and public keys.  

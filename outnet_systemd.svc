@@ -1,0 +1,13 @@
+[Unit]
+Description=OutNet service
+After=network.target
+
+[Service]
+User=rootik
+WorkingDirectory=/home/rootik/projects/outnet/
+ExecStart=/home/rootik/projects/outnet/outnet
+Restart=always
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target

@@ -1,36 +1,62 @@
 #########################################################
 OutNet Windows and Linux common installation instructions
 #########################################################
-1. create start.url text file with initial url to connect to.
+OutNet is a service and therefore it has to be installed to run as a service.
+
+The first step in Linux or Windows installation is creating or editing start.url text file.
+It contains an initial url (IP:PORT) for OutNet to connect to. For example 127.0.0.1:12345
+This is where OutNet will connect to find peers.  The file can be deleted later.
+You should trust the initial source of the information to avoid problems.
+
+Note, when outnet first runs it creates the following files:
+    outnet.cfg outnet*.log publicOutNet.key secretOutNet.key and possibly remoteData.save
+User can further create *.service files with local service descriptions you want to advertise.
+User can also create *.badip and *.badkey files for blacklisted IPs and Public Keys respectively.
+
+To make sure OutNet is running, you can use onlist utility that comes with Outnet:
+    onlist 127.0.0.1 PORT#
+
+
+#################################################################
+Installation instructions for OutNet daemon on Linux with systemd
+#################################################################
+
+1. create start.url file as described above in the common instructions
+
+2. edit outnet_systemd.svc to set your User, WorkingDirectory and ExecStart
+    User should match "whoami"
+    WorkingDirectory should be set to the location of the executable file "outnet"
+    ExecStart should be set to the full path for the executable "outnet"
+
+3. run "sudo mv outnet_systemd.svc /etc/systemd/system/outnet.service" in the install dir
+
+4. run "sudo systemctl daemon-reload"
+
+5. run "sudo systemctl enable outnet.service"
+
+6. run "sudo systemctl start outnet.service"
+    At this point OutNet will start running and create some files.
+
+7. Change to OutNet directory and check outnet*.log file for errors.
 
 
 ##########################################################
 Installation instructions for OutNet service on MS Windows
 ##########################################################
 
-1. Right click on a command prompt icon and select "Run as Administrator".  Enter admin password.
+1. create start.url file as described above in the common instructions.
 
-2. run the following command: "sc create OutNet binPath= c:\pathToOutnet\outnet.exe start= auto"
+2. Right click on a command prompt icon and select "Run as Administrator".  Enter admin password.
+
+3. Run the following command: "sc create OutNet binPath= c:\pathToOutnet\outnet.exe start= auto"
+    Make sure to replace pathToOutNet with a full path to outnet.exe
     At this point you should see "[SC] CreateService SUCCESS"
 
-3. run "sc start OutNet"
-    Make sure the STATE is "RUNNING"
+4. run "sc start OutNet"
+    Make sure it shows the STATE is "RUNNING"
+    At this point OutNet will start running and create some files.
 
-4. check outnet*.log file for errors
+4. Change to OutNet directory and check outnet*.log file for errors.
 
-The following steps are optional:
-
-5. run "sc stop OutNet"
-
-6. edit outnet.cfg file to your liking
-
-7. run "sc start OutNet"
-
-8. check outnet*.log file
-
-If anything goes wrong, run "sc delete OutNet" and repeat the steps above
-If initialization fails, log file can end up in c:\windows\system32\outnet*.log
-Note, when outnet first runs it creates the following files: outnet.cfg outnet*.log publicOutNet.key secretOutNet.key and possibly remoteData.save
-
-User can further create *.service files with local service descriptions you want to advertise
-User can also create *.badip and *.badkey files for blacklisted IPs and Public Keys respectively.
+If anything goes wrong, run "sc delete OutNet" and repeat the steps above.
+If outnet fails to start, log file can end up in c:\windows\system32\outnet*.log
