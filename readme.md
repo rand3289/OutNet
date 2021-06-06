@@ -37,13 +37,14 @@ OutNet provides anonymity.  Instead of a domain or a user name, a public key is 
 
 
 ## Project status
-OutNet is written in C++ 20. Project does not have ANY external dependencies.  Everything is built-in (source code available from ONE git repository).  Most features are implemented and currently being tested.  OutNet was started in February 2020 by a single developer.  Its most recent version is 0.1
+OutNet is written in C++ 20. Project does not have ANY external dependencies.  Everything is built-in (source code available from ONE git repository).  All features are implemented and currently being tested.  OutNet was started in February 2020 by a single developer.  Its most recent version is 0.1  
 It compiles using g++ 10.2 under linux or MinGW-w64 from msys2.org on windows.  To compile type "make" in OutNet directory.  To compile "onlist" utility, type "make" in OutNet/onlist directory.  "onlist" utility queries the OutNet service.
 
 Apple requires an Apple ID to download Command Line Tools.  Apple ID registration requires submission of your phone number.  This project has not been ported to macOS for this reason.
 
-OutNet's home is https://github.com/rand3289/OutNetMsg  
-Other OutNet based services currently being implemented are available here:  
+OutNet's home is https://github.com/rand3289/OutNet  
+Binaries are available here: https://github.com/rand3289/OutNetBin  
+Other OutNet based services:  
 https://github.com/rand3289/OutNetMsg  
 
 
@@ -290,3 +291,8 @@ Health and stability of the internet should be every user's goal.  A botnet clie
 * Implement/fix all TODO in source code
 * Add IPv4 SSDP capability so that other services can find OutNet.  This way services do not need to be configured with OutNet IP:port
 * move buffer.h  log.*  sock.*  utils.*  svc*.*  to ./lib/ ???
+* move sign/* and upnp/* to deps/* or extern/*
+* copy  outnet, outnet.svc, start.url  to outnetbin repository
+
+
+This repository was cloned from https://github.com/rand3289/OutNet
