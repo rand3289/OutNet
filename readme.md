@@ -110,14 +110,14 @@ User can also create *.badip and *.badkey files for blacklisted IPs and Public K
 
 ### Installation instructions for OutNet daemon on Linux with systemd
 1. create start.url file as described above in the common instructions
-2. edit outnet_systemd.svc to set your User, WorkingDirectory and ExecStart
-    User should match "whoami"
-    WorkingDirectory should be set to the location of the executable file "outnet"
+2. edit outnet_systemd.svc to set your User, WorkingDirectory and ExecStart  
+    User should match "whoami"  
+    WorkingDirectory should be set to the location of the executable file "outnet"  
     ExecStart should be set to the full path for the executable "outnet"
 3. run "sudo mv outnet_systemd.svc /etc/systemd/system/outnet.service" in the install dir
 4. run "sudo systemctl daemon-reload"
 5. run "sudo systemctl enable outnet.service"
-6. run "sudo systemctl start outnet.service"
+6. run "sudo systemctl start outnet.service"  
     At this point OutNet will start running and create some files.
 7. Change to OutNet directory and check outnet*.log file for errors.
 
@@ -125,13 +125,13 @@ User can also create *.badip and *.badkey files for blacklisted IPs and Public K
 ### Installation instructions for OutNet service on MS Windows
 1. create start.url file as described above in the common instructions.
 2. Right click on a command prompt icon and select "Run as Administrator".  Enter admin password.
-3. Run the following command: "sc create OutNet binPath= c:\pathToOutnet\outnet.exe start= auto"
-    Make sure to replace pathToOutNet with a full path to outnet.exe
+3. Run the following command: "sc create OutNet binPath= c:\pathToOutnet\outnet.exe start= auto"  
+    Make sure to replace pathToOutNet with a full path to outnet.exe  
     At this point you should see "[SC] CreateService SUCCESS"
 4. run "sc start OutNet"
-    Make sure it shows the STATE is "RUNNING"
+    Make sure it shows the STATE is "RUNNING"  
     At this point OutNet will start running and create some files.
-4. Change to OutNet directory and check outnet*.log file for errors.
+5. Change to OutNet directory and check outnet*.log file for errors.
 
 If anything goes wrong, run "sc delete OutNet" and repeat the steps above.
 If outnet fails to start, log file can end up in c:\windows\system32\outnet*.log
