@@ -110,11 +110,11 @@ User can also create *.badip and *.badkey files for blacklisted IPs and Public K
 
 ### Installation instructions for OutNet daemon on Linux with systemd
 1. create start.url file as described above in the common instructions
-2. edit outnet_systemd.svc to set your User, WorkingDirectory and ExecStart  
+2. edit outnet.svc to set your User, WorkingDirectory and ExecStart  
     User should match "whoami"  
     WorkingDirectory should be set to the location of the executable file "outnet"  
     ExecStart should be set to the full path for the executable "outnet"
-3. run "sudo mv outnet_systemd.svc /etc/systemd/system/outnet.service" in the install dir
+3. run "sudo mv outnet.svc /etc/systemd/system/outnet.service" in the install dir
 4. run "sudo systemctl daemon-reload"
 5. run "sudo systemctl enable outnet.service"
 6. run "sudo systemctl start outnet.service"  

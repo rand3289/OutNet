@@ -1,5 +1,5 @@
 [Unit]
-Description=OutNet service
+Description=OutNet systemd service (github.com/rand3289/OutNet)
 After=network.target
 
 [Service]
