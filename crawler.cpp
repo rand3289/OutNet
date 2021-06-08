@@ -398,8 +398,8 @@ int Crawler::run(){
 }
 
 
-const string RDFile = "remoteData.save";
-const string tempRDFile = "remoteData.tmp";
+const string RDFile = "outnetPeers.save";
+const string tempRDFile = "outnetPeers.tmp";
 
 
 // Data is periodically saved.  When service is restarted, it is loaded back up

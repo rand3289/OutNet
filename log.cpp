@@ -4,7 +4,7 @@
 #include <sstream>
 #include <iomanip> // std::hex, std::dec
 using namespace std;
-
+// TODO: make this code thread safe
 
 static ofstream devNull;
 static const int LINES_PER_FILE = 1000000;
@@ -27,7 +27,7 @@ bool createLogFile(ofstream& log){
 
     string fname = "outnet"+date+".log";
     log.close();
-    log.open(fname);
+    log.open(fname, ios_base::out | ios_base::app); // append
     log << "LOG date: " << date << " " << logTime() << endl;
 
     return log.good();

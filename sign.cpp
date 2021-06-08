@@ -11,8 +11,8 @@
 #include <chrono>
 using namespace std;
 
-static const string pubKeyFile = "publicOutNet.key";
-static const string privateKeyFile = "secretOutNet.key";
+static const string pubKeyFile = "outnetPublic.key";
+static const string privateKeyFile = "outnetSecret.key";
 bool       Signature::keysLoaded = false; // static
 PrivateKey Signature::privateKey;         // static
 PubKey     Signature::publicKey;          // static

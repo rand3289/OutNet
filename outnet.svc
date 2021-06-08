@@ -6,6 +6,7 @@ After=network.target
 User=rootik
 WorkingDirectory=/home/rootik/projects/outnet/
 ExecStart=/home/rootik/projects/outnet/outnet
+Type=forking
 Restart=always
 RestartSec=60
 

@@ -15,7 +15,10 @@ bool keepRunning(){ return keepServicesRunning; }
 
 void handleSigterm(int sigNum){
     if(SIGTERM == sigNum){
-        keepServicesRunning = false; 
+        keepServicesRunning = false;
+        log() << "Received SIGTERM.  Asking threads to exit." << std::endl;
+    } else {
+        logErr() << "Received unexpected signal " << sigNum << std::endl;
     }
 }
 
@@ -23,7 +26,7 @@ void handleSigterm(int sigNum){
 int registerService( void (*run) () ){
     signal(SIGTERM, &handleSigterm);
 
-    if( daemon(true, false) ){ // Do not change CWD.  Close stdin/stdout/stderr
+    if( daemon(1, 0) ){ // Do not change CWD.  Close stdin/stdout/stderr
         int err = errno;
         logErr() << "daemon(true, false) failed with error code " << err << std::endl;
         return -1;

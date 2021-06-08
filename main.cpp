@@ -34,7 +34,7 @@ std::string selectStr(uint32_t sel){
 
 
 bool startUp(RemoteData& rdata){
-    const string filename = "start.url";
+    const string filename = "outnetStart.url";
     ifstream urlf (filename);
     if( !urlf ){
         log() << filename << " NOT found." << endl;

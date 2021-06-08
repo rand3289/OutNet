@@ -67,7 +67,7 @@ https://en.wikipedia.org/wiki/Mingw-w64
 https://en.wikipedia.org/wiki/Repository_(version_control)
 
 
-Since one does not want to expose ALL available local services on the internet, OutNet does not discover local services.  Local services can register with OutNet or be added via configuration files.  Service descriptions visible to the world have to contain routable (public/external) IP addresses instead of host names.  If OutNet determines your service is behind a NAT router and IP is a non-routable IP, it will replace your non-routable IP with it's own external routable IP when listing your service.  In addition, OutNet will open a port in the router via UPnP protocol that will allow your service to accept connections.  Upon startup OutNet looks for start.url file that contains remote OutNet addresses (one ip:port per line) to start looking for peers.
+Since one does not want to expose ALL available local services on the internet, OutNet does not discover local services.  Local services can register with OutNet or be added via configuration files.  Service descriptions visible to the world have to contain routable (public/external) IP addresses instead of host names.  If OutNet determines your service is behind a NAT router and IP is a non-routable IP, it will replace your non-routable IP with it's own external routable IP when listing your service.  In addition, OutNet will open a port in the router via UPnP protocol that will allow your service to accept connections.  Upon startup OutNet looks for outnetStart.url file that contains remote OutNet addresses (one ip:port per line) to start looking for peers.
 
 
 Reading further requires understanding of the following concepts:  
@@ -98,19 +98,19 @@ https://en.wikipedia.org/wiki/Wide_area_network
 
 
 ## OutNet installation instructions
-The first step in any installation is creating or editing start.url text file.
+The first step in any installation is creating or editing outnetStart.url text file.
 It contains an initial url (IP:PORT) for OutNet to connect to. For example 127.0.0.1:12345
 This is where OutNet will connect to find peers.  The file can be deleted later.
 You should trust the initial source of the information to avoid problems.
 
 When outnet first runs, it creates the following files:  
-outnet.cfg outnet*.log publicOutNet.key secretOutNet.key and possibly remoteData.save  
+outnet.cfg outnet*.log outnetPublic.key outnetSecret.key and possibly outnetPeers.save
 User can further create *.service files with local service descriptions you want to advertise.  
 User can also create *.badip and *.badkey files for blacklisted IPs and Public Keys respectively.
 
 
 ### Installation instructions for OutNet daemon on Linux with systemd
-1. create start.url file as described above in the common instructions
+1. create outnetStart.url file as described above in the common instructions
 2. edit outnet.svc to set your User, WorkingDirectory and ExecStart  
     User should match "whoami"  
     WorkingDirectory should be set to the location of the executable file "outnet"  
@@ -124,7 +124,7 @@ User can also create *.badip and *.badkey files for blacklisted IPs and Public K
 
 
 ### Installation instructions for OutNet service on MS Windows
-1. create start.url file as described above in the common instructions.
+1. create outnetStart.url file as described above in the common instructions.
 2. Right click on a command prompt icon and select "Run as Administrator".  Enter admin password.
 3. Run the following command: "sc create OutNet binPath= c:\pathToOutnet\outnet.exe start= auto"  
     Make sure to replace pathToOutNet with a full path to outnet.exe  
@@ -273,7 +273,7 @@ https://en.wikipedia.org/wiki/Netsplit
 https://en.wikipedia.org/wiki/Botnet  
 
 ## Generating public/private keys
-Public and private keys will be generated automatically if you do not have files publicOutNet.key and secretOutNet.key in the OutNet service directory.  If one of the keys is missing, the keys will also be regenerated.  Never share your private key!  Make backup of you private and public keys.  You will NOT be able to recover the private key if it is lost.
+Public and private keys will be generated automatically if you do not have files outnetPublic.key and outnetSecret.key in the OutNet service directory.  If one of the keys is missing, the keys will also be regenerated.  Never share your private key!  Make backup of you private and public keys.  You will NOT be able to recover the private key if it is lost.
 
 ## Securing against network splits
 Small world network properties can be used to find relatively small semi-isolated connectivity islands that might be trying to split the network and exclude them.  Any fresh client connecting to such an island can become isolated from the rest of the OutNet.  It is important to trust your first connection source.  OutNet services returning HostInfo records without any overlap with existing records can receive a negative rating.  After verification of returned records the raiting should raise above 0.
@@ -292,7 +292,7 @@ Health and stability of the internet should be every user's goal.  A botnet clie
 * Add IPv4 SSDP capability so that other services can find OutNet.  This way services do not need to be configured with OutNet IP:port
 * move buffer.h  log.*  sock.*  utils.*  svc*.*  to ./lib/ ???
 * move sign/* and upnp/* to deps/* or extern/*
-* copy  outnet, outnet.svc, start.url  to outnetbin repository
+* copy  outnet, outnet.svc, outnetStart.url  to outnetbin repository
 
 
 This repository was cloned from https://github.com/rand3289/OutNet
