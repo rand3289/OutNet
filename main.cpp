@@ -65,8 +65,8 @@ bool startUp(RemoteData& rdata){
     return added > 0;
 }
 
-void run();
 
+void run();
 // Three threads: main one serves requests, second (crawler) collects info, 
 // third thread subscribes services & loads black lists.
 int main(int argc, char* argv[]){
@@ -136,7 +136,7 @@ void run(){
     // unordered_map<uint32_t, system_clock::time_point> connTime; // keep track of when someone connects to us
     map<uint32_t, system_clock::time_point> connTime; // keep track of when someone connects to us
     Response response;
-    while(true){
+    while( keepRunning() ){
         Sock conn;
         if( INVALID_SOCKET == server.accept(conn) ){ continue; }
         conn.setRWtimeout(ldata.timeoutServer); // seconds read/write timeout
@@ -180,6 +180,11 @@ void run(){
             Response::writeDebug(conn, select, filters);
         }
 
-        this_thread::sleep_for(seconds(ldata.sleepServer)); // windblows freaks out in recv() if you don't
+        // windblows freaks out in recv() if you close connection
+        // TODO: keep a list of active sockets for a few seconds. for now, this is the solution:
+        for(int i=0; i < ldata.sleepServer; ++i){
+            if( !keepRunning() ){ return; }
+            this_thread::sleep_for(seconds(1));
+        }
     } // while()
 } // run()

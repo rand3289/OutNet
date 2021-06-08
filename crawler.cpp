@@ -3,6 +3,7 @@
 #include "http.h"
 #include "utils.h"
 #include "log.h"
+#include "svc.h"
 #include <memory>
 #include <algorithm>
 #include <unordered_map> // erase_if(unordered_multimap, predicate)
@@ -359,7 +360,7 @@ int Crawler::run(){
     turnBitsOff(select, SELECTION::ISCHK); // signatureVerified is of interest to local services only
     turnBitsOff(select, SELECTION::RSVCF); // do not filter out remote services by protocol
 
-    while(true){
+    while( keepRunning() ){
         vector<HostInfo> newData;
         vector<HostInfo*> callList;
 
@@ -386,8 +387,12 @@ int Crawler::run(){
         }
 
         int count = merge(newData);
-        if( count<=0 ){ this_thread::sleep_for( seconds( (rand()%3) + ldata.sleepCrawler ) ); }
-        else { saveRemoteDataToDisk(); } // found new services
+        if( count<=0 ){
+            for(int i=0; i < ldata.sleepCrawler; ++i){
+                if( !keepRunning() ){ return 0; }
+                this_thread::sleep_for( seconds( 1 ) );
+            }
+        } else { saveRemoteDataToDisk(); } // found new services
     } // while(true)
     return 0;
 }

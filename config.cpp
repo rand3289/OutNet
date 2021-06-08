@@ -2,6 +2,7 @@
 #include "sock.h" // Sock::ANY_PORT, Sock::stringToIP()
 #include "utils.h"
 #include "log.h"
+#include "svc.h"
 #include <algorithm>
 #include <vector>
 #include <thread>
@@ -17,8 +18,11 @@ using namespace std::filesystem;
 // *.badip *.badkey - blacklists of IPs or public keys
 // *.service - service description file (one service description per line)
 int Config::watch() {
-    while(true){
-        this_thread::sleep_for( seconds(refreshRate) );
+    while( true ){
+        for(uint32_t i=0; i < refreshRate; ++i){
+            if( !keepRunning() ) { return 0; }
+            this_thread::sleep_for( seconds(1) );
+        }
         loadServiceFiles();
         loadBlackListFiles();
     }

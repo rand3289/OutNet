@@ -30,7 +30,7 @@ DWORD ServiceHandler( DWORD dwControl, DWORD dwEventType, LPVOID lpEventData, LP
         case SERVICE_CONTROL_SHUTDOWN:
             keepServicesRunning = false;
             status(SERVICE_STOP_PENDING);
-            Sleep(3);
+            Sleep(3); // this_thread::sleep_for(seconds(3));
             status(SERVICE_STOPPED);
             break;
 

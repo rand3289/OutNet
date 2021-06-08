@@ -216,6 +216,7 @@ bool UPNPNAT::discovery(int retry)
 
 	for(int i=1; i<=retry; ++i)
     {
+        if(i>1){ Sleep(10*1000); } // starting as a daemon.  wait for the network to come up.
         ret=sendto(udp_socket, send_buff.c_str(), send_buff.size(), 0, (struct sockaddr*)&r_address, sizeof(struct sockaddr_in));
         Sleep(1000);
 
