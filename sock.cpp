@@ -221,17 +221,11 @@ int Sock::closeSock(void){
 
 
 int Sock::write(const void* buff, size_t size){
-//	log() << "WRITE: " << size << endl; // DEBUGGING!!!
 	return send(s, (char*) buff, size, MSG_NOSIGNAL);
 }
 
-//#include "utils.h"  // printHex()
 int Sock::read(void* buff, size_t size){
-	int ret = recv(s, (char*) buff, size, 0); //	return recv(s, buff, size, MSG_DONTWAIT);
-//	int wserr = WSAGetLastError();
-//	log() << "ERRNO: " << wserr << " READ: " << ret << " bytes: "; // DEBUGGING!!!
-//	printHex( (const unsigned char*)buff, ret); // 10060=WSAETIMEDOUT
-	return ret;
+	return recv(s, (char*) buff, size, 0); //	return recv(s, buff, size, MSG_DONTWAIT);
 }
 
 
@@ -280,7 +274,7 @@ int Sock::writeString(const string& str){
     unsigned char iclen = (unsigned char) str.length();
     if(str.length() > MAX_STR_LEN){
         iclen = MAX_STR_LEN;
-        logErr() << "WARNING: writeString() truncating string: " << str << endl;
+        err("WARNING: writeString() is truncating a string.");
     }
     if( 1 != write( &iclen, 1) ){ return -1; }
     return 1 + write( str.c_str(), iclen);
@@ -308,12 +302,12 @@ int Sock::readString(void* buff, size_t buffSize){ // make sure buff is at least
     if( rdsize!=size ){ return -2; } // ERROR
     ((char*)buff)[size] = 0; // null terminate the string
 
-	if(original> size){ // if buffer is too small, read the rest from stream and discard
-		logErr() << "WARNING: readString() buffer too small." << endl;
-		char localBuff[256];
+    if(original> size){ // if buffer is too small, read the rest from stream and discard
+        err("WARNING: readString() buffer is too small.");
+        char localBuff[256];
         rdsize = read( localBuff, original-size);
         if( rdsize!=size ){ return -3; } // ERROR
-	}
+    }
     return original; // return the number of bytes read from socket
 }
 
