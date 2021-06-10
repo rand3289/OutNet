@@ -20,7 +20,10 @@ using namespace std::filesystem;
 int Config::watch() {
     while( true ){
         for(uint32_t i=0; i < refreshRate; ++i){
-            if( !keepRunning() ) { return 0; }
+            if( !keepRunning() ) { 
+                log() << "Config thread exiting." << endl;
+                return 0;
+            }
             this_thread::sleep_for( seconds(1) );
         }
         loadServiceFiles();

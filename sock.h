@@ -51,6 +51,7 @@ public:
 	// accept an incoming connection on a listening server socket and return a client socket
 	SOCKET accept();
 	SOCKET accept(Sock& connection); // recommended way of accepting connection
+	SOCKET accept(Sock& conn, int timeoutSec); // if you want it to timeout (seconds)
 
 	// bound server port even if ANY_PORT was used in listen() or remote port after accept() or connect()
 	uint16_t getPort() const { return ntohs(ip.sin_port); }

@@ -138,7 +138,7 @@ void run(){
     Response response;
     while( keepRunning() ){
         Sock conn;
-        if( INVALID_SOCKET == server.accept(conn) ){ continue; }
+        if( INVALID_SOCKET == server.accept(conn, 2) ){ continue; } // timeout = 2 seconds
         conn.setRWtimeout(ldata.timeoutServer); // seconds read/write timeout
 
         uint32_t ip = conn.getIP();
@@ -180,11 +180,15 @@ void run(){
             Response::writeDebug(conn, select, filters);
         }
 
-        // windblows freaks out in recv() if you close connection
-        // TODO: keep a list of active sockets for a few seconds. for now, this is the solution:
-        for(int i=0; i < ldata.sleepServer; ++i){
-            if( !keepRunning() ){ return; }
+        // windblows freaks out in recv() if you close connection right away
+        // TODO: keep a list of active sockets for a few seconds. for now, sleep
+        for(int i=0; i < ldata.sleepServer && keepRunning(); ++i){
             this_thread::sleep_for(seconds(1));
         }
     } // while()
+
+    watch.join(); // wait for other threads to exit first
+    search.join();
+    auto& outs = log() << "Main thread exiting." << endl;
+    outs.flush();
 } // run()

@@ -129,6 +129,29 @@ SOCKET Sock::accept(Sock& conn){
 }
 
 
+SOCKET Sock::accept(Sock& conn, int timeoutSec){
+    fd_set set;
+    FD_ZERO(&set);
+    FD_SET(s, &set);
+
+    struct timeval timeout;
+    timeout.tv_sec = timeoutSec;
+    timeout.tv_usec = 0;
+
+    int ret = select( s+1, &set, NULL, NULL, &timeout);
+    if (ret <= 0){
+        return INVALID_SOCKET;
+    }
+
+    socklen_t size = sizeof(conn.ip);
+    conn.s = ::accept(s, (sockaddr*)&conn.ip, &size);
+    if(INVALID_SOCKET == conn.s ){
+        err("accepting connection: ");
+    }
+    return conn.s;
+}
+
+
 int Sock::listen(uint16_t port){
     int reuse = 1; // allow binding to a port if previous socket is lingering
     if ( 0 > setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char*)&reuse, sizeof(reuse)) ){

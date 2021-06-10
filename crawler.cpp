@@ -388,12 +388,13 @@ int Crawler::run(){
 
         int count = merge(newData);
         if( count<=0 ){
-            for(int i=0; i < ldata.sleepCrawler; ++i){
-                if( !keepRunning() ){ return 0; }
+            for(int i=0; i < ldata.sleepCrawler && keepRunning(); ++i){
                 this_thread::sleep_for( seconds( 1 ) );
             }
         } else { saveRemoteDataToDisk(); } // found new services
-    } // while(true)
+    } // while( keepRunning() )
+
+    log() << "Crawler thread exiting." << endl;
     return 0;
 }
 
