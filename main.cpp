@@ -33,7 +33,7 @@ std::string selectStr(uint32_t sel){
 }
 
 
-bool startUp(RemoteData& rdata){
+bool addFirstPeer(RemoteData& rdata){
     const string filename = "outnetStart.url";
     ifstream urlf (filename);
     if( !urlf ){
@@ -84,7 +84,7 @@ void run(){
     LocalData ldata;  // info about local services and local public key
     RemoteData rdata; // information gathered about remote services
     BlackList blist;  // Black and White lists
-    startUp(rdata); // load remote outnet service location to initialize from
+    addFirstPeer(rdata); // load remote outnet service location to initialize from
     Config config; // config is aware of service port, LocalData and BWLists
     config.init(ldata, blist); // load ldata,bwlists
 
