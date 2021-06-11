@@ -18,4 +18,4 @@ outnet: $(OBJ)
 	$(CC) -o $@ $^ -lpthread $(LDFLAGS)
 
 clean:
-	/bin/rm -f $(OBJ) outnet outnet.exe
+	/bin/rm -f $(OBJ)

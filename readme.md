@@ -291,7 +291,7 @@ Health and stability of the internet should be every user's goal.  A botnet clie
 * Implement/fix all TODO in source code
 * Add IPv4 SSDP capability so that other services can find OutNet.  This way services do not need to be configured with OutNet IP:port
 * move buffer.h  log.*  sock.*  utils.*  svc*.*  to ./lib/ ???
-* move sign/* and upnp/* to deps/* or extern/*
+* move sign/* and upnp/* to deps/*
 * copy  outnet, outnet.svc, outnetStart.url  to outnetbin repository
 
 

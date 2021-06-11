@@ -50,11 +50,11 @@ struct IpPortProt {
 
 // look for *.service in current directory and load their contents into LocalData::services
 int Config::loadServiceFiles(){
-    log() << "Loading service files: ";
+    auto& os = log() << "Loading service files: ";
     static const string extension = ".service";
     vector<string> lines;
     int fCount = parseFilesIntoLines(extension, lines);
-    log() << "(" << fCount << " found)" << endl;
+    os << fCount << " found." << endl;
     std::sort( begin(lines), end(lines) ); // set_difference needs sorted data
 
     vector<string> newServices; // newServices(not in ldata->services)
@@ -94,15 +94,15 @@ int Config::loadServiceFiles(){
 int Config::loadBlackListFiles(){ // load *.badkey and *.badip files
     static const string ext1 = ".badip";
     vector<string> lines;
-    log() << "Loading IP blacklist files: ";
+    auto& os = log() << "Loading IP blacklist files: ";
     int fCount = parseFilesIntoLines(ext1, lines);
-    log() << "(" << fCount << " found)" << endl;
+    os << fCount << " found." << endl;
 
     static const string ext2 = ".badkey";
     vector<string> lines2;
     log() << "Loading KEY blacklist files: ";
     fCount = parseFilesIntoLines(ext2, lines2);
-    log() << "(" << fCount << " found)" << endl;
+    os << fCount << " found." << endl;
 
     unique_lock ulock(blist->mutx);
 

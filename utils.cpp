@@ -91,7 +91,7 @@ int parseFilesIntoLines(const string& extension, vector<string>& lines){
     int fCount = 0;
     for(auto& p: directory_iterator(".") ){
         if(p.path().extension() != extension){ continue; }
-        log() << p.path() << " ";
+//        log() << p.path() << " ";
         ifstream listf (p.path());
         if( !listf ){ continue; }
         parseLines(listf, lines);
