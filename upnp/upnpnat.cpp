@@ -227,7 +227,7 @@ bool UPNPNAT::discovery(int retry)
 		buff[ret] = 0; // null terminate the buffer strings
 
 		recv_buff=buff;
-        unsigned int pos=recv_buff.find(HTTP_OK);
+        size_t pos=recv_buff.find(HTTP_OK);
         if(pos==std::string::npos){
 			continue;                       //invalid response
 		}

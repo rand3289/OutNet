@@ -80,8 +80,8 @@ int Sock::setNoDelay(bool state){
 
 
 int Sock::setCork(bool state){
-#ifdef _WIN32
-	return 0; // no TCP_CORK on windblows
+#ifndef TCP_CORK
+	return 0; // no TCP_CORK on windblows and macOS
 #else
 	int onoff = state ? 1 : 0;
 	return setsockopt(s, SOL_SOCKET, TCP_CORK, (char*) &onoff, sizeof(onoff) );
@@ -164,11 +164,11 @@ int Sock::listen(uint16_t port){
 	ip.sin_port=htons(port);
 	ip.sin_addr.s_addr = INADDR_ANY;
 
-	if ( SOCKET_ERROR==bind(s, (sockaddr*) &ip, size)){
+	if ( SOCKET_ERROR==::bind(s, (sockaddr*) &ip, size)){
 		err("binding to port ");
 		return -3;
 	}
-	if ( SOCKET_ERROR==getsockname(s, (sockaddr*) &ip, (socklen_t*)&size)){
+	if ( SOCKET_ERROR==::getsockname(s, (sockaddr*) &ip, (socklen_t*)&size)){
 		err("getting bound socket information: ");
 		return -4;
 	}
