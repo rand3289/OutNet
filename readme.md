@@ -38,10 +38,11 @@ OutNet provides anonymity.  Instead of a domain or a user name, a public key is 
 
 ## Project status
 OutNet is written in C++ 20. Project does NOT have ANY external dependencies.  Everything is built-in.  All source code is available from ONE git repository.  There is no need to install any libraries.  OutNet was started in February 2020 by a single developer.  Its most recent version is 0.1  
-It compiles using  
+It compiles using
 * g++ version 10.2 under x86_64 linux  
 * MinGW-w64 from msys2.org on x86_64 windows  
 * Apple clang version 13.1.6 on arm64 (M1) macOS  
+
 To compile type "make" in OutNet directory.  To compile "onlist" utility, type "make" in OutNet/onlist directory.  "onlist" utility queries the OutNet service.  
 
 OutNet's home: https://github.com/rand3289/OutNet  
