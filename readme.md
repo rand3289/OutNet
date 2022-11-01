@@ -161,11 +161,14 @@ https://en.wikipedia.org/wiki/Cryptocurrency
 https://en.wikipedia.org/wiki/E-commerce  
 
 
-##  Future Base Services
+##  Future Services based on OutNet
 
-* OutNet should be treated as a piece of an eco system.  It is the backbone on top of which all other services are built.  "onlist" utility that comes with OutNet is the simplest application one can write based on OutNet.  It is a text mode query tool to list registered local and remote services (peers).  For example a query tool can get a list of servers for your favorite game or a list of zoom personal meeting rooms ready to chat.  For example, here we se an OutNet service's IP:PORT followed by public key and OutNetMsg service on the next line that starts with a tab:  
+* OutNet should be treated as a piece of an eco system.  It is the backbone on top of which all other services are built.  "onlist" utility that comes with OutNet is the simplest application based on OutNet.  It is a text mode query tool to list registered local and remote services (peers).  For example a query tool can get a list of servers for your favorite game or a list of zoom personal meeting rooms ready to chat.  For example, here we se an OutNet service's IP:PORT followed by public key and OutNetMsg service on the next line that starts with a tab:  
 192.168.0.123:2233	44235ce17e199806c14fd6a5f0dbf65f4df47774e028e9937fd7ebd0a65ac421  
 	http:tcp:outnetmsg:67.17.38.99:2345:/index.html
+
+
+* While onlist provides manual public key to IP or IP to a public key translation, it should be easy to write an OutNet based DNS proxy for resolving outnet addresses to IP addresses.  This way any URL, for example http://8fa9fa8dad8fa0dfadf89a75fa4323lk/blah can be resolved to an IP address and used in the browser or another program.  One can avoid using DNS and write a SOCKS proxy which will translate OutNet addresses.
 
 
 * There is a need for OutNet notification service.  E-mail is not shared by the OutNet service to prevent network-wide spam.  OutNetMsg receives messages addressed to your public key.  If it is from some one you trust (their public key is on your white list), it tries to open the message using the protocol/mime specified in the message.  OutNetMsg can display the message, offer to open/save the message or file, forward it to one of the services running on your system (for example, by acting as a TCP wrapper) or suggest you install a corresponding protocol handler / service.  For example it can open a Zoom conference.
